@@ -1,0 +1,148 @@
+import numpy as np
+from matplotlib import pyplot as plt
+import pandas as pd
+import os
+import re
+
+
+# SN redshift
+z = 0.037
+# define peaks to calculate and their wavelength
+peaks_to_calculate = {'H_alpha':6562.81}
+# wave propagation velocity (light speed)
+c = 299792.458 # km/s
+
+
+
+# import all LCO spectra ascii files and organize in a dictionary
+folder_join = os.path.join
+working_dir = r"snexdata_target5025"  # working folder
+filenames = os.listdir(working_dir)
+# reading and merging
+spectra = {}
+for file in filenames:
+    # extract date of spectrum measurment from filename
+    date = re.sub('.*hmx_|_redblu|_|\..*\.ascii', '', os.path.basename(file))
+    # transform to standard datetime format
+    date = pd.to_datetime(date)
+    # add as element in dict
+    spectra[date] = {'df': pd.read_csv(folder_join(working_dir, file), sep=' ', names = ["x", "y"])}
+    # correct wavelengths for redshift
+    spectra[date]['df'] = spectra[date]['df'] / (1 + z)
+
+# TODO: add weizmann spectra - why are values an order of magnitude higher than the LCO data?
+# import ZTF spectra from Weizmann transient name server as ascii file and add it to the dictionary
+# filename = 'tns_2018hmx_2018-11-06_09-27-00_P60_SED-Machine_ZTF.ascii'
+# date = re.sub('tns.*hmx_|_P.*', '', filename)
+# date = re.sub('_', ' ', date)
+# transform to standard datetime format
+# date = pd.to_datetime(date)
+# add as element in dict
+# spectra[date] = {'df': pd.read_csv(filename, sep=' ', names = ["x", "y", 'dy'], header=180)}
+# correct wavelengths for redshift
+# spectra[date]['df'] = spectra[date]['df'] / (1 + z)
+
+
+
+# get list
+dates = spectra.keys()
+
+
+# plot all spectra
+fig, ax = plt.subplots(1, figsize=(10, 5))
+for date in dates:
+    spectra[date]['df'].plot(x='x', y='y', ax=ax, label=date)
+for peak_name in peaks_to_calculate:
+    ax.axvline(x=peaks_to_calculate[peak_name], color='k')
+ax.set_title('SN2018hmx Spectra over time', fontsize=16)
+ax.set_xlabel('Rest (z = 0.037) Wavelength (Å)', size=14)
+ax.set_ylabel('Flux (10-15 erg s-1 cm-2 Å-1)', size=14)
+fig.savefig(re.sub(' | - ', '_','SN2018hmx Spectra over time'+'.png'))
+
+
+def approximate_peak_range(df, peak_name, param):
+    if peak_name == 'H_alpha':
+        if param == 'min':
+            range_min, range_max = 6200, 6500
+        elif param == 'max':
+            range_min, range_max = 6400, 6600
+
+        df_slice = df.loc[(df['x'] > range_min) & (df['x'] < range_max)]
+
+        if param == 'min':
+            y = np.min(df_slice['y'])
+        elif param == 'max':
+            y = np.max(df_slice['y'])
+
+        x = np.min(df_slice.loc[df_slice['y'] == y]['x'])
+        peak_range = [x - 80, x + 100]
+        return peak_range
+
+
+def fit_curve(df, peak_name):
+    # TODO: split this into three seperate functions, for each output
+    f, x_slice, curve_extreme = {}, {}, {}
+    for param in ['min', 'max']:
+        peak_range = approximate_peak_range(df, peak_name, param)
+        df_slice = df.loc[(df['x'] > peak_range[0]) & (df['x'] < peak_range[1])]
+        mypoly = np.polyfit(df_slice['x'], df_slice['y'], deg=2)
+        f[param] = (np.poly1d(mypoly))
+        x_slice[param] = (df_slice['x'])
+        curve_extreme[param] = find_curve_extreme(f, x_slice, param)
+    return f, x_slice, curve_extreme
+
+
+def find_curve_extreme(f, x_slice, param):
+    x = list(x_slice[param])
+    y = f[param](x)
+    if param == 'min':
+        extreme_y = np.min(y)
+    elif param == 'max':
+        extreme_y = np.max(y)
+    extreme_i = np.where(y == extreme_y)[0][0]
+    extreme_x = x[extreme_i]
+    return {'x': extreme_x, 'y': extreme_y}
+
+def calculate_expansion_velocity(wavelength_expected, wavelength_observed):
+    v = c * (wavelength_expected / wavelength_observed - 1)
+    return v
+
+
+for date in dates:
+    for peak_name in peaks_to_calculate.keys():
+        spectra[date][peak_name] = {'polyfits': '', 'peak_xslices': '', 'peak_extremes': '', 'expansion_velocity': ''}
+        spectra[date][peak_name]['polyfits'] , spectra[date][peak_name]['peak_xslices'], spectra[date][peak_name]['peak_extremes']\
+            = fit_curve(spectra[date]['df'], peak_name)
+
+        spectra[date][peak_name]['expansion_velocity'] = calculate_expansion_velocity(peaks_to_calculate[peak_name], spectra[date][peak_name]['peak_extremes']['min']['x'])
+        # plotting
+
+        spectra[date]['fig'], spectra[date]['ax'] = plt.subplots(1, figsize=(10, 4))
+        spectra[date]['df'].plot('x', 'y', label=str(date), marker='.', linestyle='None', ax=spectra[date]['ax'])
+        for param in ['min', 'max']:
+            x_slice = spectra[date][peak_name]['peak_xslices'][param]
+            f = spectra[date][peak_name]['polyfits'][param]
+            extreme_point = spectra[date][peak_name]['peak_extremes'][param]
+            spectra[date]['ax'].plot(x_slice, f(x_slice), label='polyfit_'+param)
+            spectra[date]['ax'].plot(extreme_point['x'], extreme_point['y'], '*', markersize=10, label='polyfit_'+param+'_extreme')
+        spectra[date]['ax'].legend()
+        spectra[date]['ax'].axvline(x=peaks_to_calculate[peak_name], color='k')
+        spectra[date]['ax'].set_title('SN2018hmx Spectra from '+str(date), fontsize=16)
+        spectra[date]['ax'].set_xlabel('Rest (z = 0.037) Wavelength (Å)', size=12)
+        spectra[date]['ax'].set_ylabel('Flux (10-15 erg s-1 cm-2 Å-1)', size=12)
+        spectra[date]['fig'].savefig(re.sub(' | - |:', '_', 'SN2018hmx Spectra from '+str(date) + '.png'))
+
+# plot expansion velocities over datetime
+for peak_name in peaks_to_calculate.keys():
+    dates = [date for date in spectra.keys()]
+    expansion_velocities = [spectra[date][peak_name]['expansion_velocity'] for date in spectra.keys()]
+    fig_v, ax_v = plt.subplots(1, figsize=(8, 5))
+    ax_v.scatter(dates, expansion_velocities)
+    ax_v.set_ylim(bottom=0, top=np.max(expansion_velocities) * 1.1)
+    ax_v.set_title('SN2018hmx expansion velocity of '+peak_name+ ' peak over time', fontsize=16)
+    ax_v.set_ylabel('Expansion velocity (km s–1)', size=12)
+    ax_v.set_xlabel('Date', size=12)
+
+fig_v.savefig(re.sub(' | - ', '_','SN2018hmx expansion velocity of '+peak_name+ ' peak over time'+'.png'))
+
+plt.show()
