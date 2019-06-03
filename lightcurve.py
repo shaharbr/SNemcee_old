@@ -4,7 +4,7 @@ from pandas.io.json import json_normalize
 import pandas as pd
 import re
 
-print('hi)
+print('hello')
 
 # import LCO dataset (TSV file)
 lco_phot = pd.read_csv('lco_photometry.txt', sep='\t', parse_dates={'datetime': ['dateobs', 'ut']})
