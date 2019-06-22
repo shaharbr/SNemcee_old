@@ -4,14 +4,16 @@ from pandas.io.json import json_normalize
 import pandas as pd
 import re
 
-# TODO: correct for galactic extinction
 plt.rcParams['font.sans-serif'] = 'Arial'
 
 # set discovery dates and convert to datetime format
 discovery_date = pd.to_datetime('17-10-18')
 z = 0.037
 distance_modulus = 36.06
-
+galactic_extinction = {'U': 0.206, 'B': 0.173, 'V': 0.131, 'R': 0.103, 'I': 0.072,
+                       'u': 0.202, 'g': 0.157, 'r': 0.109, 'i': 0.081, 'z': 0.060,
+                       'J': 0.034, 'H': 0.021, 'K': 0.014, 'L': 0.007,
+                       'G': 0, 'o': 0}
 
 # import LCO photometry dataset (TSV file) for 2018hmx
 lco_phot = pd.read_csv('lco_photometry.txt', sep='\t', parse_dates={'datetime': ['dateobs', 'ut']})
@@ -71,6 +73,17 @@ def add_rest_frame_days_from_discovery(SN_dict, discovery_date, z):
 
 namemap = add_rest_frame_days_from_discovery(namemap, discovery_date, z)
 
+
+def remove_glactic_extinction(SN_dict, galactic_extinction_values):
+    for name in namemap:
+        df = SN_dict[name]['df']
+        for filter in df['filter'].unique():
+            df.loc[df['filter'] == filter, 'mag'] = df.loc[df['filter'] == filter, 'mag'] - galactic_extinction_values[filter]
+    return SN_dict
+
+namemap = remove_glactic_extinction(namemap, galactic_extinction)
+
+
 def add_absolute_magnitude(SN_dict, distance_modulus):
     sources = SN_dict.keys()
     for source in sources:
@@ -103,7 +116,7 @@ def lightcurve_plot(SN_dict):
     ax2.invert_yaxis()
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax2.tick_params(axis='both', which='major', labelsize=14)
-    fig.savefig(re.sub(' | - ', '_', 'SN2018hmx light-curve over time - overlay of all sources' + '.png'))
+    # fig.savefig(re.sub(' | - ', '_', 'SN2018hmx light-curve over time - overlay of all sources' + '.png'))
 
 
 lightcurve_plot(namemap)
