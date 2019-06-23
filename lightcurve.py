@@ -2,31 +2,28 @@ from matplotlib import pyplot as plt
 import json
 from pandas.io.json import json_normalize
 import pandas as pd
-import re
+# import re
 
 plt.rcParams['font.sans-serif'] = 'Arial'
-# TODO find real galactic extinction for 1999em (these are just made up)
+# input correction parameters for all investigated SNe
 galactic_extinction = {'SN2018hmx': {'U': 0.206, 'B': 0.173, 'V': 0.131, 'R': 0.103, 'I': 0.072,
                        'u': 0.202, 'g': 0.157, 'r': 0.109, 'i': 0.081, 'z': 0.060,
                        'J': 0.034, 'H': 0.021, 'K': 0.014, 'L': 0.007,
                        'G': 0, 'o': 0},
-                       'SN1999em': {'U': -6.206, 'B': -6.173, 'V': -6.131, 'R': -6.103, 'I': -6.072,
-                       'u': -6.202, 'g': -6.157, 'r': -6.109, 'i': -6.081, 'z': -6.060,
-                       'J': -6.034, 'H': -6.021, 'K': -6.014, 'L': -6.007,
+                       'SN1999em': {'U': 0.176, 'B': 0.147, 'V': 0.111, 'R': 0.088, 'I': 0.061,
+                       'u': 0.172, 'g': 0.134, 'r': 0.093, 'i': 0.069, 'z': 0.051,
+                       'J': 0.029, 'H': 0.018, 'K': 0.012, 'L': 0.006,
                        'G': 0, 'o': 0}}
+distance_modulus = {'SN2018hmx': 36.06, 'SN1999em': 30.03}
+z = {'SN2018hmx': 0.037, 'SN1999em': 0.0024}
+discovery_date = {'SN2018hmx': '2018-10-18 00:00:00', 'SN1999em': '1999-10-29 10:33:00'}
 
-# initiate SN dictionaries
+# make sure discovery dates to datetime format
+for SN in discovery_date.keys():
+    discovery_date[SN] = pd.to_datetime(discovery_date[SN])
+
 # TODO: when I combine the two analysis files to an organized project with seperate function files, make this
 # TODO 'SN data dict' something that is standard and can be passed between functions and files
-# remember that some of the SN1999em data were copied from SN2018hm as placeholders, need to find its real data
-SN2018hmx = {'lightcurve': {}, 'name': '2018hmx', 'z': 0.037, 'discovery_date': '2018-10-18 00:00:00',
-             'distance_modulus': 36.06, 'galactic_extinction': galactic_extinction['SN2018hmx']}
-SN1999em= {'lightcurve': {}, 'name': '1999em', 'z': 0, 'discovery_date': '1999-10-29 10:33:00',
-           'distance_modulus': 36.06, 'galactic_extinction': galactic_extinction['SN1999em']}
-
-# convert discovery date to datetime format
-for SN in [SN2018hmx, SN1999em]:
-    SN['discovery_date'] = pd.to_datetime(SN['discovery_date'])
 
 
 
@@ -76,14 +73,36 @@ atlas_phot['filter'] = 'o'
 ztf_phot_new['filter'].replace({'zg': 'g', 'zr':'r'}, inplace=True)
 lco_phot['filter'].replace({'ip': 'i', 'gp':'g', 'rp':'r'}, inplace=True)
 
-# integrate the dataframes in the SN discts and add plotting guidelines
-SN2018hmx['lightcurve'] = {'Gaia': {'marker': 'D', 'Linestyle': 'None', 'df': gaia_phot}, 'ATLAS': {'marker': 's', 'Linestyle': 'None', 'df': atlas_phot}, 'ZTF': {'marker': '^', 'Linestyle': 'None', 'df': ztf_phot_new}, 'LCO': {'marker': 'o', 'Linestyle': 'None', 'df': lco_phot}}
-SN1999em['lightcurve'] = {'Leonard': {'marker': 'None', 'Linestyle': '--', 'df': sn1999em_phot}}
+# sort the light curve data of each SN in a dict, which also has the plotting guides for each light curve
+lightcurves = {'SN2018hmx': {
+                    'Gaia': {'df': gaia_phot, 'marker': 'D', 'Linestyle': 'None'},
+                    'ATLAS': {'df': atlas_phot, 'marker': 's', 'Linestyle': 'None'},
+                    'ZTF': {'df': ztf_phot_new, 'marker': '^', 'Linestyle': 'None'},
+                    'LCO': {'df': lco_phot, 'marker': 'o', 'Linestyle': 'None'}},
+                'SN1999em': {
+                    'Leonard': {'df': sn1999em_phot, 'marker': 'None', 'Linestyle': '--'}}}
 
+
+def make_SN_dict(SN_name, lightcurves_dict, z_dict, discovery_date_dict, distance_modulus_dict,
+                 galactic_extinction_dict):
+    SN_dict = {'lightcurve': lightcurves_dict[SN_name],
+               'name': SN_name,
+               'z': z_dict[SN_name],
+               'discovery_date': discovery_date_dict[SN_name],
+               'distance_modulus': distance_modulus_dict[SN_name],
+               'galactic_extinction': galactic_extinction_dict[SN_name]}
+    return SN_dict
+
+
+SN2018hmx = make_SN_dict('SN2018hmx', lightcurves, z, discovery_date, distance_modulus, galactic_extinction)
+SN1999em = make_SN_dict('SN1999em', lightcurves, z, discovery_date, distance_modulus, galactic_extinction)
+
+# define colormap for plotting, the colors each filter will be presented in
 colormap = {'i': 'firebrick', 'r': 'tomato', 'V': 'limegreen', 'g': 'turquoise', 'B': 'blue', 'U': 'darkorchid',
             'G': 'teal', 'o': 'orange', 'R': 'tomato', 'I': 'firebrick'}
 
-
+# TODO seperate to function that gets t_from_discovery and another function that normalized to rest frame by z
+# TODO after that, do the t_from_discovery only for 2018hmx but rest frame normalization for both
 def add_rest_frame_days_from_discovery(SN_dict):
     discovery_date = SN_dict['discovery_date']
     z = SN_dict['z']
@@ -92,7 +111,6 @@ def add_rest_frame_days_from_discovery(SN_dict):
         # TODO convert the timedelta to float so the plotting doesn't round it down to days
         timedelta = (lightcurve[source]['df']['datetime'] - discovery_date) / (1 + z)
         lightcurve[source]['df']['t_from_discovery'] = timedelta.dt.days
-        print(timedelta)
     SN_dict['lightcurve'] = lightcurve
     return SN_dict
 
@@ -118,7 +136,7 @@ def add_absolute_magnitude(SN_dict):
     return SN_dict
 
 # colormap
-def lightcurve_plot(SN_dict_list):
+def lightcurve_plot(SN_dict_list, main_SN):
     fig, ax = plt.subplots(1, figsize=(9, 6))
     ax2 = ax.twinx()
     for SN in SN_dict_list:
@@ -128,29 +146,32 @@ def lightcurve_plot(SN_dict_list):
             marker = lightcurve[source]['marker']
             linestyle = lightcurve[source]['Linestyle']
             for filter in df['filter'].unique():
-                df.loc[df['filter'] == filter].plot(x='t_from_discovery', y='mag', yerr='dmag',
-                                                    marker=marker,
-                                                    ax=ax, linestyle=linestyle, label=source + ' (' + filter + ')',
-                                                    color=colormap[filter],  markeredgecolor='k', markeredgewidth=0.3)
-                df.loc[df['filter'] == filter].plot(x='t_from_discovery', y='abs_mag',
-                                                    marker=marker,
-                                                    ax=ax2, linestyle=linestyle, color=colormap[filter],
-                                                    markeredgecolor='k', markeredgewidth =0.3)
-    ax.set_title('light-curve over time - overlay of all sources', fontsize=16)
+                if SN['name'] == main_SN:
+                    distance_modulus = SN['distance_modulus']
+                    df.loc[df['filter'] == filter].plot(x='t_from_discovery', y='mag', yerr='dmag', ax=ax,
+                                                        marker=marker, linestyle=linestyle,
+                                                        color=colormap[filter],
+                                                        markeredgecolor='k', markeredgewidth=0.3)
+                df.loc[df['filter'] == filter].plot(x='t_from_discovery', y='abs_mag', ax=ax2,
+                                                    marker=marker, linestyle=linestyle,
+                                                    color=colormap[filter],
+                                                    markeredgecolor='k', markeredgewidth =0.3,
+                                                    label=source + ' (' + filter + ')',)
+    ax.set_title('Light-curve over time - 2018hmx vs 1999em', fontsize=16)
     ax.set_xlabel('Time since discovery (rest-frame days)', size=16)
     ax.set_ylabel('Apparent Magnitude', size=16)
-    ax.set_ylim(15, 25)
+    ax.set_ylim(14, 25)
     ax2.set_ylabel('Absolute Magnitude', size=16)
     # TODO remember that the distance module difference between the y axes is hardcoded here -
     # TODO need to find way to me this automatic
-    ax2.set_ylim(15 - 36.06, 25 - 36.06)
-    ax.legend(ncol=2, loc='lower right')
+    ax2.set_ylim(14 - distance_modulus, 25 - distance_modulus)
+    ax2.legend(ncol=2)
     ax.invert_yaxis()
-    ax2.get_legend().remove()
+    ax.get_legend().remove()
     ax2.invert_yaxis()
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax2.tick_params(axis='both', which='major', labelsize=14)
-    # fig.savefig(re.sub(' | - ', '_', 'SN2018hmx light-curve over time - overlay of all sources' + '.png'))
+    fig.savefig('light-curve over time - 2018hmx vs 1999em' + '.png')
 
 SN2018hmx = add_rest_frame_days_from_discovery(SN2018hmx)
 
@@ -158,7 +179,7 @@ for SN in [SN2018hmx, SN1999em]:
     SN = remove_glactic_extinction(SN)
     SN = add_absolute_magnitude(SN)
 
-lightcurve_plot([SN2018hmx, SN1999em])
+lightcurve_plot([SN2018hmx, SN1999em], main_SN='SN2018hmx')
 
 
 
