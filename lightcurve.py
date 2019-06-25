@@ -146,10 +146,9 @@ def lightcurve_plot(SN_dict_list, main_SN, V50_line=False):
                                                         markeredgecolor='k', markeredgewidth=0.3)
                     if isinstance(V50_line, np.ndarray) and source == 'LCO':
                         V50_poly1d = np.poly1d(V50_line)
+                        # TODO make drawing borders same 50 days as ones used for extracting fit
                         x = list(df.loc[(df['filter'] == 'V') &
-                                        (df['t_from_discovery'] <= 100) &
-                                        (df['t_from_discovery'] > 50),
-                                        't_from_discovery'])
+                                        (df['t_from_discovery'] <= 80), 't_from_discovery'])
                         y = V50_poly1d(x)
                         ax2.plot(x, y, color='k')
 
@@ -184,11 +183,15 @@ lightcurve_plot([SN2018hmx, SN1999em], main_SN='SN2018hmx')
 # light curve parameters:
 def fit_50V_regression(SN_dict):
     LCO_lighcurve = SN_dict['lightcurve']['LCO']['df']
-    V50_lightcurve = LCO_lighcurve.loc[(LCO_lighcurve['filter'] == 'V') &
-                                       (LCO_lighcurve['t_from_discovery'] <= 100) &
-                                       (LCO_lighcurve['t_from_discovery'] > 50)]
-    x = list(V50_lightcurve['t_from_discovery'])
-    y = list(V50_lightcurve['abs_mag'])
+    V_LCO_lightcurve = LCO_lighcurve.loc[(LCO_lighcurve['filter'] == 'V')]
+    peak_absmag = np.min(V_LCO_lightcurve.loc[V_LCO_lightcurve['t_from_discovery'] < 100, 'abs_mag'])
+    peak_day = float(V_LCO_lightcurve.loc[V_LCO_lightcurve['abs_mag'] == peak_absmag, 't_from_discovery'])
+    day50_after_peak = peak_day + 50
+    V_LCO_lightcurve = V_LCO_lightcurve.loc[(V_LCO_lightcurve['filter'] == 'V') &
+                                       (V_LCO_lightcurve['t_from_discovery'] >= peak_day) &
+                                       (V_LCO_lightcurve['t_from_discovery'] <= day50_after_peak)]
+    x = list(V_LCO_lightcurve['t_from_discovery'])
+    y = list(V_LCO_lightcurve['abs_mag'])
     V50_regression_params = np.polyfit(x, y, deg=1)
     return V50_regression_params
 
@@ -202,7 +205,12 @@ v50_regression_params = fit_50V_regression(SN2018hmx)
 lightcurve_plot([SN2018hmx], main_SN='SN2018hmx', V50_line=v50_regression_params)
 
 s50V_2018hmx = calc_s50V(SN2018hmx)
-print(s50V_2018hmx)
+print('s50V:', s50V_2018hmx)
+
+
+# TODO move functions to seperate module files
+# TODO write code for extracting tPT via emcee optimization of a0, w0 and p0 (what is m0?)
+
 
 # show
 plt.show()
