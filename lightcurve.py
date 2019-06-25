@@ -3,8 +3,24 @@ import json
 from pandas.io.json import json_normalize
 import pandas as pd
 # import re
+import numpy as np
+import data_import
+
+# TODO split to modules:
+# 1) data imports
+# 2) functions that organize the data in data df and SN_dicts. maybe also include in this the functions
+#  that normalize and calculate t from discovery
+# 3) plotting
+# 4) light curve parameter calculations
+
+
+# TODO:
+# standardize the SN_dict object so it is the same for both the photometry and spectroscopy analyses
 
 plt.rcParams['font.sans-serif'] = 'Arial'
+# TODO ask - what should I do regarding the G and o filters which dont have galactic extinction values in the NES?
+
+# TODO turn the data input dicts to stardardized files that can be imported with the data (csv?)
 # input correction parameters for all investigated SNe
 galactic_extinction = {'SN2018hmx': {'U': 0.206, 'B': 0.173, 'V': 0.131, 'R': 0.103, 'I': 0.072,
                        'u': 0.202, 'g': 0.157, 'r': 0.109, 'i': 0.081, 'z': 0.060,
@@ -16,62 +32,22 @@ galactic_extinction = {'SN2018hmx': {'U': 0.206, 'B': 0.173, 'V': 0.131, 'R': 0.
                        'G': 0, 'o': 0}}
 distance_modulus = {'SN2018hmx': 36.06, 'SN1999em': 30.03}
 z = {'SN2018hmx': 0.037, 'SN1999em': 0.0024}
-discovery_date = {'SN2018hmx': '2018-10-18 00:00:00', 'SN1999em': '1999-10-29 10:33:00'}
+discovery_date = {'SN2018hmx': '2018-10-17 15:30:14', 'SN1999em': '1999-10-29 10:33:00'}
 
-# make sure discovery dates to datetime format
+# convert discovery dates to MJD
 for SN in discovery_date.keys():
-    discovery_date[SN] = pd.to_datetime(discovery_date[SN])
-
-# TODO: when I combine the two analysis files to an organized project with seperate function files, make this
-# TODO 'SN data dict' something that is standard and can be passed between functions and files
+    discovery_date[SN] = data_import.convert_to_mjd(discovery_date[SN], from_datetime=True)
 
 
-
-# import LCO photometry dataset (TSV file) for 2018hmx
-lco_phot = pd.read_csv('lco_photometry.txt', sep='\t', parse_dates={'datetime': ['dateobs', 'ut']})
-# import Gaia photometry dataset (CSV file) for 2018hmx
-gaia_phot = pd.read_csv('gaia18doi.txt', parse_dates=['#Date'], header=1)
-# import ATLAS photometry dataset (TSV file) for 2018hmx
-atlas_phot = pd.read_csv('ATLAS1_ACAM1.txt', sep='\t', parse_dates=['Obs-date'])
-# import ZTF photometry dataset (JSON file) for 2018hmx
-file = open('ZTF18accnoli_2.json')
-file = json.load(file)
-ztf_phot = json_normalize(file['results'])[['candidate.wall_time', 'candidate.magpsf', 'candidate.sigmapsf', 'candidate.filter']]
-ztf_phot['candidate.wall_time'] = pd.to_datetime(ztf_phot['candidate.wall_time'])
-# import photometry dataset (TSV file) for 1999em
-sn1999em_phot = pd.read_csv('sn1999em_UBVRI_leonard02.txt', sep='\s+', header=None,
-                       names=['t_from_discovery', 'U', 'B', 'V', 'R', 'I'], parse_dates=['t_from_discovery'])
-# import re-analyzed ZTF photometry dataset (ASCII file) for 2018hmx
-ztf_phot_new = pd.read_csv('ztf_dr1_lightcurve.txt', sep=r'\s+', header=50, usecols=['mjd|', 'mag|', 'expid|', 'catflags|'])
-ztf_phot_new.drop([0, 1, 2], inplace=True)
+# import 2018hmx photometry data files
+lco_phot = data_import.lco_phot('lco_photometry.txt')
+gaia_phot = data_import.gaia_phot('gaia18doi.txt')
+atlas_phot = data_import.atlas_phot('ATLAS1_ACAM1.txt')
+ztf_phot_new = data_import.ztf_phot_new('ztf_dr1_lightcurve.txt')
+sn1999em_leonard_phot = data_import.leonard_phot('sn1999em_UBVRI_leonard02.txt')
 
 
 
-# standardize column names and fill missing fields
-gaia_phot.rename(columns={'#Date':'datetime', 'averagemag.':'mag'}, inplace=True)
-atlas_phot.rename(columns={'Obs-date':'datetime', 'Mag. / Flux':'mag', 'Err':'dmag'}, inplace=True)
-ztf_phot.rename(columns={'candidate.wall_time':'datetime', 'candidate.magpsf':'mag', 'candidate.sigmapsf':'dmag', 'candidate.filter':'filter'}, inplace=True)
-ztf_phot_new.rename(columns={'expid|':'datetime', 'mjd|':'mag', 'mag|':'dmag', 'catflags|':'filter'}, inplace=True)
-
-ztf_phot_new['datetime'], ztf_phot_new['mag'], ztf_phot_new['dmag'], ztf_phot_new['filter'] = \
-    ztf_phot_new['datetime'].astype('float64'), ztf_phot_new['mag'].astype('float64'),\
-    ztf_phot_new['dmag'].astype('float64'), ztf_phot_new['filter'].astype('str'),
-ztf_phot_new['datetime'] = pd.to_datetime(ztf_phot_new['datetime'], unit='D', origin='julian')
-
-# restructure sn1999em data as the others - all mag in one column, and another column which indicates which filter its from
-sn1999em_phot = sn1999em_phot.melt(id_vars=['t_from_discovery'], var_name='filter', value_name='mag')
-sn1999em_phot['t_from_discovery'] = sn1999em_phot['t_from_discovery'].astype('float64')
-sn1999em_phot = sn1999em_phot.loc[sn1999em_phot['t_from_discovery'] < 300]
-sn1999em_phot = sn1999em_phot.loc[sn1999em_phot['mag'] < 90]
-sn1999em_phot['dmag'] = 0
-
-# fill missing columns
-gaia_phot['dmag'] = 0
-# sort filter names
-gaia_phot['filter'] = 'G'
-atlas_phot['filter'] = 'o'
-ztf_phot_new['filter'].replace({'zg': 'g', 'zr':'r'}, inplace=True)
-lco_phot['filter'].replace({'ip': 'i', 'gp':'g', 'rp':'r'}, inplace=True)
 
 # sort the light curve data of each SN in a dict, which also has the plotting guides for each light curve
 lightcurves = {'SN2018hmx': {
@@ -80,7 +56,7 @@ lightcurves = {'SN2018hmx': {
                     'ZTF': {'df': ztf_phot_new, 'marker': '^', 'Linestyle': 'None'},
                     'LCO': {'df': lco_phot, 'marker': 'o', 'Linestyle': 'None'}},
                 'SN1999em': {
-                    'Leonard': {'df': sn1999em_phot, 'marker': 'None', 'Linestyle': '--'}}}
+                    'Leonard': {'df': sn1999em_leonard_phot, 'marker': 'None', 'Linestyle': '--'}}}
 
 
 def make_SN_dict(SN_name, lightcurves_dict, z_dict, discovery_date_dict, distance_modulus_dict,
@@ -101,16 +77,27 @@ SN1999em = make_SN_dict('SN1999em', lightcurves, z, discovery_date, distance_mod
 colormap = {'i': 'firebrick', 'r': 'tomato', 'V': 'limegreen', 'g': 'turquoise', 'B': 'blue', 'U': 'darkorchid',
             'G': 'teal', 'o': 'orange', 'R': 'tomato', 'I': 'firebrick'}
 
-# TODO seperate to function that gets t_from_discovery and another function that normalized to rest frame by z
-# TODO after that, do the t_from_discovery only for 2018hmx but rest frame normalization for both
+
+# TODO:
+# seperate to function that gets t_from_discovery and another function that normalized to rest frame by z
+# after that, do the t_from_discovery only for 2018hmx but rest frame normalization for both
+
 def add_rest_frame_days_from_discovery(SN_dict):
     discovery_date = SN_dict['discovery_date']
     z = SN_dict['z']
     lightcurve = SN_dict['lightcurve']
     for source in lightcurve.keys():
         # TODO convert the timedelta to float so the plotting doesn't round it down to days
-        timedelta = (lightcurve[source]['df']['datetime'] - discovery_date) / (1 + z)
-        lightcurve[source]['df']['t_from_discovery'] = timedelta.dt.days
+        timedelta = (lightcurve[source]['df']['mjd'] - discovery_date) / (1 + z)
+        lightcurve[source]['df']['t_from_discovery'] = timedelta
+    SN_dict['lightcurve'] = lightcurve
+    return SN_dict
+
+# remove before-discovery data points
+def remove_data_before_discovery(SN_dict):
+    lightcurve = SN_dict['lightcurve']
+    for source in lightcurve.keys():
+        lightcurve[source]['df'] = lightcurve[source]['df'].loc[lightcurve[source]['df']['t_from_discovery'] >= 0]
     SN_dict['lightcurve'] = lightcurve
     return SN_dict
 
@@ -136,7 +123,7 @@ def add_absolute_magnitude(SN_dict):
     return SN_dict
 
 # colormap
-def lightcurve_plot(SN_dict_list, main_SN):
+def lightcurve_plot(SN_dict_list, main_SN, V50_line=False):
     fig, ax = plt.subplots(1, figsize=(9, 6))
     ax2 = ax.twinx()
     for SN in SN_dict_list:
@@ -146,17 +133,26 @@ def lightcurve_plot(SN_dict_list, main_SN):
             marker = lightcurve[source]['marker']
             linestyle = lightcurve[source]['Linestyle']
             for filter in df['filter'].unique():
+                df.loc[df['filter'] == filter].plot(x='t_from_discovery', y='abs_mag', ax=ax2,
+                                                    marker=marker, linestyle=linestyle,
+                                                    color=colormap[filter],
+                                                    markeredgecolor='k', markeredgewidth =0.3,
+                                                    label=source + ' (' + filter + ')',)
                 if SN['name'] == main_SN:
                     distance_modulus = SN['distance_modulus']
                     df.loc[df['filter'] == filter].plot(x='t_from_discovery', y='mag', yerr='dmag', ax=ax,
                                                         marker=marker, linestyle=linestyle,
                                                         color=colormap[filter],
                                                         markeredgecolor='k', markeredgewidth=0.3)
-                df.loc[df['filter'] == filter].plot(x='t_from_discovery', y='abs_mag', ax=ax2,
-                                                    marker=marker, linestyle=linestyle,
-                                                    color=colormap[filter],
-                                                    markeredgecolor='k', markeredgewidth =0.3,
-                                                    label=source + ' (' + filter + ')',)
+                    if isinstance(V50_line, np.ndarray) and source == 'LCO':
+                        V50_poly1d = np.poly1d(V50_line)
+                        x = list(df.loc[(df['filter'] == 'V') &
+                                        (df['t_from_discovery'] <= 100) &
+                                        (df['t_from_discovery'] > 50),
+                                        't_from_discovery'])
+                        y = V50_poly1d(x)
+                        ax2.plot(x, y, color='k')
+
     ax.set_title('Light-curve over time - 2018hmx vs 1999em', fontsize=16)
     ax.set_xlabel('Time since discovery (rest-frame days)', size=16)
     ax.set_ylabel('Apparent Magnitude', size=16)
@@ -171,7 +167,8 @@ def lightcurve_plot(SN_dict_list, main_SN):
     ax2.invert_yaxis()
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax2.tick_params(axis='both', which='major', labelsize=14)
-    fig.savefig('light-curve over time - 2018hmx vs 1999em' + '.png')
+
+    # fig.savefig('light-curve over time - 2018hmx vs 1999em' + '.png')
 
 SN2018hmx = add_rest_frame_days_from_discovery(SN2018hmx)
 
@@ -179,9 +176,33 @@ for SN in [SN2018hmx, SN1999em]:
     SN = remove_glactic_extinction(SN)
     SN = add_absolute_magnitude(SN)
 
+SN2018hmx = remove_data_before_discovery(SN2018hmx)
+SN1999em = remove_data_before_discovery(SN1999em)
+
 lightcurve_plot([SN2018hmx, SN1999em], main_SN='SN2018hmx')
 
+# light curve parameters:
+def fit_50V_regression(SN_dict):
+    LCO_lighcurve = SN_dict['lightcurve']['LCO']['df']
+    V50_lightcurve = LCO_lighcurve.loc[(LCO_lighcurve['filter'] == 'V') &
+                                       (LCO_lighcurve['t_from_discovery'] <= 100) &
+                                       (LCO_lighcurve['t_from_discovery'] > 50)]
+    x = list(V50_lightcurve['t_from_discovery'])
+    y = list(V50_lightcurve['abs_mag'])
+    V50_regression_params = np.polyfit(x, y, deg=1)
+    return V50_regression_params
 
+def calc_s50V(SN_dict):
+    V50_regression_params = fit_50V_regression(SN_dict)
+    s50V = V50_regression_params[0] * 50
+    return s50V
+
+v50_regression_params = fit_50V_regression(SN2018hmx)
+
+lightcurve_plot([SN2018hmx], main_SN='SN2018hmx', V50_line=v50_regression_params)
+
+s50V_2018hmx = calc_s50V(SN2018hmx)
+print(s50V_2018hmx)
 
 # show
 plt.show()
