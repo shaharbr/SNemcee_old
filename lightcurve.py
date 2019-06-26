@@ -5,6 +5,7 @@ import pandas as pd
 # import re
 import numpy as np
 import data_import
+import lightcurve_param_fit
 
 # TODO split to modules:
 # 1) data imports
@@ -87,7 +88,6 @@ def add_rest_frame_days_from_discovery(SN_dict):
     z = SN_dict['z']
     lightcurve = SN_dict['lightcurve']
     for source in lightcurve.keys():
-        # TODO convert the timedelta to float so the plotting doesn't round it down to days
         timedelta = (lightcurve[source]['df']['mjd'] - discovery_date) / (1 + z)
         lightcurve[source]['df']['t_from_discovery'] = timedelta
     SN_dict['lightcurve'] = lightcurve
@@ -178,39 +178,40 @@ for SN in [SN2018hmx, SN1999em]:
 SN2018hmx = remove_data_before_discovery(SN2018hmx)
 SN1999em = remove_data_before_discovery(SN1999em)
 
+
+def remove_LCO_outlier(SN_dict):
+    df = SN_dict['lightcurve']['LCO']['df']
+    df = df.loc[df['t_from_discovery'] < 190]
+    return df
+
+SN2018hmx['lightcurve']['LCO']['df'] = remove_LCO_outlier(SN2018hmx)
+
+
 lightcurve_plot([SN2018hmx, SN1999em], main_SN='SN2018hmx')
 
 # light curve parameters:
-def fit_50V_regression(SN_dict):
-    LCO_lighcurve = SN_dict['lightcurve']['LCO']['df']
-    V_LCO_lightcurve = LCO_lighcurve.loc[(LCO_lighcurve['filter'] == 'V')]
-    peak_absmag = np.min(V_LCO_lightcurve.loc[V_LCO_lightcurve['t_from_discovery'] < 100, 'abs_mag'])
-    peak_day = float(V_LCO_lightcurve.loc[V_LCO_lightcurve['abs_mag'] == peak_absmag, 't_from_discovery'])
-    day50_after_peak = peak_day + 50
-    V_LCO_lightcurve = V_LCO_lightcurve.loc[(V_LCO_lightcurve['filter'] == 'V') &
-                                       (V_LCO_lightcurve['t_from_discovery'] >= peak_day) &
-                                       (V_LCO_lightcurve['t_from_discovery'] <= day50_after_peak)]
-    x = list(V_LCO_lightcurve['t_from_discovery'])
-    y = list(V_LCO_lightcurve['abs_mag'])
-    V50_regression_params = np.polyfit(x, y, deg=1)
-    return V50_regression_params
 
-def calc_s50V(SN_dict):
-    V50_regression_params = fit_50V_regression(SN_dict)
-    s50V = V50_regression_params[0] * 50
-    return s50V
+s50V_2018hmx = lightcurve_param_fit.calc_s50V(SN2018hmx)
+p0_2018hmx = lightcurve_param_fit.calc_p0(SN2018hmx, time_range=[140, 190])
 
-v50_regression_params = fit_50V_regression(SN2018hmx)
-
-lightcurve_plot([SN2018hmx], main_SN='SN2018hmx', V50_line=v50_regression_params)
-
-s50V_2018hmx = calc_s50V(SN2018hmx)
+# lightcurve_plot([SN2018hmx], main_SN='SN2018hmx', V50_line=v50_regression_params)
 print('s50V:', s50V_2018hmx)
+print('p0:', p0_2018hmx)
 
+lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 'p0')
+lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 's50V')
+
+sampler = lightcurve_param_fit.SN_lightcurve_params(SN2018hmx)
+lightcurve_param_fit.chain_plots(sampler.chain)
+lightcurve_param_fit.plot_v_lightcurve_with_fit(SN2018hmx, sampler)
+
+
+print(sampler.chain.shape)
 
 # TODO move functions to seperate module files
 # TODO write code for extracting tPT via emcee optimization of a0, w0 and p0 (what is m0?)
 
 
-# show
+
 plt.show()
+
