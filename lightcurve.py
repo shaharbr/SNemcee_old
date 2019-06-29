@@ -23,6 +23,11 @@ plt.rcParams['font.sans-serif'] = 'Arial'
 
 # TODO turn the data input dicts to stardardized files that can be imported with the data (csv?)
 # input correction parameters for all investigated SNe
+distance_modulus = {'SN2018hmx': 36.06, 'SN1999em': 30.03, 'SN2004ej': 32.3, 'SN2012A': 29.73 , 'ASASSN14kg': 34.04}
+z = {'SN2018hmx': 0.037, 'SN1999em': 0.0024, 'SN2004ej': 0.0091, 'SN2012A': 0.002291429, 'ASASSN14kg': 0.014477}
+# note: SN2012A z calculated as average of multiple z values onon the sn2 catalog
+discovery_date = {'SN2018hmx': '2018-10-17 15:30:14', 'SN1999em': '1999-10-29 10:33:00',
+                  'SN2004ej': '2004-09-10', 'SN2012A': '2012-01-07', 'ASASSN14kg': '2014-11-17'}
 galactic_extinction = {'SN2018hmx': {'U': 0.206, 'B': 0.173, 'V': 0.131, 'R': 0.103, 'I': 0.072,
                        'u': 0.202, 'g': 0.157, 'r': 0.109, 'i': 0.081, 'z': 0.060,
                        'J': 0.034, 'H': 0.021, 'K': 0.014, 'L': 0.007,
@@ -30,22 +35,30 @@ galactic_extinction = {'SN2018hmx': {'U': 0.206, 'B': 0.173, 'V': 0.131, 'R': 0.
                        'SN1999em': {'U': 0.176, 'B': 0.147, 'V': 0.111, 'R': 0.088, 'I': 0.061,
                        'u': 0.172, 'g': 0.134, 'r': 0.093, 'i': 0.069, 'z': 0.051,
                        'J': 0.029, 'H': 0.018, 'K': 0.012, 'L': 0.006,
-                       'G': 0, 'o': 0}}
-distance_modulus = {'SN2018hmx': 36.06, 'SN1999em': 30.03}
-z = {'SN2018hmx': 0.037, 'SN1999em': 0.0024}
-discovery_date = {'SN2018hmx': '2018-10-17 15:30:14', 'SN1999em': '1999-10-29 10:33:00'}
+                       'G': 0, 'o': 0},
+                       'SN2004ej': {'V': 0},
+                       'SN2012A': {'B': 0, 'V': 0, 'U': 0, 'UVW1': 0, 'UVW2': 0, 'UVM2': 0},
+                       'ASASSN14kg': {'B': 0, 'V': 0, 'U': 0, 'i': 0, 'r': 0, 'g': 0}}
+# define colormap for plotting, the colors each filter will be presented in
+colormap = {'i': 'firebrick', 'r': 'tomato', 'g': 'turquoise',
+            'V': 'limegreen', 'B': 'blue', 'U': 'darkorchid', 'G': 'teal', 'R': 'tomato', 'I': 'firebrick',
+            'o': 'orange',
+            'UVW1': 'darkorchid', 'UVW2': 'darkorchid', 'UVM2': 'darkorchid'}
 
 # convert discovery dates to MJD
 for SN in discovery_date.keys():
     discovery_date[SN] = data_import.convert_to_mjd(discovery_date[SN], from_datetime=True)
 
 
-# import 2018hmx photometry data files
+# import photometry data files
 lco_phot = data_import.lco_phot('lco_photometry.txt')
 gaia_phot = data_import.gaia_phot('gaia18doi.txt')
 atlas_phot = data_import.atlas_phot('ATLAS1_ACAM1.txt')
 ztf_phot_new = data_import.ztf_phot_new('ztf_dr1_lightcurve.txt')
 sn1999em_leonard_phot = data_import.leonard_phot('sn1999em_UBVRI_leonard02.txt')
+sn2004ej_phot = data_import.sne_catalog_phot('SN2004ej.csv')
+sn2012A_phot = data_import.sne_catalog_phot('SN2012A.csv')
+ASASSN14kg_phot = data_import.sne_catalog_phot('ASASSN-14kg.csv')
 
 
 
@@ -57,7 +70,14 @@ lightcurves = {'SN2018hmx': {
                     'ZTF': {'df': ztf_phot_new, 'marker': '^', 'Linestyle': 'None'},
                     'LCO': {'df': lco_phot, 'marker': 'o', 'Linestyle': 'None'}},
                 'SN1999em': {
-                    'Leonard': {'df': sn1999em_leonard_phot, 'marker': 'None', 'Linestyle': '--'}}}
+                    'Leonard': {'df': sn1999em_leonard_phot, 'marker': 'None', 'Linestyle': '--'}},
+                'SN2004ej': {
+                    'Planck': {'df': sn2004ej_phot, 'marker': '*', 'Linestyle': 'None'}},
+                'SN2012A': {
+                    'Swift': {'df': sn2012A_phot, 'marker': '*', 'Linestyle': 'None'}},
+                'ASASSN14kg': {
+                    'ASASSN': {'df': ASASSN14kg_phot, 'marker': '*', 'Linestyle': 'None'}},
+                }
 
 
 def make_SN_dict(SN_name, lightcurves_dict, z_dict, discovery_date_dict, distance_modulus_dict,
@@ -73,10 +93,9 @@ def make_SN_dict(SN_name, lightcurves_dict, z_dict, discovery_date_dict, distanc
 
 SN2018hmx = make_SN_dict('SN2018hmx', lightcurves, z, discovery_date, distance_modulus, galactic_extinction)
 SN1999em = make_SN_dict('SN1999em', lightcurves, z, discovery_date, distance_modulus, galactic_extinction)
-
-# define colormap for plotting, the colors each filter will be presented in
-colormap = {'i': 'firebrick', 'r': 'tomato', 'V': 'limegreen', 'g': 'turquoise', 'B': 'blue', 'U': 'darkorchid',
-            'G': 'teal', 'o': 'orange', 'R': 'tomato', 'I': 'firebrick'}
+SN2004ej = make_SN_dict('SN2004ej', lightcurves, z, discovery_date, distance_modulus, galactic_extinction)
+SN2012A = make_SN_dict('SN2012A', lightcurves, z, discovery_date, distance_modulus, galactic_extinction)
+ASASSN14kg = make_SN_dict('ASASSN14kg', lightcurves, z, discovery_date, distance_modulus, galactic_extinction)
 
 
 # TODO:
@@ -104,7 +123,6 @@ def remove_data_before_discovery(SN_dict):
 
 def remove_glactic_extinction(SN_dict):
     lightcurve = SN_dict['lightcurve']
-
     galactic_extinction_values = SN_dict['galactic_extinction']
     for source in lightcurve.keys():
         df = lightcurve[source]['df']
@@ -152,14 +170,14 @@ def lightcurve_plot(SN_dict_list, main_SN, V50_line=False):
                         y = V50_poly1d(x)
                         ax2.plot(x, y, color='k')
 
-    ax.set_title('Light-curve over time - 2018hmx vs 1999em', fontsize=16)
+    ax.set_title('Light-curve over time - '+str([SN['name'] for SN in SN_dict_list]), fontsize=16)
     ax.set_xlabel('Time since discovery (rest-frame days)', size=16)
     ax.set_ylabel('Apparent Magnitude', size=16)
-    ax.set_ylim(14, 25)
+    ax.set_ylim(14, 27)
     ax2.set_ylabel('Absolute Magnitude', size=16)
     # TODO remember that the distance module difference between the y axes is hardcoded here -
     # TODO need to find way to me this automatic
-    ax2.set_ylim(14 - distance_modulus, 25 - distance_modulus)
+    ax2.set_ylim(14 - distance_modulus, 27 - distance_modulus)
     ax2.legend(ncol=2)
     ax.invert_yaxis()
     ax.get_legend().remove()
@@ -170,8 +188,12 @@ def lightcurve_plot(SN_dict_list, main_SN, V50_line=False):
     # fig.savefig('light-curve over time - 2018hmx vs 1999em' + '.png')
 
 SN2018hmx = add_rest_frame_days_from_discovery(SN2018hmx)
+SN2004ej = add_rest_frame_days_from_discovery(SN2004ej)
+SN2012A = add_rest_frame_days_from_discovery(SN2012A)
+ASASSN14kg = add_rest_frame_days_from_discovery(ASASSN14kg)
 
-for SN in [SN2018hmx, SN1999em]:
+
+for SN in [SN2018hmx, SN1999em, SN2012A, SN2004ej, ASASSN14kg]:
     SN = remove_glactic_extinction(SN)
     SN = add_absolute_magnitude(SN)
 
@@ -188,6 +210,9 @@ SN2018hmx['lightcurve']['LCO']['df'] = remove_LCO_outlier(SN2018hmx)
 
 
 lightcurve_plot([SN2018hmx, SN1999em], main_SN='SN2018hmx')
+lightcurve_plot([SN2018hmx, SN2004ej], main_SN='SN2018hmx')
+lightcurve_plot([SN2018hmx, SN2012A], main_SN='SN2018hmx')
+lightcurve_plot([SN2018hmx, ASASSN14kg], main_SN='SN2018hmx')
 
 # light curve parameters:
 
@@ -201,12 +226,12 @@ print('p0:', p0_2018hmx)
 lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 'p0')
 lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 's50V')
 
-sampler = lightcurve_param_fit.SN_lightcurve_params(SN2018hmx)
-lightcurve_param_fit.chain_plots(sampler.chain)
-lightcurve_param_fit.plot_v_lightcurve_with_fit(SN2018hmx, sampler)
+# sampler = lightcurve_param_fit.SN_lightcurve_params(SN2018hmx)
+# lightcurve_param_fit.chain_plots(sampler.chain)
+# lightcurve_param_fit.plot_v_lightcurve_with_fit(SN2018hmx, sampler)
 
 
-print(sampler.chain.shape)
+# print(sampler.chain.shape)
 
 # TODO move functions to seperate module files
 # TODO write code for extracting tPT via emcee optimization of a0, w0 and p0 (what is m0?)
