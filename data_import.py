@@ -25,6 +25,14 @@ def lco_phot(path):
     lco_phot['filter'].replace({'ip': 'i', 'gp': 'g', 'rp': 'r'}, inplace=True)
     return lco_phot
 
+
+def sne_catalog_phot(path):
+    # import SNE catalog photometry dataset (CSV file)
+    phot = pd.read_csv(path)
+    phot.rename(columns={'time': 'mjd', 'magnitude': 'mag', 'e_magnitude': 'dmag', 'band': 'filter'}, inplace=True)
+    return phot
+
+
 def gaia_phot(path):
     # import Gaia photometry dataset (CSV file)
     gaia_phot = pd.read_csv(path, header=1)
