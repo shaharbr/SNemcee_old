@@ -10,7 +10,7 @@ plt.rcParams['font.sans-serif'] = 'Arial'
 
 # initiate SN dictionaries
 SN2018hmx = {'name': '2018hmx', 'z': 0.037, 'discovery_date': '2018-10-18 00:00:00', 'spectra': {}, 'expansion_velocities': ''}
-SNiPTF14hls = {'name': 'iPTF14hls', 'z': 0.0344, 'discovery_date': '2014-09-22 12:00:00', 'spectra': {}, 'expansion_velocities': ''}
+SNiPTF14hls = {'name': 'iPTF14hls', 'z': 0.0344, 'discovery_date': '2014-09-22 12:43:00', 'spectra': {}, 'expansion_velocities': ''}
 
 # convert discovery date to datetime format
 for SN in [SN2018hmx, SNiPTF14hls]:
@@ -125,7 +125,6 @@ def smooth_LCO_spectra(SN_dict):
         if SN2018hmx['spectra'][date]['telescope'] == 'LCO':
             start_variability = np.std(SN_dict['spectra'][date]['df']['y'][0:300])
             smoothing_window = int(50 * start_variability)
-            print(date, smoothing_window)
             SN_dict['spectra'][date]['df']['y'] = SN_dict['spectra'][date]['df']['y'].rolling(smoothing_window).mean()
     return SN_dict
 
@@ -252,8 +251,6 @@ def plot_stacked_spectra(SN_dict, lines_dict=False, plot_curve_fits=False):
 plot_stacked_spectra(SN2018hmx, lines_dict)
 
 
-exit()
-
 def add_fitted_curves_to_plot(single_spectrum_dict, lines_dict, ax, y_shift=False, number_curves_to_draw=1):
     colors = ['r', 'g', 'b']
     n = 0
@@ -356,10 +353,10 @@ def plot_expansion_velocities(df_list, absorptionORemission):
     # fig.savefig(''.join(names) + absorptionORemission + '_expansion_velocity_over_time' + '.png')
 
 
-plot_expansion_velocities([SN2018hmx['expansion_velocities'], SNiPTF14hls['expansion_velocities']], 'absorption')
+# plot_expansion_velocities([SN2018hmx['expansion_velocities'], SNiPTF14hls['expansion_velocities']], 'absorption')
 # plot_expansion_velocities([SN2018hmx['expansion_velocities']], 'emission')
 
+SN2018hmx['expansion_velocities'].to_csv('sN2018hmx_expansion_velocities.csv')
 
-
-plt.show()
+# plt.show()
 
