@@ -1,6 +1,6 @@
 import filters
 import models
-from lightcurve import LC
+from lightcurve_lightcurve_fitting import LC
 
 from astropy import constants as const
 from astropy import units as u
@@ -105,7 +105,7 @@ def plot_bolometric_results(t0, save_plot_as=None):
     axarr[0].errorbar(t0['MJD'], t0['L_mcmc'], (t0['dL_mcmc0'], t0['dL_mcmc1']), marker='.', ls='none', color='C1',
                       label='pseudobolometric, MCMC')
     axarr[0].plot(t0['MJD'], t0['L_int'], marker='.', ls='none', color='C2', label='pseudobolometric, integration')
-    axarr[0].axvline(x=58408.6459, color='red', linestyle='--')
+    # axarr[0].axvline(x=58408.6459, color='red', linestyle='--')
     axarr[0].legend()
 
     axarr[0].set_yscale('log')
@@ -113,12 +113,12 @@ def plot_bolometric_results(t0, save_plot_as=None):
 
     axarr[1].errorbar(t0['MJD'], t0['radius'], t0['dradius'], color='C0', marker='.', ls='none')
     axarr[1].errorbar(t0['MJD'], t0['radius_mcmc'], (t0['dradius0'], t0['dradius1']), color='C1', marker='.', ls='none')
-    axarr[1].axvline(x=58408.6459, color='red', linestyle='--')
+    # axarr[1].axvline(x=58408.6459, color='red', linestyle='--')
     axarr[1].set_ylabel('Radius ($1000 R_\\odot$)')
 
     axarr[2].errorbar(t0['MJD'], t0['temp'], t0['dtemp'], color='C0', marker='.', ls='none')
     axarr[2].errorbar(t0['MJD'], t0['temp_mcmc'], (t0['dtemp0'], t0['dtemp1']), color='C1', marker='.', ls='none')
-    axarr[2].axvline(x=58408.6459, color='red', linestyle='--')
+    # axarr[2].axvline(x=58408.6459, color='red', linestyle='--')
     axarr[2].set_ylabel('Temperature (kK)')
     axarr[2].set_xlabel('MJD')
 
