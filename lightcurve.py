@@ -72,11 +72,11 @@ lightcurves = {'SN2018hmx': {
                 'SN1999em': {
                     'Leonard': {'df': sn1999em_leonard_phot, 'marker': 'None', 'Linestyle': '--'}},
                 'SN2004ej': {
-                    'Planck': {'df': sn2004ej_phot, 'marker': '*', 'Linestyle': 'None'}},
+                    'Planck': {'df': sn2004ej_phot, 'marker': 'None', 'Linestyle': '--'}},
                 'SN2012A': {
-                    'Swift': {'df': sn2012A_phot, 'marker': '*', 'Linestyle': 'None'}},
+                    'Swift': {'df': sn2012A_phot, 'marker': 'None', 'Linestyle': '--'}},
                 'ASASSN14kg': {
-                    'ASASSN': {'df': ASASSN14kg_phot, 'marker': '*', 'Linestyle': 'None'}},
+                    'ASASSN': {'df': ASASSN14kg_phot, 'marker': 'None', 'Linestyle': '--'}},
                 }
 
 
@@ -223,8 +223,8 @@ p0_2018hmx = lightcurve_param_fit.calc_p0(SN2018hmx, time_range=[140, 190])
 print('s50V:', s50V_2018hmx)
 print('p0:', p0_2018hmx)
 
-lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 'p0')
-lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 's50V')
+# lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 'p0')
+# lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 's50V')
 
 # sampler = lightcurve_param_fit.SN_lightcurve_params(SN2018hmx)
 # lightcurve_param_fit.chain_plots(sampler.chain)
