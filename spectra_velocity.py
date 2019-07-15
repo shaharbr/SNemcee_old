@@ -5,6 +5,8 @@ import os
 import re
 import random
 
+# TODO: convert all datetime to MJD
+
 plt.rcParams['font.sans-serif'] = 'Arial'
 
 
@@ -36,6 +38,10 @@ expans_v_iPTF14hls.rename(columns={'JD':'datetime', 'Velocity [km/s]':'absorptio
 expans_v_iPTF14hls['name'] = 'iPTF14hls'
 expans_v_iPTF14hls['t_from_discovery'] = expans_v_iPTF14hls['datetime'] - SNiPTF14hls['discovery_date']
 SNiPTF14hls['expansion_velocities'] = expans_v_iPTF14hls
+
+# impott expansion velocity file for SN1999em
+expans_v_sn1999em = pd.read_csv('SN1999em_velocities_leonard_et_al_2002.txt', sep='\s+', header=0)
+
 
 # import all LCO spectra ascii files for 2018hmx and organize in a dictionary
 folder_join = os.path.join
@@ -321,12 +327,44 @@ def make_velocity_df(SN_dict, lines_dict):
 
 SN2018hmx['expansion_velocities'] = make_velocity_df(SN2018hmx, lines_dict)
 
+expans_v_sn1999em = expans_v_sn1999em.loc[expans_v_sn1999em['day'] < 96]
+
 
 # plot expansion velocities over datetime
 def plot_expansion_velocities(df_list, absorptionORemission):
     fig, ax = plt.subplots(1, figsize=(9, 6))
+
+    # TODO did some mess here adding the sn1999em data, sort that
+
+    ax.errorbar(x=expans_v_sn1999em['day'], y=expans_v_sn1999em['v_Halpha'],
+                # yerr=expans_v_sn1999em['verr_Halpha'],
+                label='SN1999em Halpha',
+                marker='None',
+                linestyle='--',
+                color='#1b9e77',
+                alpha=0.8)
+
+    ax.errorbar(x=expans_v_sn1999em['day'], y=expans_v_sn1999em['v_Hbeta'],
+                # yerr=expans_v_sn1999em['verr_Hbeta'],
+                label='SN1999em Hbeta',
+                marker='None',
+                linestyle='--',
+                color='#d95f02',
+                alpha=0.8)
+
+    Fe_expans_v = expans_v_sn1999em.loc[expans_v_sn1999em['day'] > 6]
+
+    ax.errorbar(x=Fe_expans_v['day'], y=Fe_expans_v['v_FeII5169'],
+                # yerr=Fe_expans_v['verr_FeII5169'],
+                label='SN1999em FeII 5169',
+                marker='None',
+                linestyle='--',
+                color='#7570b3',
+                alpha=0.8)
+
+
     names = []
-    colors = {'Halpha': '#1b9e77', 'Hbeta': '#7570b3', 'FeII 5169': '#''d95f02'}
+    colors = {'Halpha': '#1b9e77', 'Hbeta': '#7570b3', 'FeII 5169': '#d95f02'}
     markers_fill = {'2018hmx': 'full', 'iPTF14hls': 'none'}
     for df in df_list:
         lines = colors.keys()
@@ -342,7 +380,11 @@ def plot_expansion_velocities(df_list, absorptionORemission):
                                                  marker='s',
                                                  fillstyle=markers_fill[SN_name],
                                                  linestyle='None',
-                                                 color=colors[line_name ])
+                                                 color=colors[line_name])
+
+
+
+
     if absorptionORemission == 'absorption':
         ax.set_ylim(bottom=0)
     ax.set_title('Expansion velocity over time - '+absorptionORemission, fontsize=16)
@@ -350,13 +392,13 @@ def plot_expansion_velocities(df_list, absorptionORemission):
     ax.set_xlabel('Days from discovery', size=12)
     ax.legend()
     ax.tick_params(axis='both', which='major', labelsize=14)
-    # fig.savefig(''.join(names) + absorptionORemission + '_expansion_velocity_over_time' + '.png')
+    fig.savefig(''.join(names) + absorptionORemission + '_expansion_velocity_over_time_sn1999em' + '.png')
 
 
-# plot_expansion_velocities([SN2018hmx['expansion_velocities'], SNiPTF14hls['expansion_velocities']], 'absorption')
+plot_expansion_velocities([SN2018hmx['expansion_velocities'], SNiPTF14hls['expansion_velocities']], 'absorption')
 # plot_expansion_velocities([SN2018hmx['expansion_velocities']], 'emission')
 
-SN2018hmx['expansion_velocities'].to_csv('sN2018hmx_expansion_velocities.csv')
+# SN2018hmx['expansion_velocities'].to_csv('sN2018hmx_expansion_velocities.csv')
 
-# plt.show()
+plt.show()
 
