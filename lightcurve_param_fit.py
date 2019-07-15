@@ -11,7 +11,7 @@ def log_prior(theta):
     a0_min = 0
     a0_max = 6
     w0_min = 0
-    w0_max = 30
+    w0_max = 100
     m0_min = 10
     m0_max = 25
     if m0_min < theta[0] < m0_max:
@@ -62,7 +62,7 @@ def emcee_fit_params(v_time_vec, v_mag_vec, v_dmag_vec):
     a0_min = 0
     a0_max = 6
     w0_min = 0
-    w0_max = 30
+    w0_max = 100
     m0_min = 10
     m0_max = 25
 
@@ -121,7 +121,14 @@ def plot_v_lightcurve_with_fit(SN_dict, sampler):
     a0 = np.average(sampler.chain[:, -1, 1])
     tPT = np.average(sampler.chain[:, -1, 2])
     w0 = np.average(sampler.chain[:, -1, 3])
+
+    m0_std = np.std(sampler.chain[:, -1, 0])
+    a0_std = np.std(sampler.chain[:, -1, 1])
+    tPT_std = np.std(sampler.chain[:, -1, 2])
+    w0_std = np.std(sampler.chain[:, -1, 3])
+
     print(m0, a0, tPT, w0)
+    print(m0_std, a0_std, tPT_std, w0_std)
     p0 = 0.0089
     data = get_LCO_V_df(SN_dict)
     data = data.loc[data['t_from_discovery'] < 190]
