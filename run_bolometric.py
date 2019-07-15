@@ -1,22 +1,9 @@
-from lightcurve import LC
+from lightcurve_lightcurve_fitting import LC
 import bolometric
 from matplotlib import pyplot as plt
 import pandas as pd
-import data_import
+import data_import_lightcurve_fitting as data_import
 import numpy as np
-
-
-expansion_v = pd.read_csv('../sn2018hmx/sN2018hmx_expansion_velocities.csv')
-expansion_v = expansion_v.loc[expansion_v['line'] == 'FeII 5169'].reset_index()
-expansion_v['datetime'] = data_import.convert_to_mjd(expansion_v['datetime'], from_datetime=True)
-expansion_v['t_from_discovery'] = expansion_v['datetime'] - 58408.6459
-expansion_v['vt'] = expansion_v['t_from_discovery'] * expansion_v['absorption_mean_velocity'] * 86400 #vt and multiplied by seconds in a day (v in km/s)
-expansion_v['d_vt'] = expansion_v['t_from_discovery'] * expansion_v['absorption_std_velocity'] * 86400
-print(expansion_v['t_from_discovery'])
-print(expansion_v['absorption_mean_velocity'])
-print(expansion_v['vt'])
-print(expansion_v['d_vt'])
-
 
 
 
@@ -73,45 +60,20 @@ t = bolometric.calculate_bolometric(lc, z, outpath, save_table_as='bolometric_ta
 
 fig = bolometric.plot_bolometric_results(t, save_plot_as='results_fig_allsources.png')
 
-print(t)
-
-print(list(t['MJD']))
-print(list(t['temp']))
-print(list(t['radius']))
-
-print(t['temp'] * t['radius'])
-print(list(t['temp'] * t['radius']))
-
 blackbody_data = {'t_from_discovery': np.array(t['MJD']) - 58408.6459, # subtract discovery date
-                  # 'temp': np.array(t['temp']),
-                  # 'dtemp': np.array(t['dtemp']),
-                  'radius': np.array(t['radius']) * 695510000, # convert "1000 solar radius" units to km
-                  'dradius': np.array(t['dradius']) * 695510000
+                  'temp': np.array(t['temp_mcmc']),
+                  'dtemp0': np.array(t['dtemp0']),
+                  'dtemp1': np.array(t['dtemp1']),
+                  'radius': np.array(t['radius_mcmc']) * 695510000, # convert "1000 solar radius" units to km
+                  'dradius0': np.array(t['dradius0']) * 695510000,
+                  'dradius1': np.array(t['dradius1']) * 695510000,
+                  'Lum': np.array(t['L_mcmc']),
+                  'dLum0': np.array(t['dL_mcmc0']),
+                  'dLum1': np.array(t['dL_mcmc1']),
                   }
 
+blackbody_data = pd.DataFrame.from_dict(blackbody_data)
 
+blackbody_data.to_csv('blackbody_results.csv')
 
-
-
-fig1, ax1 = plt.subplots()
-ax1.errorbar(x=blackbody_data['t_from_discovery'],
-            y=blackbody_data['radius'] / 10000000000,
-            yerr=blackbody_data['dradius'] / 10000000000,
-            label='blackbody radius',
-            marker='o',
-            linestyle='None',
-            color='blue')
-ax1.errorbar(x=expansion_v['t_from_discovery'],
-            y=expansion_v['vt'] / 10000000000,
-            yerr=expansion_v['d_vt'] / 10000000000,
-            label='Fe velocity * t',
-            marker='o',
-            linestyle='None',
-            color='red')
-ax1.set_ylabel('radius (10^10 km)')
-ax1.set_xlabel('time after discovery (days)')
-ax1.set_title('SN2018 - blackbody radius vs Fe velocity * time')
-ax1.legend()
-
-plt.show()
 
