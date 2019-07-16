@@ -10,75 +10,6 @@ import random
 plt.rcParams['font.sans-serif'] = 'Arial'
 
 
-# initiate SN dictionaries
-SN2018hmx = {'name': '2018hmx', 'z': 0.037, 'discovery_date': '2018-10-18 00:00:00', 'spectra': {}, 'expansion_velocities': ''}
-SNiPTF14hls = {'name': 'iPTF14hls', 'z': 0.0344, 'discovery_date': '2014-09-22 12:43:00', 'spectra': {}, 'expansion_velocities': ''}
-
-# convert discovery date to datetime format
-for SN in [SN2018hmx, SNiPTF14hls]:
-    SN['discovery_date'] = pd.to_datetime(SN['discovery_date'])
-
-# wave propagation velocity (light speed)
-c = 299792.458 # km/s
-
-# define lines to calculate and their wavelength
-# lines_dict = {'H_alpha': {'peak': 6562.81, 'absorption_range': [6200, 6500], 'emission_range': [6400, 6600]},
-#               }
-#
-lines_dict = {'Halpha': {'peak': 6562.81, 'absorption_range': [6200, 6500], 'emission_range': [6400, 6600]},
-              'Hbeta': {'peak': 4861, 'absorption_range': [4600, 4800], 'emission_range': [4700, 4900]},
-              'FeII 5169': {'peak': 5169, 'absorption_range': [5000, 5100], 'emission_range': [5100, 5500]}
-              }
-
-# import expansion velocity file for iPTF14hls
-expans_v_iPTF14hls = pd.read_csv('iPTF14hls_expansion_velocity.csv', header=0)
-expans_v_iPTF14hls['JD'] = pd.to_datetime(expans_v_iPTF14hls['JD'], unit='D', origin='julian')
-expans_v_iPTF14hls.rename(columns={'JD':'datetime', 'Velocity [km/s]':'absorption_mean_velocity', 'Line':'line',
-                                   'Velocity_Error [km/s]':'absorption_std_velocity'}, inplace=True)
-expans_v_iPTF14hls['name'] = 'iPTF14hls'
-expans_v_iPTF14hls['t_from_discovery'] = expans_v_iPTF14hls['datetime'] - SNiPTF14hls['discovery_date']
-SNiPTF14hls['expansion_velocities'] = expans_v_iPTF14hls
-
-# impott expansion velocity file for SN1999em
-expans_v_sn1999em = pd.read_csv('SN1999em_velocities_leonard_et_al_2002.txt', sep='\s+', header=0)
-
-
-# import all LCO spectra ascii files for 2018hmx and organize in a dictionary
-folder_join = os.path.join
-working_dir = r"snexdata_target5025"  # working folder
-filenames = os.listdir(working_dir)
-# reading and merging
-SN2018hmx_spectra = {}
-for file in filenames:
-    # extract date of spectrum measurment from filename
-    date = re.sub('.*hmx|_|-|P60.*|v1|[a-z]|[A-Z]|\..*', '', os.path.basename(file))
-    # transform to standard datetime format
-    date = pd.to_datetime(date)
-    # add as element in dict
-    if 'ZTF' in os.path.basename(file):
-        SN2018hmx['spectra'][date] = {'df': pd.read_csv(folder_join(working_dir, file), sep=' ', names = ["x", "y", 'dy'], header=180)}
-    else:
-        SN2018hmx['spectra'][date] = {'df': pd.read_csv(folder_join(working_dir, file), sep=' ', names = ["x", "y"])}
-    # SN2018hmx['spectra'][date]['df']['x'] = SN2018hmx['spectra'][date]['df']['x'].astype('float')
-    # SN2018hmx['spectra'][date]['df']['y'] = SN2018hmx['spectra'][date]['df']['y'].astype('float')
-    if 'redblu' in os.path.basename(file):
-        SN2018hmx['spectra'][date]['telescope'] = 'LCO'
-    elif 'ZTF' in os.path.basename(file):
-        SN2018hmx['spectra'][date]['telescope'] = 'ZTF'
-    elif 'HET' in os.path.basename(file):
-        SN2018hmx['spectra'][date]['telescope'] = 'HET'
-    else:
-        SN2018hmx['spectra'][date]['telescope'] = 'ND'
-
-# import ZTF spectra from Weizmann transient name server as ascii file and add it to the dictionary
-# filename = 'tns_2018hmx_2018-11-06_09-27-00_P60_SED-Machine_ZTF.ascii'
-# date = re.sub('tns.*hmx_|_P.*', '', filename)
-# date = re.sub('_', ' ', date)
-# transform to standard datetime format
-# date = pd.to_datetime(date)
-# add as element in dict
-# SN2018hmx['spectra'][date] = {'df': pd.read_csv(filename, sep=' ', names = ["x", "y", 'dy'], header=180)}
-# correct wavelengths for redshift
 
 def add_time_from_discovery(SN_dict):
     dates = SN_dict['spectra'].keys()
@@ -86,49 +17,27 @@ def add_time_from_discovery(SN_dict):
         SN_dict['spectra'][date]['t_from_discovery'] = date - SN_dict['discovery_date']
     return SN_dict
 
-SN2018hmx = add_time_from_discovery(SN2018hmx)
 
 def correct_redshift(SN_dict):
     dates = SN_dict['spectra'].keys()
     for date in dates:
         # correct wavelengths for redshift
         SN_dict['spectra'][date]['df']['x'] = SN_dict['spectra'][date]['df']['x'] / (1 + SN_dict['z'])
-        os.path.basename(file)
     return SN_dict
-
-SN2018hmx = correct_redshift(SN2018hmx)
-
-# def normalize_spectra(SN_dict):
-#     dates = SN_dict['spectra'].keys()
-#     for date in dates:
-#         if SN2018hmx['spectra'][date]['telescope'] == 'HET':
-#             lendf = len(SN_dict['spectra'][date]['df']['y'])
-#             missing_part_len = int(lendf * 0.21)
-#             missing_part_series = SN_dict['spectra'][date]['df'].iloc[0:missing_part_len]['y']
-#             missing_part_avg = np.average(missing_part_series)
-#             avg = np.average(SN_dict['spectra'][date]['df']['y'])
-#             avg = avg * 0.89 + missing_part_avg * 0.21
-#         else:
-#             avg = np.average(SN_dict['spectra'][date]['df']['y'])
-#         SN_dict['spectra'][date]['df']['y'] = SN_dict['spectra'][date]['df']['y'] / avg
-#     return SN_dict
-
 
 def normalize_spectra(SN_dict):
     dates = SN_dict['spectra'].keys()
     for date in dates:
         avg = np.average(SN_dict['spectra'][date]['df']['y'])
         SN_dict['spectra'][date]['df']['y'] = SN_dict['spectra'][date]['df']['y'] / avg
-        if SN2018hmx['spectra'][date]['telescope'] == 'HET':
+        if SN_dict['spectra'][date]['telescope'] == 'HET':
             SN_dict['spectra'][date]['df']['y'] = SN_dict['spectra'][date]['df']['y'] / 2
     return SN_dict
-
-SN2018hmx = normalize_spectra(SN2018hmx)
 
 def smooth_LCO_spectra(SN_dict):
     dates = SN_dict['spectra'].keys()
     for date in dates:
-        if SN2018hmx['spectra'][date]['telescope'] == 'LCO':
+        if SN_dict['spectra'][date]['telescope'] == 'LCO':
             start_variability = np.std(SN_dict['spectra'][date]['df']['y'][0:300])
             smoothing_window = int(50 * start_variability)
             SN_dict['spectra'][date]['df']['y'] = SN_dict['spectra'][date]['df']['y'].rolling(smoothing_window).mean()
@@ -150,8 +59,6 @@ def plot_overlay_spectra(SN_dict, lines_dict=False):
     ax.set_ylabel('Flux (10-15 erg s-1 cm-2 Å-1)', size=14)
     ax.tick_params(axis='both', which='major', labelsize=14)
     # fig.savefig(name + '_spectra_over_time_overlay'+'.png')
-
-plot_overlay_spectra(SN2018hmx, lines_dict)
 
 
 def approximate_actual_line_range(spectra_df, line_name, lines_dict, absorptionOremission):
@@ -215,8 +122,6 @@ def fit_Pcygni_curves(spectra_dict, lines_dict, fixed_curve_range=False, number_
                 = fit_curves(spectra_dict[date]['df'], line_name, lines_dict, fixed_curve_range, number_curves)
     return spectra_dict
 
-SN2018hmx['spectra'] = fit_Pcygni_curves(SN2018hmx['spectra'], lines_dict, fixed_curve_range=False, number_curves=3)
-
 
 def plot_stacked_spectra(SN_dict, lines_dict=False, plot_curve_fits=False):
     dates = sorted(SN_dict['spectra'].keys(), reverse=True)
@@ -254,7 +159,6 @@ def plot_stacked_spectra(SN_dict, lines_dict=False, plot_curve_fits=False):
     # else:
         # fig.savefig(name + '_spectra_over_time_stacked.png')
 
-plot_stacked_spectra(SN2018hmx, lines_dict)
 
 
 def add_fitted_curves_to_plot(single_spectrum_dict, lines_dict, ax, y_shift=False, number_curves_to_draw=1):
@@ -279,11 +183,10 @@ def add_fitted_curves_to_plot(single_spectrum_dict, lines_dict, ax, y_shift=Fals
                 ax.plot(extreme_point['x'], extreme_point['y'], '.', color=color)
 
 
-plot_stacked_spectra(SN2018hmx, lines_dict, plot_curve_fits=True)
-
 def calculate_expansion_velocity(wavelength_expected, wavelength_observed):
     num_curves = len(wavelength_observed)
     wavelength_expected = [wavelength_expected] * num_curves
+    c = 299792.458  # km/s
     v = c * (np.divide(wavelength_expected, wavelength_observed) - 1)
     return v
 
@@ -304,8 +207,6 @@ def add_expansion_velocity(spectra_dict, lines_dict):
                 spectra_dict[date]['line'][line_name]['velocity'][param]['std'] = np.std(velocity_list)
     return spectra_dict
 
-SN2018hmx['spectra'] = add_expansion_velocity(SN2018hmx['spectra'], lines_dict)
-
 
 def make_velocity_df(SN_dict, lines_dict):
     dates = SN_dict['spectra'].keys()
@@ -325,43 +226,10 @@ def make_velocity_df(SN_dict, lines_dict):
     velocity_df['name'] = SN_dict['name']
     return velocity_df
 
-SN2018hmx['expansion_velocities'] = make_velocity_df(SN2018hmx, lines_dict)
-
-expans_v_sn1999em = expans_v_sn1999em.loc[expans_v_sn1999em['day'] < 96]
-
 
 # plot expansion velocities over datetime
 def plot_expansion_velocities(df_list, absorptionORemission):
     fig, ax = plt.subplots(1, figsize=(9, 6))
-
-    # TODO did some mess here adding the sn1999em data, sort that
-
-    ax.errorbar(x=expans_v_sn1999em['day'], y=expans_v_sn1999em['v_Halpha'],
-                # yerr=expans_v_sn1999em['verr_Halpha'],
-                label='SN1999em Halpha',
-                marker='None',
-                linestyle='--',
-                color='#1b9e77',
-                alpha=0.8)
-
-    ax.errorbar(x=expans_v_sn1999em['day'], y=expans_v_sn1999em['v_Hbeta'],
-                # yerr=expans_v_sn1999em['verr_Hbeta'],
-                label='SN1999em Hbeta',
-                marker='None',
-                linestyle='--',
-                color='#d95f02',
-                alpha=0.8)
-
-    Fe_expans_v = expans_v_sn1999em.loc[expans_v_sn1999em['day'] > 6]
-
-    ax.errorbar(x=Fe_expans_v['day'], y=Fe_expans_v['v_FeII5169'],
-                # yerr=Fe_expans_v['verr_FeII5169'],
-                label='SN1999em FeII 5169',
-                marker='None',
-                linestyle='--',
-                color='#7570b3',
-                alpha=0.8)
-
 
     names = []
     colors = {'Halpha': '#1b9e77', 'Hbeta': '#7570b3', 'FeII 5169': '#d95f02'}
@@ -393,12 +261,4 @@ def plot_expansion_velocities(df_list, absorptionORemission):
     ax.legend()
     ax.tick_params(axis='both', which='major', labelsize=14)
     fig.savefig(''.join(names) + absorptionORemission + '_expansion_velocity_over_time_sn1999em' + '.png')
-
-
-plot_expansion_velocities([SN2018hmx['expansion_velocities'], SNiPTF14hls['expansion_velocities']], 'absorption')
-# plot_expansion_velocities([SN2018hmx['expansion_velocities']], 'emission')
-
-# SN2018hmx['expansion_velocities'].to_csv('sN2018hmx_expansion_velocities.csv')
-
-plt.show()
 
