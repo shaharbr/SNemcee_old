@@ -162,6 +162,7 @@ def calc_s50V(SN_dict, get_all_params=False):
         s50V = V50_regression_params
     else:
         s50V = V50_regression_params[0] * 50
+    print('s50V:', s50V)
     return s50V
 
 def calc_p0(SN_dict, time_range=False, get_all_params=False):
@@ -177,6 +178,7 @@ def calc_p0(SN_dict, time_range=False, get_all_params=False):
         p0 = p0_regression_params
     else:
         p0 = p0_regression_params[0]
+    print('p0:', p0)
     return p0
 
 
