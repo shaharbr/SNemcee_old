@@ -103,3 +103,13 @@ def leonard_phot(path):
     leonard_phot['dmag'] = 0
     return leonard_phot
 
+
+def make_SN_dict(SN_name, lightcurves_dict, z_dict, discovery_date_dict, distance_modulus_dict,
+                 galactic_extinction_dict):
+    SN_dict = {'lightcurve': lightcurves_dict[SN_name],
+               'name': SN_name,
+               'z': z_dict[SN_name],
+               'discovery_date': discovery_date_dict[SN_name],
+               'distance_modulus': distance_modulus_dict[SN_name],
+               'galactic_extinction': galactic_extinction_dict[SN_name]}
+    return SN_dict
