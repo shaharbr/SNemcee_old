@@ -1,7 +1,8 @@
 import json
 from pandas.io.json import json_normalize
 import pandas as pd
-# import re
+import re
+import os
 
 
 def convert_to_mjd(datetime_series, from_datetime=False):
@@ -103,13 +104,76 @@ def leonard_phot(path):
     leonard_phot['dmag'] = 0
     return leonard_phot
 
+def date_to_time_from_discovery(date, discovery_date):
+    timedelta = (date - discovery_date)
+    return timedelta
 
-def make_SN_dict(SN_name, lightcurves_dict, z_dict, discovery_date_dict, distance_modulus_dict,
-                 galactic_extinction_dict):
-    SN_dict = {'lightcurve': lightcurves_dict[SN_name],
-               'name': SN_name,
-               'z': z_dict[SN_name],
-               'discovery_date': discovery_date_dict[SN_name],
-               'distance_modulus': distance_modulus_dict[SN_name],
-               'galactic_extinction': galactic_extinction_dict[SN_name]}
+def t_to_restframe(t, z):
+    t = t / (1 + z)
+    return t
+
+
+def make_SN_dict(SN_name, lightcurves_dict=False, z_dict=False, discovery_date_dict=False,
+                 distance_modulus_dict=False, galactic_extinction_dict=False,
+                 spectra=False, expansion_velocities=False):
+
+    # organize in SN_dict
+    fields = [lightcurves_dict, z_dict, discovery_date_dict,
+                 distance_modulus_dict, galactic_extinction_dict,
+                 spectra, expansion_velocities]
+    keys = ['lightcurve', 'z','discovery_date', 'distance_modulus', 'galactic_extinction',
+               'spectra', 'expansion_velocities']
+
+    # convert date to MJD
+    discovery_date_dict[SN_name] = convert_to_mjd(discovery_date_dict[SN_name], from_datetime=True)
+    SN_dict = {}
+    SN_dict['name'] = SN_name
+    for i in range(len(fields)):
+        if fields[i]:
+            SN_dict[keys[i]] = fields[i][SN_name]
+        else:
+            SN_dict[keys[i]] = ''
     return SN_dict
+
+
+def remove_last_days(df, day_limit):
+    df = df.loc[df['t_from_discovery'] < day_limit]
+    return df
+
+def LCO_spect(dir_path):
+    # import all LCO spectra ascii files for 2018hmx and organize in a dictionary
+    folder_join = os.path.join
+    filenames = os.listdir(dir_path)
+    # reading and merging
+    LCO_spect_dict = {}
+    for file in filenames:
+        # extract date of spectrum measurment from filename
+        # TODO make this re condition more general for all SNe
+        date = re.sub('.*hmx|.*aad|_|-|P60.*|v1|[a-z]|[A-Z]|\..*', '', os.path.basename(file))
+        # transform to standard datetime format
+        date = pd.to_datetime(date)
+        # convert date to MJD
+        date = convert_to_mjd(date, from_datetime=True)
+        # add as element in dict
+        if 'ZTF' in os.path.basename(file):
+            LCO_spect_dict[date] = {
+                'df': pd.read_csv(folder_join(dir_path, file), sep=' ', names=["x", "y", 'dy'], header=180)}
+        else:
+            LCO_spect_dict[date] = {'df': pd.read_csv(folder_join(dir_path, file), sep=' ', names=["x", "y"])}
+        if 'redblu' in os.path.basename(file):
+            LCO_spect_dict[date]['telescope'] = 'LCO'
+        elif 'ZTF' in os.path.basename(file):
+            LCO_spect_dict[date]['telescope'] = 'ZTF'
+        elif 'HET' in os.path.basename(file):
+            LCO_spect_dict[date]['telescope'] = 'HET'
+        else:
+            LCO_spect_dict[date]['telescope'] = 'ND'
+    return LCO_spect_dict
+
+def SN14hls_expans_v(path):
+    # import expansion velocity file for iPTF14hls
+    expans_v_df = pd.read_csv(path, header=0)
+    expans_v_df['JD'] = pd.to_datetime(expans_v_df['JD'], unit='D', origin='julian')
+    expans_v_df.rename(columns={'JD': 'datetime', 'Velocity [km/s]': 'absorption_mean_velocity', 'Line': 'line',
+                                       'Velocity_Error [km/s]': 'absorption_std_velocity'}, inplace=True)
+    return expans_v_df
