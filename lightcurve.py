@@ -1,6 +1,12 @@
 from matplotlib import pyplot as plt
 
 
+# define colormap for plotting, the colors each filter will be presented in
+colormap = {'i': 'firebrick', 'r': 'tomato', 'g': 'turquoise',
+            'V': 'limegreen', 'B': 'blue', 'U': 'darkorchid', 'G': 'teal', 'R': 'tomato', 'I': 'firebrick',
+            'o': 'orange',
+            'UVW1': 'darkorchid', 'UVW2': 'darkorchid', 'UVM2': 'darkorchid'}
+
 def add_rest_frame_days_from_discovery(SN_dict):
     discovery_date = SN_dict['discovery_date']
     z = SN_dict['z']
@@ -18,6 +24,7 @@ def remove_data_before_discovery(SN_dict):
         lightcurve[source]['df'] = lightcurve[source]['df'].loc[lightcurve[source]['df']['t_from_discovery'] >= 0]
     SN_dict['lightcurve'] = lightcurve
     return SN_dict
+
 
 
 def remove_glactic_extinction(SN_dict):
@@ -39,8 +46,8 @@ def add_absolute_magnitude(SN_dict):
     SN_dict['lightcurve'] = lightcurve
     return SN_dict
 
-# colormap
-def lightcurve_plot(SN_dict_list, main_SN, V50_line=False):
+# TODO fix colormap
+def lightcurve_plot(SN_dict_list, main_SN):
     fig, ax = plt.subplots(1, figsize=(9, 6))
     ax2 = ax.twinx()
     for SN in SN_dict_list:
@@ -83,4 +90,30 @@ def remove_LCO_outlier(SN_dict):
     df = SN_dict['lightcurve']['LCO']['df']
     df = df.loc[df['t_from_discovery'] < 190]
     return df
+
+
+def BV_plot(SN_dict):
+    df = SN_dict['lightcurve']['LCO']['df']
+    B = df.loc[df['filter'] == 'B', ('t_from_discovery', 'abs_mag')]
+    B['t_from_discovery'] = B['t_from_discovery'].astype(int)
+    B = B.groupby('t_from_discovery').mean()
+    print(B)
+    # B = B.set_index('t_from_discovery')
+    V = df.loc[df['filter'] == 'V', ('t_from_discovery', 'abs_mag')]
+    V['t_from_discovery'] = V['t_from_discovery'].astype(int)
+    V = V.groupby('t_from_discovery').mean()
+    # V = V.set_index('t_from_discovery')
+    # print(B['abs_mag'])
+    # print(V['abs_mag'])
+    B_V = V['abs_mag'].rsub(B['abs_mag'])
+    print(B_V)
+    # print(B_V)
+    plt.figure()
+    plt.plot(B_V.index, B_V, linestyle='None', marker='o')
+    plt.ylim(bottom=0)
+    plt.xlim(left=0)
+    plt.title('B-V color curve - SN2018hmx')
+    plt.ylabel('B-V absolute magnitude')
+    plt.xlabel('t from discovery')
+
 
