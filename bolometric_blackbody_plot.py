@@ -62,8 +62,6 @@ blackbody_data['dLum1'] = blackbody_data['dLum1'] * 10**7
 
 expansion_v = pd.read_csv('sN2018hmx_expansion_velocities.csv')
 expansion_v = expansion_v.loc[expansion_v['line'] == 'FeII 5169'].reset_index()
-expansion_v['datetime'] = data_import.convert_to_mjd(expansion_v['datetime'], from_datetime=True)
-expansion_v['t_from_discovery'] = expansion_v['datetime'] - 58408.6459
 expansion_v['vt'] = expansion_v['t_from_discovery'] * expansion_v['absorption_mean_velocity'] * 86400 #vt and multiplied by seconds in a day (v in km/s)
 expansion_v['d_vt'] = expansion_v['t_from_discovery'] * expansion_v['absorption_std_velocity'] * 86400
 
@@ -120,9 +118,9 @@ ax1.legend()
 
 fig2, ax2 = plt.subplots()
 ax2.errorbar(x=blackbody_data['t_from_discovery'],
-            y=blackbody_data['Lum'] / 10**43,
-            yerr=[blackbody_data['dLum0'] / 10**43,
-                  blackbody_data['dLum1'] / 10**43],
+            y=blackbody_data['Lum'],
+            yerr=[blackbody_data['dLum0'],
+                  blackbody_data['dLum1']],
             label='18hmx',
             marker='o',
             fillstyle='full',
@@ -131,9 +129,9 @@ ax2.errorbar(x=blackbody_data['t_from_discovery'],
 
 
 # ax2.errorbar(x=SN14hls_bolometric['t_from_discovery'],
-#             y=SN14hls_bolometric['Luminosity [erg/s]'] / 10**43,
-#             yerr=[SN14hls_bolometric['Luminosity_Low [erg/s]'] / 10**43,
-#                   SN14hls_bolometric['Luminosity_High [erg/s]'] / 10**43],
+#             y=SN14hls_bolometric['Luminosity [erg/s]']
+#             yerr=[SN14hls_bolometric['Luminosity_Low [erg/s]']
+#                   SN14hls_bolometric['Luminosity_High [erg/s]']],
 #             label='14hls',
 #             marker='o',
 #             fillstyle='none',
@@ -142,11 +140,12 @@ ax2.errorbar(x=blackbody_data['t_from_discovery'],
 
 
 
-ax2.set_ylabel('bolometric luminosity (10^43 erg/s)')
+ax2.set_ylabel('bolometric luminosity (erg/s)')
 ax2.set_xlabel('time after discovery (days)')
 ax2.set_title('SN2018hmx - bolometric luminosity \n', fontsize=14)
+ax2.set_yscale('log')
 ax2.legend()
-
+# TODO add comparison to valenti data
 
 
 sampler = Ni_mass.SN_lightcurve_params(blackbody_data)
@@ -155,7 +154,24 @@ Ni_mass.plot_v_lightcurve_with_fit(blackbody_data, sampler)
 
 
 print(sampler.chain.shape)
+# TODO add comparison to valenti data
 
 
+def blackbody_radius_zero(SN_df):
+    x = SN_df['t_from_discovery'][0:4]
+    y = SN_df['radius'][0:4]
+    plt.figure()
+    plt.plot(x, y, marker='o')
+    f = np.poly1d(np.polyfit(x, y, deg=1))
+    fit_x = range(100)
+    plt.plot(fit_x, f[1] * fit_x + f[0])
+    plt.axhline(y=0, color='k', linestyle='--')
+    radius_0_t = - f[0] / f[1]
+    plt.xlabel('time from discovery (days)')
+    plt.ylabel('blackbody radius (km)')
+    print(radius_0_t)
+
+
+blackbody_radius_zero(blackbody_data)
 
 plt.show()
