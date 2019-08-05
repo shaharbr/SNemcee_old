@@ -2,43 +2,52 @@ from matplotlib import pyplot as plt
 import data_import
 import lightcurve_param_fit
 import lightcurve
-
+import pandas as pd
+import numpy as np
 '''
-# TODO:
-- standardize the SN_dict object so it is the same for both the photometry and spectroscopy analyses
- TODO turn the data input dicts to stardardized files that can be imported with the data (csv?)
-
-
 # TODO - ask Iair:
 - what should I do regarding the G and o filters which dont have galactic extinction values in the NES?
-- Derive explosion time by comparing temperature and/or B-V colors to other SNe
-
+- removing R filter from bolometric - griffin's code limits to epoches with at least 3 filters by deafult.
+If removing R, much of the radioactive tail is excluded, or changing to to at least 2 filters (then high error) 
 
 # TODO additional analysis after GSP: 
 - add comparison of lightcurve params to valenti 2D plots
-- analyse and compare velocities to 18aad (data on SNEx
 - compare velocities to Gutierrez sample. (and light curves?)
   (https://iopscience.iop.org/article/10.3847/1538-4357/aa8f52,
-  in particular Figures 11, and 18, and Table 7 (and table 8?)
+  in particular Figures 11, and 18, and Table 8
   values from the absorption method not the FWHM one).
+- Derive explosion time by comparing temperature and/or B-V colors to other SNe
 
-- exclude  the r-band data in the blackbody fits,
-- Derive explosion time by extrapolating blackbody radius back in time to 0 radius.
-- check ATLAS might have more photometry points on their webpage.
+
+- check ATLAS and ZTF might have more photometry points on their webpage.
 
 '''
 
 
-
+# TODO add lightcurve compared to 18ad?
+# TODO add atlas photometry data
 
 plt.rcParams['font.sans-serif'] = 'Arial'
 
 # input correction parameters for all investigated SNe
-distance_modulus = {'SN2018hmx': 36.06, 'SN1999em': 30.03, 'SN2004ej': 32.3, 'SN2012A': 29.73 , 'ASASSN14kg': 34.04}
-z = {'SN2018hmx': 0.037, 'SN1999em': 0.0024, 'SN2004ej': 0.0091, 'SN2012A': 0.002291429, 'ASASSN14kg': 0.014477}
-# note: SN2012A z calculated as average of multiple z values onon the sn2 catalog
-discovery_date = {'SN2018hmx': '2018-10-17 15:30:14', 'SN1999em': '1999-10-29 10:33:00',
-                  'SN2004ej': '2004-09-10', 'SN2012A': '2012-01-07', 'ASASSN14kg': '2014-11-17'}
+distance_modulus = {'SN2018hmx': 36.06,
+                    'SN1999em': 30.03,
+                    'SN2004ej': 32.3,
+                    'SN2012A': 29.73 ,
+                    'ASASSN14kg': 34.04}
+
+z = {'SN2018hmx': 0.037,
+     'SN1999em': 0.0024,
+     'SN2004ej': 0.0091,
+     'SN2012A': 0.002291429,  # note: SN2012A z calculated as average of multiple z values onon the sn2 catalog
+     'ASASSN14kg': 0.014477}
+
+discovery_date = {'SN2018hmx': '2018-10-17 15:30:14',
+                  'SN1999em': '1999-10-29 10:33:00',
+                  'SN2004ej': '2004-09-10',
+                  'SN2012A': '2012-01-07',
+                  'ASASSN14kg': '2014-11-17'}
+
 galactic_extinction = {'SN2018hmx': {'U': 0.206, 'B': 0.173, 'V': 0.131, 'R': 0.103, 'I': 0.072,
                        'u': 0.202, 'g': 0.157, 'r': 0.109, 'i': 0.081, 'z': 0.060,
                        'J': 0.034, 'H': 0.021, 'K': 0.014, 'L': 0.007,
@@ -50,19 +59,16 @@ galactic_extinction = {'SN2018hmx': {'U': 0.206, 'B': 0.173, 'V': 0.131, 'R': 0.
                        'SN2004ej': {'V': 0},
                        'SN2012A': {'B': 0, 'V': 0, 'U': 0, 'UVW1': 0, 'UVW2': 0, 'UVM2': 0},
                        'ASASSN14kg': {'B': 0, 'V': 0, 'U': 0, 'i': 0, 'r': 0, 'g': 0}}
+
 # define colormap for plotting, the colors each filter will be presented in
 colormap = {'i': 'firebrick', 'r': 'tomato', 'g': 'turquoise',
             'V': 'limegreen', 'B': 'blue', 'U': 'darkorchid', 'G': 'teal', 'R': 'tomato', 'I': 'firebrick',
             'o': 'orange',
             'UVW1': 'darkorchid', 'UVW2': 'darkorchid', 'UVM2': 'darkorchid'}
 
-# convert discovery dates to MJD
-for SN in discovery_date.keys():
-    discovery_date[SN] = data_import.convert_to_mjd(discovery_date[SN], from_datetime=True)
-
 
 # import photometry data files
-lco_phot = data_import.lco_phot('lco_photometry.txt')
+lco_phot = data_import.lco_phot('sn2018hmx_20181101-20190505_lcophot.txt')
 gaia_phot = data_import.gaia_phot('gaia18doi.txt')
 atlas_phot = data_import.atlas_phot('ATLAS1_ACAM1.txt')
 ztf_phot_new = data_import.ztf_phot_new('ztf_dr1_lightcurve.txt')
@@ -109,39 +115,75 @@ for SN in [SN2018hmx, SN1999em, SN2012A, SN2004ej, ASASSN14kg]:
     SN = lightcurve.remove_glactic_extinction(SN)
     SN = lightcurve.add_absolute_magnitude(SN)
 
-SN2018hmx = lightcurve.remove_data_before_discovery(SN2018hmx)
-SN1999em = lightcurve.remove_data_before_discovery(SN1999em)
+def make_alllightcurve_df(SN_dict):
+    sources = SN_dict['lightcurve'].keys()
+    all_df = []
+    for source in sources:
+        df = SN_dict['lightcurve'][source]['df'].copy(deep=True)
+        df = df.loc[df['mag'] > 0]
+        df['source'] = source
+        all_df.append(df)
+    all_df = pd.concat(all_df, sort=False)
+    all_df = all_df[['mjd', 'mag', 'dmag', 'filter', 'source']]
+    all_df.reset_index(inplace=True, drop=True)
+    return all_df
 
 
-def remove_LCO_outlier(SN_dict):
-    df = SN_dict['lightcurve']['LCO']['df']
-    df = df.loc[df['t_from_discovery'] < 190]
+def save_ascii(dataframe, filename):
+    df = dataframe.copy(deep=True)
+    df.rename(columns={'mjd': 'MJD', 'filter': 'filt'}, inplace=True)
+    df['nondet |'] = 'FALSE |'
+    header_row = pd.DataFrame(np.array(df.keys()).reshape(1, 6), columns=list(df.keys()))
+    df = pd.concat([header_row, df], ignore_index=True)
+    def equalspace(x):
+        x = str(x)
+        len_x = len(x)
+        x = '|' + ' '*(20-len_x) + x
+        return x
+    for column in df.keys():
+        df[column] = df[column].apply(equalspace)
+    df.to_csv(filename, sep=str(' '), index=False, header=False)
     return df
 
-SN2018hmx['lightcurve']['LCO']['df'] = remove_LCO_outlier(SN2018hmx)
 
 
+SN2018hmx_lightcurves = make_alllightcurve_df(SN2018hmx)
+ascii18hmx = save_ascii(SN2018hmx_lightcurves, 'ascii18hmx.ascii')
+
+
+exit()
 lightcurve.lightcurve_plot([SN2018hmx, SN1999em], main_SN='SN2018hmx')
 lightcurve.lightcurve_plot([SN2018hmx, SN2004ej], main_SN='SN2018hmx')
 lightcurve.lightcurve_plot([SN2018hmx, SN2012A], main_SN='SN2018hmx')
 lightcurve.lightcurve_plot([SN2018hmx, ASASSN14kg], main_SN='SN2018hmx')
 
 # light curve parameters:
+# TODO also for bolometric, not only for the V
 
 s50V_2018hmx = lightcurve_param_fit.calc_s50V(SN2018hmx)
 p0_2018hmx = lightcurve_param_fit.calc_p0(SN2018hmx, time_range=[140, 190])
+Vmax_2018hmx, Vmax_err_2018hmx = lightcurve_param_fit.calc_Vmax(SN2018hmx)
 
-# lightcurve_plot([SN2018hmx], main_SN='SN2018hmx', V50_line=v50_regression_params)
+lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 'p0')
+lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 's50V')
 
-# lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 'p0')
-# lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 's50V')
-
-# sampler = lightcurve_param_fit.SN_lightcurve_params(SN2018hmx)
-# lightcurve_param_fit.chain_plots(sampler.chain)
-# lightcurve_param_fit.plot_v_lightcurve_with_fit(SN2018hmx, sampler)
+sampler = lightcurve_param_fit.SN_lightcurve_params(SN2018hmx)
+lightcurve_param_fit.chain_plots(sampler.chain)
+lightcurve_param_fit.plot_v_lightcurve_with_fit(SN2018hmx, sampler)
 
 
-# print(sampler.chain.shape)
+# TODO what is the correct method for calculating parameter uncertainties? in particular p0 and s50v, but also MCMC.
+param_results = lightcurve_param_fit.get_param_results_dict(sampler)
+param_results['s50V'] = s50V_2018hmx
+param_results['p0'] = p0_2018hmx
+param_results['Vmax'] = Vmax_2018hmx
+param_results['e_Vmax'] = Vmax_err_2018hmx
+param_results['Name'] = 'SN2018hmx'
+param_results = pd.DataFrame(param_results, index=[0])
+param_results.to_csv('SN2018hmx_param_results.csv')
+
+
+lightcurve.BV_plot(SN2018hmx)
 
 
 
