@@ -5,7 +5,6 @@ import numpy as np
 import Ni_mass
 
 
-
 '''
 Fitting the Planck function using an MCMC routine. This is slower, depending on how many walkers (nwalkers) and steps (burnin_steps and steps) you use, but gives more robust uncertainties. The columns temp_mcmc, radius_mcmc, dtemp0, dtemp1, dradius0, and dradius1 come from this fit. My convention for non-Gaussian uncertainties is that 0 is the lower uncertainty and 1 is the upper uncertainty.
 Integrating the Planck function between $U$ and $I$ band (observed) gives L_mcmc, dL_mcmc0, and dL_mcmc1.
@@ -150,8 +149,10 @@ ax2.legend()
 
 sampler = Ni_mass.SN_lightcurve_params(blackbody_data)
 Ni_mass.chain_plots(sampler.chain)
-Ni_mass.plot_v_lightcurve_with_fit(blackbody_data, sampler)
+Ni_vec = Ni_mass.plot_v_lightcurve_with_fit(blackbody_data, sampler)
 
+Ni_df = pd.DataFrame({'t_from_disovery': blackbody_data['t_from_discovery'], 'Ni_mass': Ni_vec})
+Ni_df.to_csv('Ni_mass_SN2018hmx.csv')
 
 print(sampler.chain.shape)
 # TODO add comparison to valenti data
@@ -173,5 +174,10 @@ def blackbody_radius_zero(SN_df):
 
 
 blackbody_radius_zero(blackbody_data)
+
+
+
+
+
 
 plt.show()
