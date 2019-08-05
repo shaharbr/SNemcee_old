@@ -1,32 +1,16 @@
 from lightcurve_lightcurve_fitting import LC
 import bolometric
-from matplotlib import pyplot as plt
 import pandas as pd
-import data_import_lightcurve_fitting as data_import
 import numpy as np
+import matplotlib.pyplot as plt
 
 
+# TODO compare (plot on top) with and without R band, radius, temp, bolometric lum
 
-lc = LC.read('example/SN2018hmx.table')
-# lc = LC.read('example/SN2016bkv.table')
+# TODO update bolometric table according to new phot data, and also with atlas
 
-'''
-extinction = {
- 'U': 0.069,
- 'B': 0.061,
- 'g': 0.055,
- 'V': 0.045,
- '0': 0.035,
- 'r': 0.038,
- 'R': 0.035,
- 'i': 0.028,
- 'I': 0.025,
-}
-z = 0.002
-lc.calcAbsMag(dm=30.79, extinction=extinction)
-lc.calcLum()
+lc = LC.read('ascii18hmx.ascii')
 
-'''
 
 
 extinction = {
@@ -52,9 +36,9 @@ z = 0.037
 lc.calcAbsMag(dm=36.06, extinction=extinction)
 lc.calcLum()
 
+print(lc)
 
 outpath = '/Users/Shahar/sn2018hmx/SN2018hmx_bolometric_allsources'
-# outpath = '/Users/Shahar/sn2018hmx/SN2016bkv_bolometric'
 
 t = bolometric.calculate_bolometric(lc, z, outpath, save_table_as='bolometric_tabe_SN2018hmx')
 
@@ -77,3 +61,5 @@ blackbody_data = pd.DataFrame.from_dict(blackbody_data)
 blackbody_data.to_csv('blackbody_results.csv')
 
 
+
+plt.show()
