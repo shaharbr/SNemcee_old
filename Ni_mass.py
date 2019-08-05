@@ -31,8 +31,8 @@ def log_posterior(theta, data_x, data_y, data_dy):
 
 
 def emcee_fit_params(bolometric_time_vec, bolometric_mag_vec, bolometric_dmag_vec):
-    n_walkers = 100
-    n_steps = 1000
+    n_walkers = 50
+    n_steps = 300
     n_params = 1
     args = [bolometric_time_vec, bolometric_mag_vec, bolometric_dmag_vec]
 
@@ -55,7 +55,6 @@ def SN_lightcurve_params(blackbody_results):
     bolometric_time_vec = blackbody_results['t_from_discovery']
     bolometric_mag_vec = blackbody_results['Lum']
     bolometric_dmag_vec = blackbody_results['dLum0']
-    print(len(bolometric_dmag_vec))
     sampler = emcee_fit_params(bolometric_time_vec, bolometric_mag_vec, bolometric_dmag_vec)
     return sampler
 
@@ -68,7 +67,6 @@ def chain_plots(chain, **kwargs):
 
 
 def plot_v_lightcurve_with_fit(blackbody_results, sampler):
-    print(sampler.chain[:, -1, 0])
     Ni = np.average(sampler.chain[:, -1, 0])
 
     Ni_std = np.std(sampler.chain[:, -1, 0])
@@ -85,7 +83,7 @@ def plot_v_lightcurve_with_fit(blackbody_results, sampler):
     plt.errorbar(x, y, yerr=dy, marker='o', linestyle='None', label='bolometric luminosity')
     plt.ylabel('bolometric luminosity (10^43 erg/s)')
     plt.xlabel('time after discovery (days)')
-    # plt.figure()
     plt.plot(x, y_fit, label='Ni mass fit')
     plt.legend()
+    return y_fit
 
