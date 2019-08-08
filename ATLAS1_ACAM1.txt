@@ -1,3 +1,0 @@
-ID	Obs-date	Mag. / Flux	Err	Lim. Mag./Flux	Units	Filter	Tel / Inst	Exp-time	Observer/s	Remarks
-37895	2018-10-17 15:30:14	17.651	0.072	18.92	ABMag	orange-ATLAS	ATLAS1_ACAM1	30	Robot	
-37894	2018-06-23 06:46:04			18.33	ABMag	orange-ATLAS	ATLAS1_ACAM1	30	Robot	[Last non detection]
