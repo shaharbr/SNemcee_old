@@ -1,6 +1,5 @@
 from matplotlib import pyplot as plt
 
-
 # define colormap for plotting, the colors each filter will be presented in
 colormap = {'i': 'firebrick', 'r': 'tomato', 'g': 'turquoise',
             'V': 'limegreen', 'B': 'blue', 'U': 'darkorchid', 'G': 'teal', 'R': 'tomato', 'I': 'firebrick',
@@ -97,17 +96,12 @@ def BV_plot(SN_dict):
     B = df.loc[df['filter'] == 'B', ('t_from_discovery', 'abs_mag')]
     B['t_from_discovery'] = B['t_from_discovery'].astype(int)
     B = B.groupby('t_from_discovery').mean()
-    print(B)
     # B = B.set_index('t_from_discovery')
     V = df.loc[df['filter'] == 'V', ('t_from_discovery', 'abs_mag')]
     V['t_from_discovery'] = V['t_from_discovery'].astype(int)
     V = V.groupby('t_from_discovery').mean()
     # V = V.set_index('t_from_discovery')
-    # print(B['abs_mag'])
-    # print(V['abs_mag'])
     B_V = V['abs_mag'].rsub(B['abs_mag'])
-    print(B_V)
-    # print(B_V)
     plt.figure()
     plt.plot(B_V.index, B_V, linestyle='None', marker='o')
     plt.ylim(bottom=0)
