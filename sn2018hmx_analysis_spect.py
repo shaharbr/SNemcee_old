@@ -3,11 +3,7 @@ import pandas as pd
 import spectra_velocity
 import data_import
 
-# TODO: convert all datetime to MJD
-
 plt.rcParams['font.sans-serif'] = 'Arial'
-
-
 
 
 plt.rcParams['font.sans-serif'] = 'Arial'
@@ -41,30 +37,32 @@ spectra = {'SN2018hmx': SN18hmx_spect_dict,
 expansion_v = {'SNiPTF14hls': SN14hls_expans_v_df}
 
 
-
-
 SN2018hmx = data_import.make_SN_dict('SN2018hmx', z_dict=z, discovery_date_dict=discovery_date, spectra=spectra)
 SN2018aad = data_import.make_SN_dict('SN2018aad', z_dict=z, discovery_date_dict=discovery_date, spectra=spectra)
 SNiPTF14hls = data_import.make_SN_dict('SNiPTF14hls', z_dict=z, discovery_date_dict=discovery_date, expansion_velocities=expansion_v)
 
 SNiPTF14hls['expansion_velocities'] = spectra_velocity.add_name_t_from_discovery_to_df(SNiPTF14hls['expansion_velocities'], 'SNiPTF14hls', discovery_date['SNiPTF14hls'])
 
-for SN in [SN2018hmx, SN2018aad]:
+# for SN in [SN2018hmx, SN2018aad]:
+for SN in [SN2018hmx]:
     SN = spectra_velocity.add_rest_frame_days_from_discovery(SN)
     SN = spectra_velocity.correct_specta_redshift(SN)
     SN = spectra_velocity.normalize_spectra(SN)
-    spectra_velocity.plot_overlay_spectra(SN, lines_dict)
     spectra_velocity.plot_stacked_spectra(SN, lines_dict)
-    # TODO why are the pCygni curves appearing a bit to the left and bottom from where it looks they should be? about 20A left
     SN['spectra'] = spectra_velocity.fit_Pcygni_curves(SN['spectra'], lines_dict, fixed_curve_range=False, number_curves=10)
     spectra_velocity.plot_stacked_spectra(SN, lines_dict, plot_curve_fits=True)
+    spectra_velocity.plot_stacked_spectra(SN, lines_dict, plot_curve_fits=True, line_velocity='Halpha')
+    spectra_velocity.plot_stacked_spectra(SN, lines_dict, plot_curve_fits=True, line_velocity='Hbeta')
+    spectra_velocity.plot_stacked_spectra(SN, lines_dict, plot_curve_fits=True, line_velocity='FeII 5169')
     SN['spectra'] = spectra_velocity.add_expansion_velocity(SN['spectra'], lines_dict)
     SN['expansion_velocities'] = spectra_velocity.make_velocity_df(SN, lines_dict)
 
 spectra_velocity.plot_expansion_velocities([SN2018hmx['expansion_velocities'], SNiPTF14hls['expansion_velocities']], 'absorption')
-spectra_velocity.plot_expansion_velocities([SN2018hmx['expansion_velocities'], SN2018aad['expansion_velocities']], 'absorption')
+# spectra_velocity.plot_expansion_velocities([SN2018hmx['expansion_velocities'], SN2018aad['expansion_velocities']], 'absorption')
 
 SN2018hmx['expansion_velocities'].to_csv('sN2018hmx_expansion_velocities.csv')
+SNiPTF14hls['expansion_velocities'].to_csv('SNiPTF14hls_expansion_velocities.csv')
+# SN2018aad['expansion_velocities'].to_csv('SN2018aad_expansion_velocities.csv')
 
 plt.show()
 
