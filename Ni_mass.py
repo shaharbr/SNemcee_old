@@ -14,7 +14,6 @@ def log_prior(theta):
     return prob_total
 
 m_Solar = 1.989 * (10 ** 33)  # gram
-print('solar', m_Solar)
 
 def log_likelihood(theta, data_x, data_y, data_dy):
     [m_Ni] = theta
@@ -64,6 +63,15 @@ def chain_plots(chain, **kwargs):
     plt.plot(chain[:, :, 0].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('Ni')
+
+def get_Ni_results_dict(sampler):
+    last_results = sampler.chain[:, -100:, 0]
+    avg = np.average(last_results)
+    sigma_lower, sigma_upper = np.percentile(last_results, [16, 84])
+    sigma_lower = avg - sigma_lower
+    sigma_upper = sigma_upper - avg
+    dict = {'Ni_mass': avg, 'Ni_lower': sigma_lower, 'Ni_upper': sigma_upper}
+    return dict
 
 
 def plot_v_lightcurve_with_fit(blackbody_results, sampler):
