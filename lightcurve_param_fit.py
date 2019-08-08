@@ -1,7 +1,6 @@
 import emcee
 import numpy as np
 from matplotlib import pyplot as plt
-import pandas as pd
 
 
 def log_prior(theta):
@@ -50,8 +49,8 @@ def log_posterior(theta, data_x, data_y, data_dy):
 
 
 def emcee_fit_params(v_time_vec, v_mag_vec, v_dmag_vec):
-    n_walkers = 100
-    n_steps = 1000
+    n_walkers = 20
+    n_steps = 300
     n_params = 4
     args = [v_time_vec, v_mag_vec, v_dmag_vec]
 
@@ -89,7 +88,6 @@ def SN_lightcurve_params(SN_dict):
     v_time_vec = df['t_from_discovery']
     v_mag_vec = df['mag']
     v_dmag_vec = df['dmag']
-    print(len(v_time_vec))
     sampler = emcee_fit_params(v_time_vec, v_mag_vec, v_dmag_vec)
     return sampler
 
@@ -115,20 +113,31 @@ def chain_plots(chain, **kwargs):
     plt.xlabel('Step Number')
     plt.ylabel('w0')
 
+# [walkers, step, dim]
+
+
+def get_param_results_dict(sampler):
+    params = ['m0', 'a0', 'tPT', 'w0']
+    dict = {}
+    for i in range(len(params)):
+        last_results = sampler.chain[:, -100:, i]
+        avg = np.average(last_results)
+        sigma_lower, sigma_upper = np.percentile(last_results, [16, 84])
+        dict[params[i]] = avg
+        dict[params[i]+'_lower'] = avg - sigma_lower
+        dict[params[i] + '_upper'] = sigma_upper - avg
+    return dict
+
+
 
 def plot_v_lightcurve_with_fit(SN_dict, sampler):
-    m0 = np.average(sampler.chain[:, -1, 0])
-    a0 = np.average(sampler.chain[:, -1, 1])
-    tPT = np.average(sampler.chain[:, -1, 2])
-    w0 = np.average(sampler.chain[:, -1, 3])
+    param_dict = get_param_results_dict(sampler)
+    m0 = param_dict['m0']
+    a0 = param_dict['a0']
+    tPT = param_dict['tPT']
+    w0 = param_dict['w0']
 
-    m0_std = np.std(sampler.chain[:, -1, 0])
-    a0_std = np.std(sampler.chain[:, -1, 1])
-    tPT_std = np.std(sampler.chain[:, -1, 2])
-    w0_std = np.std(sampler.chain[:, -1, 3])
-
-    print(m0, a0, tPT, w0)
-    print(m0_std, a0_std, tPT_std, w0_std)
+    print('m0:', m0, 'a0:', a0, 'tPT:', tPT, 'w0:', w0)
     p0 = 0.0089
     data = get_LCO_V_df(SN_dict)
     data = data.loc[data['t_from_discovery'] < 190]
@@ -149,21 +158,25 @@ def calc_Vmag_slope_param(data, time_range):
                     (data['t_from_discovery'] <= last_day)]
     x = list(data['t_from_discovery'])
     y = list(data['mag'])
-    regression_params = np.polyfit(x, y, deg=1)
-    return regression_params
+    regression_params, cov = np.polyfit(x, y, deg=1, cov=True)
+    print('polyfit', regression_params, cov)
+    sigma = np.sqrt(np.diag(cov))
+    print('sigma', sigma)
+    return regression_params, sigma
 
 def calc_s50V(SN_dict, get_all_params=False):
     data = get_LCO_V_df(SN_dict)
     peak_mag = np.min(data.loc[data['t_from_discovery'] < 100, 'mag'])
     first_day = float(data.loc[data['mag'] == peak_mag, 't_from_discovery'])
     last_day = first_day + 50
-    V50_regression_params = calc_Vmag_slope_param(data, time_range=[first_day, last_day])
+    V50_regression_params, sigma = calc_Vmag_slope_param(data, time_range=[first_day, last_day])
     if get_all_params:
         s50V = V50_regression_params
     else:
         s50V = V50_regression_params[0] * 50
+    sigma = sigma[0]
     print('s50V:', s50V)
-    return s50V
+    return s50V, sigma
 
 def calc_p0(SN_dict, time_range=False, get_all_params=False):
     data = get_LCO_V_df(SN_dict)
@@ -173,13 +186,14 @@ def calc_p0(SN_dict, time_range=False, get_all_params=False):
     else:
         last_day = np.max(data['t_from_discovery'])
         first_day = last_day - 30
-    p0_regression_params = calc_Vmag_slope_param(data, time_range=[first_day, last_day])
+    p0_regression_params, sigma = calc_Vmag_slope_param(data, time_range=[first_day, last_day])
     if get_all_params:
         p0 = p0_regression_params
     else:
         p0 = p0_regression_params[0]
+    sigma = sigma[0]
     print('p0:', p0)
-    return p0
+    return p0, sigma
 
 
 def plot_v_lightcurve_with_slope(SN_dict, param):
@@ -200,3 +214,16 @@ def plot_v_lightcurve_with_slope(SN_dict, param):
     plt.errorbar(data_x, data_y, yerr=data_dy, marker='o', linestyle='None')
     plt.plot(slope_x, slope_y)
     plt.gca().invert_yaxis()
+
+
+def calc_Vmax(SN_dict):
+    V_df = SN_dict['lightcurve']['LCO']['df']
+    Vmag = V_df.loc[V_df['filter'] == 'V', 'abs_mag']
+    Vmax = np.min(Vmag)
+    Vmax_err = np.min(V_df.loc[(V_df['filter'] == 'V') & (V_df['abs_mag'] == Vmax), 'dmag'])
+    print('Vmax: ', Vmax)
+    print('Vmax_err: ', Vmax_err)
+    return Vmax, Vmax_err
+
+
+
