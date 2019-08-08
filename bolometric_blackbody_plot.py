@@ -144,7 +144,6 @@ ax2.set_xlabel('time after discovery (days)')
 ax2.set_title('SN2018hmx - bolometric luminosity \n', fontsize=14)
 ax2.set_yscale('log')
 ax2.legend()
-# TODO add comparison to valenti data
 
 
 sampler = Ni_mass.SN_lightcurve_params(blackbody_data)
@@ -154,8 +153,14 @@ Ni_vec = Ni_mass.plot_v_lightcurve_with_fit(blackbody_data, sampler)
 Ni_df = pd.DataFrame({'t_from_disovery': blackbody_data['t_from_discovery'], 'Ni_mass': Ni_vec})
 Ni_df.to_csv('Ni_mass_SN2018hmx.csv')
 
+Ni_results = Ni_mass.get_Ni_results_dict(sampler)
+print(Ni_results)
+param_results = pd.DataFrame(Ni_results, index=[0])
+param_results.to_csv('SN2018hmx_Ni_results.csv')
+
+
+
 print(sampler.chain.shape)
-# TODO add comparison to valenti data
 
 
 def blackbody_radius_zero(SN_df):
