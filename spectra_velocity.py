@@ -5,8 +5,6 @@ import re
 import random
 import data_import
 
-# TODO: convert all datetime to MJD
-
 plt.rcParams['font.sans-serif'] = 'Arial'
 
 
@@ -32,25 +30,24 @@ def correct_specta_redshift(SN_dict):
 def normalize_spectra(SN_dict):
     dates = SN_dict['spectra'].keys()
     for date in dates:
-        # TODO why does the beginning of the first sectrum get shorter when I normalize it?
         avg = np.average(SN_dict['spectra'][date]['df']['y'])
         SN_dict['spectra'][date]['df']['y'] = SN_dict['spectra'][date]['df']['y'] / avg
-        # if SN_dict['spectra'][date]['t_from_discovery'] <20:
-        #     SN_dict['spectra'][date]['df']['y'] = SN_dict['spectra'][date]['df']['y'] * 2
+        if SN_dict['spectra'][date]['telescope'] == 'ZTF':
+            SN_dict['spectra'][date]['df']['y'] = SN_dict['spectra'][date]['df']['y'] * 2
         if SN_dict['spectra'][date]['telescope'] == 'HET':
             SN_dict['spectra'][date]['df']['y'] = SN_dict['spectra'][date]['df']['y'] / 2
     return SN_dict
 
-def smooth_LCO_spectra(SN_dict):
-    dates = SN_dict['spectra'].keys()
-    for date in dates:
-        var_list = list(SN_dict['spectra'][date]['df']['y'])
-        var_list = [x for x in var_list if str(x) != 'nan']
-        var_list = var_list[0:200]
-        start_variability = np.std(var_list)
-        smoothing_window = int(50 * start_variability)
-        SN_dict['spectra'][date]['df']['y'] = SN_dict['spectra'][date]['df']['y'].rolling(smoothing_window).mean()
-    return SN_dict
+
+
+def smooth_spectrum(spectrum_y):
+    var_list = list(spectrum_y)
+    var_list = [x for x in var_list if str(x) != 'nan']
+    var_list = var_list[0:200]
+    start_variability = np.std(var_list)
+    smoothing_window = int(len(spectrum_y)/50 * start_variability)+1
+    smooth_y = spectrum_y.rolling(smoothing_window, center=True).mean()
+    return smooth_y
 
 
 # plot all spectra in an overlay figure
@@ -78,14 +75,12 @@ def approximate_actual_line_range(spectra_df, line_name, lines_dict, absorptionO
     elif absorptionOremission == 'emission':
         y = np.max(df_slice['y'])
     x = np.min(df_slice.loc[df_slice['y'] == y]['x'])
-    line_range = [x - 100, x + 80]
+    line_range = [x - 80, x + 80]
     return line_range
 
-# TODO condition minama only of really minima (second derivative positive)
 def find_curve_extreme(polyfit_f, x_slice, param):
     x = list(x_slice)
     y = polyfit_f(x)
-    # print(polyfit_f[0])
     if param == 'absorption':
         extreme_y = np.min(y)
     elif param == 'emission':
@@ -147,62 +142,108 @@ def fit_Pcygni_curves(spectra_dict, lines_dict, fixed_curve_range=False, number_
     return spectra_dict
 
 
-def plot_stacked_spectra(SN_dict, lines_dict=False, plot_curve_fits=False):
+def plot_stacked_spectra(SN_dict, lines_dict, plot_curve_fits=False, line_velocity=False):
     dates = sorted(SN_dict['spectra'].keys(), reverse=True)
-    fig, ax = plt.subplots(1, figsize=(7, 9))
+    if line_velocity:
+        fig, ax = plt.subplots(1, figsize=(5, 9))
+    else:
+        fig, ax = plt.subplots(1, figsize=(12, 9))
     name = SN_dict['name']
     y_shift = 0
-    y_shift_delta = 1.5
+    lines_list = lines_dict.keys()
     colors = {'Halpha': '#1b9e77', 'Hbeta': '#7570b3', 'FeII 5169': '#''d95f02'}
-    # smoothed_SN_dict = smooth_LCO_spectra(SN_dict)
-    smoothed_SN_dict = SN_dict
-    if lines_dict:
-        for line_name in lines_dict.keys():
-            ax.axvline(x=lines_dict[line_name]['peak'], color=colors[line_name], alpha=0.5)
+    # draw expected lines locations in background
+    if line_velocity:
+        ax.axvline(x=0, color=colors[line_velocity], alpha=0.5)
+    else:
+        for line_name in lines_list:
+            wavelength_expected = lines_dict[line_name]['peak']
+            ax.axvline(x=wavelength_expected, color=colors[line_name], alpha=0.5)
+    # draw spectra
     for date in dates:
-        smoothed_SN_dict['spectra'][date]['df']['y'] += y_shift
-        smoothed_SN_dict['spectra'][date]['df'].plot(x='x', y='y', ax=ax, color='navy', linewidth=1)
-        spectrum_label = str(int(smoothed_SN_dict['spectra'][date]['t_from_discovery'])) + 'd (' + smoothed_SN_dict['spectra'][date]['telescope'] + ')'
-        label_ypos = np.mean(smoothed_SN_dict['spectra'][date]['df']['y']) - 0.4
-        ax.text(9780, label_ypos, spectrum_label , fontsize=14, color='navy', fontname="Arial")
+        date_dict = SN_dict['spectra'][date]
+        df = date_dict['df']
+        if date_dict['t_from_discovery'] < 20:
+            y_shift = y_shift - 0.6
+            smooth_y = df['y']
+        else:
+            smooth_y = smooth_spectrum(df['y'])
+        if line_velocity:
+            if line_velocity != 'Halpha':
+                y_shift_delta = 0.3
+                if date_dict['t_from_discovery'] < 20:
+                    y_shift = y_shift - 0.6
+            else:
+                y_shift_delta = 0.8
+            min_x = lines_dict[line_velocity]['absorption_range'][0] - 150
+            max_x = lines_dict[line_velocity]['peak'] + 200
+            bool_x = (df['x'] > min_x) & (df['x'] < max_x)
+            x = df['x'].loc[bool_x]
+            y = smooth_y[bool_x]
+            # y = df['y'].loc[bool_x]
+            wavelength_expected = lines_dict[line_velocity]['peak']
+            x = calculate_expansion_velocity(wavelength_expected, x)
+            max_x = np.nanmax(x)
+            min_x = np.nanmin(x)
+            y = y + y_shift
+            ax.set_xlim(min_x, max_x)
+            label_x = min_x - 150
+            ax.invert_xaxis()
+            ax.set_title(line_velocity, fontsize=16)
+            ax.set_xlabel('Velocity (km/s)', size=14)
+        else:
+            x = df['x']
+            y_shift_delta = (np.max(smooth_y) - np.min(smooth_y)) / 3
+            y = smooth_y + y_shift
+            ax.set_xlim(3300, 9700)
+            label_x = 9780
+            ax.set_title(name + ' spectra over time', fontsize=16)
+            ax.set_xlabel('Rest (z = 0.037) Wavelength (Å)', size=14)
+        # plot
+        ax.plot(x, y, color='navy', linewidth=1)
+        # spectrum labeled with day from explosion
+        spectrum_date_label = str(int(date_dict['t_from_discovery'])) + 'd (' + date_dict['telescope'] + ')'
+        label_ypos = np.mean(y) - 0.4
+        ax.text(label_x, label_ypos, spectrum_date_label , fontsize=14, color='navy', fontname="Arial")
+        # adding the polyfit curves if asked
         if plot_curve_fits:
-            add_fitted_curves_to_plot(smoothed_SN_dict['spectra'][date], lines_dict, ax, y_shift, number_curves_to_draw=3)
+            add_fitted_curves_to_plot(date_dict, lines_dict, ax, y_shift, line_velocity, number_curves_to_draw=3)
         y_shift += y_shift_delta
-    ax.set_title(name + ' spectra over time', fontsize=16)
-    ax.set_xlabel('Rest (z = 0.037) Wavelength (Å)', size=14)
-    ax.set_ylabel('Normalized fλ + constant', size=14)
-    ax.set_xlim(3300,9700)
+    ax.set_ylabel('Normalized fλ + shift', size=14)
     ax.set_yticks([])
-    ax.get_legend().remove()
+    # ax.get_legend().remove()
     ax.tick_params(axis='both', which='major', labelsize=14)
-    fig.subplots_adjust(right=0.8)
-    # handles, labels = ax.get_legend_handles_labels()
-    # ax.legend(handles[::-1], labels[::-1], title='Time after discovery', loc='upper right')
-    # if plot_curve_fits:
-        # fig.savefig(name + '_spectra_over_time_stacked_with_polyfit.png')
-    # else:
-        # fig.savefig(name + '_spectra_over_time_stacked.png')
+    fig.subplots_adjust(right=0.7)
+    if plot_curve_fits:
+        fig.savefig(name + '_spectra_over_time_stacked_with_polyfit' + str(line_velocity) + '.png')
+    else:
+        fig.savefig(name + '_spectra_over_time_stacked' + str(line_velocity) + '.png')
 
 
 
-def add_fitted_curves_to_plot(single_spectrum_dict, lines_dict, ax, y_shift=False, number_curves_to_draw=1):
-    colors = ['r', 'g', 'b']
-    n = 0
-    for line_name in lines_dict.keys():
-        color = colors[n]
-        n +=1
-        for param in ['absorption', 'emission']:
+def add_fitted_curves_to_plot(single_spectrum_dict, lines_dict, ax, y_shift, line_velocity, number_curves_to_draw=1):
+    colors = {'Halpha':'r', 'Hbeta':'g', 'FeII 5169':'b'}
+    if line_velocity:
+        lines = [line_velocity]
+    else:
+        lines = lines_dict.keys()
+    for line_name in lines:
+        line_dict = single_spectrum_dict['line'][line_name]
+        for param in ['absorption']:
             for i in range(number_curves_to_draw):
-                f = single_spectrum_dict['line'][line_name]['polyfits'][param][i]
+                f = line_dict['polyfits'][param][i]
                 if f != None:
-                    x_slice = single_spectrum_dict['line'][line_name]['line_xslices'][param][i]
-                    curve_y = f(x_slice)
-                    extreme_point = single_spectrum_dict['line'][line_name]['line_extremes'][param][i]
-                    if y_shift:
-                        curve_y += y_shift
-                        extreme_point['y'] += y_shift
-                    ax.plot(x_slice, curve_y, color=color, alpha=0.5, linewidth=1.5)
-                    ax.plot(extreme_point['x'], extreme_point['y'], '.', color=color)
+                    x_slice = line_dict['line_xslices'][param][i]
+                    curve_y = f(x_slice) + y_shift
+                    extreme_point = line_dict['line_extremes'][param][i]
+                    x_point = extreme_point['x']
+                    y_point = extreme_point['y'] + y_shift
+                    if line_velocity:
+                        wavelength_expected = lines_dict[line_name]['peak']
+                        x_slice = calculate_expansion_velocity(wavelength_expected, x_slice)
+                        x_point = calculate_expansion_velocity(wavelength_expected, [x_point])
+                    ax.plot(x_slice, curve_y, color=colors[line_name], alpha=0.5, linewidth=1.5)
+                    ax.plot(x_point, y_point, '.', color=colors[line_name])
 
 
 def calculate_expansion_velocity(wavelength_expected, wavelength_observed):
@@ -224,8 +265,6 @@ def add_expansion_velocity(spectra_dict, lines_dict):
                 spectra_dict[date]['line'][line_name]['velocity'][param] = {}
                 number_curves = len(spectra_dict[date]['line'][line_name]['line_extremes'][param])
                 if None not in spectra_dict[date]['line'][line_name]['line_extremes'][param]:
-                    print(spectra_dict[date]['t_from_discovery'])
-                    print([spectra_dict[date]['line'][line_name]['line_extremes'][param][i] for i in range(number_curves)])
                     wavelength_observed[param] = [spectra_dict[date]['line'][line_name]['line_extremes'][param][i]['x'] for i in range(number_curves)]
                     velocity_list = calculate_expansion_velocity(wavelength_expected, wavelength_observed[param])
                     spectra_dict[date]['line'][line_name]['velocity'][param]['mean'] = np.mean(velocity_list)
