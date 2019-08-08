@@ -13,6 +13,9 @@ import emcee
 import corner
 import os
 
+from sklearn.metrics import auc
+
+
 for filt in filters.all_filters:
     filt.read_curve()
 
@@ -222,3 +225,12 @@ def calculate_bolometric(lc, z, outpath='.', res=1., nwalkers=10, burnin_steps=2
         t0.write(save_table_as, format='ascii.fixed_width', overwrite=True)
 
     return t0
+
+
+def calculate_ET(time_vec, Lum_vec, Ni_vec):
+    # integ_Lum = auc(time_vec, time_vec * Lum_vec)
+    # integ_Ni = auc(time_vec, time_vec * Ni_vec)
+    # ET = auc(time_vec, time_vec * (Lum_vec - Ni_vec))
+    function = [time_vec[i] * (Lum_vec[i] - Ni_vec[i]) for i in range(len(Lum_vec))]
+    ET = [auc(time_vec[:i], function[:i]) for i in np.arange(2, len(Lum_vec)+1)]
+    return ET
