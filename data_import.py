@@ -4,6 +4,8 @@ import pandas as pd
 import re
 import os
 
+# from scipy.optimize import curve_fit
+
 
 def convert_to_mjd(datetime_series, from_datetime=False):
     # if origin format is datetime, convert first to JD
@@ -21,9 +23,10 @@ def convert_to_mjd(datetime_series, from_datetime=False):
 
 def lco_phot(path):
     # import LCO photometry dataset (TSV file)
-    lco_phot = pd.read_csv(path, sep='\t')
+    lco_phot = pd.read_csv(path, sep=r'\s+')
+    lco_phot['mjd'] = convert_to_mjd(lco_phot['mjd'])
     # sort filter names
-    lco_phot['filter'].replace({'ip': 'i', 'gp': 'g', 'rp': 'r'}, inplace=True)
+    # lco_phot['filter'].replace({'ip': 'i', 'gp': 'g', 'rp': 'r'}, inplace=True)
     return lco_phot
 
 
@@ -177,3 +180,7 @@ def SN14hls_expans_v(path):
     expans_v_df.rename(columns={'JD': 'datetime', 'Velocity [km/s]': 'absorption_mean_velocity', 'Line': 'line',
                                        'Velocity_Error [km/s]': 'absorption_std_velocity'}, inplace=True)
     return expans_v_df
+
+# def fit_with_errors(fit_function, x, y, err=False):
+#     popt, pcov = curve_fit(fit_function, x, y, sigma=err, absolute_sigma=True)
+#     return popt, pcov
