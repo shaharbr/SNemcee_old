@@ -1,0 +1,263 @@
+|          MJD |     mag |   dmag | filt |      source | nondet |
+|   58408.6459 |  17.651 |  0.072 |    o |       ATLAS |  FALSE |
+|   58424.4767 | 17.3027 | 0.0155 |   ip | Las Cumbres |  FALSE |
+|   58424.4748 | 17.3668 | 0.0186 |   ip | Las Cumbres |  FALSE |
+|   58424.4679 | 17.1332 | 0.0078 |   gp | Las Cumbres |  FALSE |
+|   58424.4651 | 17.1274 | 0.0077 |   gp | Las Cumbres |  FALSE |
+|    58424.463 | 17.1783 | 0.0164 |    V | Las Cumbres |  FALSE |
+|   58424.4611 | 17.2113 | 0.0161 |    V | Las Cumbres |  FALSE |
+|   58424.4581 |  17.357 | 0.0154 |    B | Las Cumbres |  FALSE |
+|   58424.4553 | 17.3169 | 0.0148 |    B | Las Cumbres |  FALSE |
+|   58424.4511 | 15.6275 |  0.028 |    U | Las Cumbres |  FALSE |
+|   58424.4472 | 15.6512 |  0.027 |    U | Las Cumbres |  FALSE |
+|   58449.3142 | 17.1665 | 0.0172 |   ip | Las Cumbres |  FALSE |
+|   58449.3124 | 17.1512 | 0.0182 |   ip | Las Cumbres |  FALSE |
+|   58449.3055 | 17.8835 | 0.0182 |   gp | Las Cumbres |  FALSE |
+|   58449.3027 | 17.8315 | 0.0173 |   gp | Las Cumbres |  FALSE |
+|   58449.3006 | 17.4242 | 0.0219 |    V | Las Cumbres |  FALSE |
+|   58449.2987 | 17.4226 | 0.0219 |    V | Las Cumbres |  FALSE |
+|   58449.2957 | 18.5172 | 0.0295 |    B | Las Cumbres |  FALSE |
+|   58449.2929 | 18.4522 | 0.0379 |    B | Las Cumbres |  FALSE |
+|   58449.2888 | 18.1043 | 0.2209 |    U | Las Cumbres |  FALSE |
+|   58449.2848 | 17.9784 |  0.206 |    U | Las Cumbres |  FALSE |
+|   58445.3794 | 17.1973 | 0.0473 |   ip | Las Cumbres |  FALSE |
+|   58445.3775 | 17.1736 | 0.1312 |   ip | Las Cumbres |  FALSE |
+|   58445.3677 | 17.6268 | 0.1108 |   gp | Las Cumbres |  FALSE |
+|   58445.3657 | 17.4166 | 0.1108 |    V | Las Cumbres |  FALSE |
+|   58445.3638 | 17.3591 | 0.0379 |    V | Las Cumbres |  FALSE |
+|   58445.3608 | 18.3996 | 0.0653 |    B | Las Cumbres |  FALSE |
+|    58445.358 | 18.4418 |  0.089 |    B | Las Cumbres |  FALSE |
+|   58445.3538 | 17.5834 | 0.3038 |    U | Las Cumbres |  FALSE |
+|   58445.3498 | 17.6067 | 0.3253 |    U | Las Cumbres |  FALSE |
+|    58443.425 | 17.1253 | 0.0151 |   ip | Las Cumbres |  FALSE |
+|   58443.4231 | 17.1256 | 0.0152 |   ip | Las Cumbres |  FALSE |
+|   58443.4162 | 17.6074 | 0.0143 |   gp | Las Cumbres |  FALSE |
+|   58443.4134 | 17.6429 | 0.0152 |   gp | Las Cumbres |  FALSE |
+|   58443.4113 | 17.3475 | 0.0225 |    V | Las Cumbres |  FALSE |
+|   58443.4095 |  17.322 | 0.0222 |    V | Las Cumbres |  FALSE |
+|   58443.4065 | 18.1576 | 0.0334 |    B | Las Cumbres |  FALSE |
+|   58443.4037 | 18.1238 | 0.0304 |    B | Las Cumbres |  FALSE |
+|   58443.3995 | 17.5509 | 0.1182 |    U | Las Cumbres |  FALSE |
+|   58443.3955 | 17.6196 | 0.1534 |    U | Las Cumbres |  FALSE |
+|   58442.3329 | 17.2415 | 0.0173 |   ip | Las Cumbres |  FALSE |
+|    58442.331 | 17.2184 | 0.0163 |   ip | Las Cumbres |  FALSE |
+|   58442.3241 | 17.6536 | 0.0143 |   gp | Las Cumbres |  FALSE |
+|   58442.3213 | 17.6624 | 0.0163 |   gp | Las Cumbres |  FALSE |
+|   58442.3192 | 17.3662 | 0.0216 |    V | Las Cumbres |  FALSE |
+|   58442.3174 | 17.3165 | 0.0238 |    V | Las Cumbres |  FALSE |
+|   58442.3143 | 18.1543 | 0.0259 |    B | Las Cumbres |  FALSE |
+|   58442.3115 | 18.1408 | 0.0286 |    B | Las Cumbres |  FALSE |
+|   58442.3073 | 17.0759 | 0.0903 |    U | Las Cumbres |  FALSE |
+|   58442.3034 | 17.3745 | 0.1591 |    U | Las Cumbres |  FALSE |
+|   58446.9410 |   17.41 |    0.0 |    G |        Gaia |  FALSE |
+|   58447.0150 |   17.42 |    0.0 |    G |        Gaia |  FALSE |
+|   58453.2897 | 17.2527 | 0.0143 |   ip | Las Cumbres |  FALSE |
+|   58453.2879 | 17.3307 | 0.1493 |   ip | Las Cumbres |  FALSE |
+|   58453.2816 | 18.0424 | 0.0121 |   gp | Las Cumbres |  FALSE |
+|   58453.2788 | 17.6209 | 0.0253 |   gp | Las Cumbres |  FALSE |
+|   58453.2767 | 17.5664 | 0.0188 |    V | Las Cumbres |  FALSE |
+|   58453.2748 | 17.2454 | 0.0402 |    V | Las Cumbres |  FALSE |
+|   58453.2718 | 18.7188 | 0.0262 |    B | Las Cumbres |  FALSE |
+|    58453.269 | 18.5899 | 0.0657 |    B | Las Cumbres |  FALSE |
+|   58453.2648 | 18.2053 | 0.2043 |    U | Las Cumbres |  FALSE |
+|   58455.2693 | 17.5085 | 0.0185 |    V | Las Cumbres |  FALSE |
+|   58455.2663 | 18.7224 | 0.0278 |    B | Las Cumbres |  FALSE |
+|   58455.2635 | 18.5545 | 0.2817 |    B | Las Cumbres |  FALSE |
+|   58455.2594 | 17.8884 | 0.1999 |    U | Las Cumbres |  FALSE |
+|   58455.2833 | 17.2093 | 0.0133 |   ip | Las Cumbres |  FALSE |
+|   58455.2814 | 18.1064 | 0.1223 |   ip | Las Cumbres |  FALSE |
+|    58455.276 | 18.1497 | 0.0234 |   gp | Las Cumbres |  FALSE |
+|   58455.2732 | 18.2414 | 0.0523 |   gp | Las Cumbres |  FALSE |
+|   58455.2712 | 17.6494 | 0.0215 |    V | Las Cumbres |  FALSE |
+|   58457.3209 | 17.2754 | 0.0214 |   ip | Las Cumbres |  FALSE |
+|   58457.3191 |  17.338 | 0.0144 |   ip | Las Cumbres |  FALSE |
+|   58457.3129 | 18.2759 | 0.0135 |   gp | Las Cumbres |  FALSE |
+|   58457.3101 | 18.2366 | 0.0105 |   gp | Las Cumbres |  FALSE |
+|   58457.3087 | 17.5535 | 0.0254 |    V | Las Cumbres |  FALSE |
+|   58457.3069 | 17.5453 | 0.0195 |    V | Las Cumbres |  FALSE |
+|   58457.3039 | 18.8603 |  0.027 |    B | Las Cumbres |  FALSE |
+|   58457.3011 | 18.8414 | 0.0259 |    B | Las Cumbres |  FALSE |
+|   58465.3224 | 17.3162 | 0.0141 |   ip | Las Cumbres |  FALSE |
+|   58465.3144 | 18.3471 | 0.0092 |   gp | Las Cumbres |  FALSE |
+|   58465.3104 | 18.3553 | 0.0102 |   gp | Las Cumbres |  FALSE |
+|   58465.3084 | 17.8253 | 0.0215 |    V | Las Cumbres |  FALSE |
+|   58465.3065 | 17.8008 | 0.0209 |    V | Las Cumbres |  FALSE |
+|   58465.3024 | 19.0793 | 0.0278 |    B | Las Cumbres |  FALSE |
+|   58465.2984 | 19.1049 |  0.026 |    B | Las Cumbres |  FALSE |
+|   58472.3512 | 17.4465 | 0.0213 |   ip | Las Cumbres |  FALSE |
+|   58472.3493 |  17.418 | 0.0212 |   ip | Las Cumbres |  FALSE |
+|   58472.3413 | 18.6188 | 0.0263 |   gp | Las Cumbres |  FALSE |
+|   58472.3374 | 18.6575 | 0.0312 |   gp | Las Cumbres |  FALSE |
+|   58472.3354 | 17.8505 | 0.0348 |    V | Las Cumbres |  FALSE |
+|   58472.3336 | 17.9056 | 0.0357 |    V | Las Cumbres |  FALSE |
+|   58472.3294 | 19.4283 | 0.0957 |    B | Las Cumbres |  FALSE |
+|   58472.3255 | 19.1941 | 0.0789 |    B | Las Cumbres |  FALSE |
+|   58476.2956 | 17.4421 | 0.0342 |   ip | Las Cumbres |  FALSE |
+|   58476.2938 | 17.5446 | 0.0312 |   ip | Las Cumbres |  FALSE |
+|   58476.2858 | 18.8119 | 0.0374 |   gp | Las Cumbres |  FALSE |
+|   58476.2819 | 18.7931 | 0.0363 |   gp | Las Cumbres |  FALSE |
+|   58476.2799 | 17.9014 | 0.0433 |    V | Las Cumbres |  FALSE |
+|    58476.278 | 17.8759 | 0.0432 |    V | Las Cumbres |  FALSE |
+|   58476.2739 | 19.4707 | 0.1019 |    B | Las Cumbres |  FALSE |
+|     58476.27 | 19.5916 | 0.1159 |    B | Las Cumbres |  FALSE |
+|   58476.2444 | 18.7897 | 0.0422 |   gp | Las Cumbres |  FALSE |
+|   58476.2404 | 18.6608 | 0.0383 |   gp | Las Cumbres |  FALSE |
+|   58476.2384 |  18.032 | 0.0485 |    V | Las Cumbres |  FALSE |
+|   58476.2366 | 17.9276 |  0.039 |    V | Las Cumbres |  FALSE |
+|   58476.2325 | 19.3961 | 0.1018 |    B | Las Cumbres |  FALSE |
+|   58476.2285 | 19.3983 | 0.1236 |    B | Las Cumbres |  FALSE |
+|    58480.382 | 17.5093 | 0.0192 |   ip | Las Cumbres |  FALSE |
+|   58480.3802 | 17.4944 | 0.0172 |   ip | Las Cumbres |  FALSE |
+|   58480.3722 | 18.7846 | 0.0173 |   gp | Las Cumbres |  FALSE |
+|   58480.3683 | 18.7771 | 0.0193 |   gp | Las Cumbres |  FALSE |
+|   58480.3663 |  18.037 | 0.0284 |    V | Las Cumbres |  FALSE |
+|   58480.3644 | 18.0459 | 0.0257 |    V | Las Cumbres |  FALSE |
+|   58480.3603 | 19.4386 | 0.0446 |    B | Las Cumbres |  FALSE |
+|   58480.3564 | 19.4098 | 0.0445 |    B | Las Cumbres |  FALSE |
+|   58487.3152 | 17.5891 | 0.0221 |   ip | Las Cumbres |  FALSE |
+|   58487.3134 | 17.5339 | 0.0241 |   ip | Las Cumbres |  FALSE |
+|   58487.3054 | 18.8663 | 0.0152 |   gp | Las Cumbres |  FALSE |
+|   58487.3015 | 18.8913 | 0.0152 |   gp | Las Cumbres |  FALSE |
+|   58487.2995 | 18.2026 | 0.0259 |    V | Las Cumbres |  FALSE |
+|   58487.2976 |  18.203 | 0.0258 |    V | Las Cumbres |  FALSE |
+|   58487.2935 | 19.7443 | 0.0416 |    B | Las Cumbres |  FALSE |
+|   58487.2896 | 19.6929 | 0.0359 |    B | Las Cumbres |  FALSE |
+|   58496.2324 | 18.2269 | 0.0832 |    V | Las Cumbres |  FALSE |
+|   58496.2305 | 18.3551 | 0.0408 |    V | Las Cumbres |  FALSE |
+|   58496.2265 | 19.8368 | 0.1007 |    B | Las Cumbres |  FALSE |
+|   58498.1524 | 18.4628 | 0.0317 |    V | Las Cumbres |  FALSE |
+|   58498.1496 | 18.3309 | 0.0259 |    V | Las Cumbres |  FALSE |
+|   58498.1444 | 19.9687 | 0.1186 |    B | Las Cumbres |  FALSE |
+|   58498.1393 | 20.1812 |   0.11 |    B | Las Cumbres |  FALSE |
+|   58498.1742 | 17.7742 | 0.0155 |   ip | Las Cumbres |  FALSE |
+|   58498.1715 | 17.8754 | 0.0165 |   ip | Las Cumbres |  FALSE |
+|   58498.1605 | 19.2392 | 0.0375 |   gp | Las Cumbres |  FALSE |
+|   58498.1554 | 19.3007 | 0.0345 |   gp | Las Cumbres |  FALSE |
+|   58504.2495 | 17.7995 | 0.0341 |   ip | Las Cumbres |  FALSE |
+|   58504.2467 | 17.8357 | 0.0221 |   ip | Las Cumbres |  FALSE |
+|   58504.2357 | 19.2386 | 0.0173 |   gp | Las Cumbres |  FALSE |
+|   58504.2307 | 19.2746 | 0.0192 |   gp | Las Cumbres |  FALSE |
+|   58504.2277 | 18.6521 | 0.0352 |    V | Las Cumbres |  FALSE |
+|   58504.2249 | 18.6591 | 0.0437 |    V | Las Cumbres |  FALSE |
+|   58504.2197 | 20.0601 | 0.0623 |    B | Las Cumbres |  FALSE |
+|   58504.2146 | 20.2615 | 0.0621 |    B | Las Cumbres |  FALSE |
+|   58514.1518 | 18.5493 | 0.0564 |    V | Las Cumbres |  FALSE |
+|   58514.1465 | 20.4518 | 0.0546 |    B | Las Cumbres |  FALSE |
+|   58514.1414 | 20.1848 | 0.0427 |    B | Las Cumbres |  FALSE |
+|   58521.3988 | 18.1095 | 0.0203 |   ip | Las Cumbres |  FALSE |
+|   58521.3961 | 18.1324 | 0.0212 |   ip | Las Cumbres |  FALSE |
+|   58521.3856 | 19.7093 | 0.0216 |   gp | Las Cumbres |  FALSE |
+|   58521.3806 |  19.717 | 0.0177 |   gp | Las Cumbres |  FALSE |
+|   58521.3779 | 18.9404 | 0.0282 |    V | Las Cumbres |  FALSE |
+|   58521.3753 | 18.8731 | 0.0258 |    V | Las Cumbres |  FALSE |
+|   58521.3702 | 20.6436 | 0.0602 |    B | Las Cumbres |  FALSE |
+|   58521.3652 | 20.5048 | 0.1554 |    B | Las Cumbres |  FALSE |
+|   58526.4123 | 18.4459 | 0.5007 |   ip | Las Cumbres |  FALSE |
+|   58526.4097 | 18.1882 | 0.0173 |   ip | Las Cumbres |  FALSE |
+|   58526.3992 | 19.9061 | 0.0234 |   gp | Las Cumbres |  FALSE |
+|   58526.3943 | 19.8443 | 0.0214 |   gp | Las Cumbres |  FALSE |
+|   58526.3915 | 19.0125 | 0.0272 |    V | Las Cumbres |  FALSE |
+|   58526.3889 | 18.9782 |  0.031 |    V | Las Cumbres |  FALSE |
+|   58526.3838 | 20.7373 | 0.0731 |    B | Las Cumbres |  FALSE |
+|   58526.3789 | 20.6817 | 0.0642 |    B | Las Cumbres |  FALSE |
+|   58536.2789 | 18.4023 | 0.0271 |   ip | Las Cumbres |  FALSE |
+|   58536.2677 | 21.0485 | 0.1924 |    B | Las Cumbres |  FALSE |
+|   58536.3706 | 18.3934 | 0.0361 |   ip | Las Cumbres |  FALSE |
+|    58536.368 | 18.4536 | 0.0291 |   ip | Las Cumbres |  FALSE |
+|   58536.3575 | 20.3402 | 0.1074 |   gp | Las Cumbres |  FALSE |
+|   58536.3526 | 20.1925 | 0.0845 |   gp | Las Cumbres |  FALSE |
+|   58536.3498 | 19.4219 | 0.0783 |    V | Las Cumbres |  FALSE |
+|   58536.3472 | 19.5422 | 0.0843 |    V | Las Cumbres |  FALSE |
+|   58536.3421 | 20.6811 | 0.1655 |    B | Las Cumbres |  FALSE |
+|   58536.3372 | 21.2035 | 0.2533 |    B | Las Cumbres |  FALSE |
+|   58540.3692 | 20.4935 | 0.0645 |   gp | Las Cumbres |  FALSE |
+|   58540.3664 | 19.5455 | 0.0552 |    V | Las Cumbres |  FALSE |
+|   58540.3638 | 19.5634 | 0.0503 |    V | Las Cumbres |  FALSE |
+|   58540.3538 | 21.4099 | 0.1515 |    B | Las Cumbres |  FALSE |
+|   58540.3873 | 18.8947 | 0.0532 |   ip | Las Cumbres |  FALSE |
+|   58540.3846 | 18.5962 | 0.0432 |   ip | Las Cumbres |  FALSE |
+|   58540.3741 | 20.5204 | 0.0675 |   gp | Las Cumbres |  FALSE |
+|   58540.5550 |   19.14 |    0.0 |    G |        Gaia |  FALSE |
+|   58540.6290 |    19.2 |    0.0 |    G |        Gaia |  FALSE |
+|   58544.2394 | 20.7508 | 0.0412 |   gp | Las Cumbres |  FALSE |
+|   58544.2345 | 20.7691 | 0.0343 |   gp | Las Cumbres |  FALSE |
+|   58544.2317 | 19.9138 | 0.0407 |    V | Las Cumbres |  FALSE |
+|   58544.2291 | 19.9079 |  0.056 |    V | Las Cumbres |  FALSE |
+|    58544.224 | 21.3424 | 0.0859 |    B | Las Cumbres |  FALSE |
+|   58544.2191 | 21.5122 | 0.0852 |    B | Las Cumbres |  FALSE |
+|   58544.2525 | 19.0187 | 0.0293 |   ip | Las Cumbres |  FALSE |
+|   58544.2499 | 19.0033 | 0.0303 |   ip | Las Cumbres |  FALSE |
+|   58544.3678 | 20.8031 | 0.0324 |   gp | Las Cumbres |  FALSE |
+|    58544.365 | 19.8066 | 0.0409 |    V | Las Cumbres |  FALSE |
+|   58544.3624 | 20.0151 | 0.0427 |    V | Las Cumbres |  FALSE |
+|   58544.3573 | 21.7073 | 0.1021 |    B | Las Cumbres |  FALSE |
+|   58544.3524 | 21.4384 |  0.095 |    B | Las Cumbres |  FALSE |
+|   58544.3859 | 19.1093 | 0.0336 |   ip | Las Cumbres |  FALSE |
+|   58544.3833 | 19.1665 | 0.0375 |   ip | Las Cumbres |  FALSE |
+|   58544.3727 | 20.7592 | 0.0354 |   gp | Las Cumbres |  FALSE |
+|   58554.8080 |   19.81 |    0.0 |    G |        Gaia |  FALSE |
+|   58555.3264 | 20.5142 |  0.083 |    V | Las Cumbres |  FALSE |
+|   58555.3302 | 20.5229 | 0.0869 |    V | Las Cumbres |  FALSE |
+|   58555.3341 | 20.6093 | 0.0634 |   gp | Las Cumbres |  FALSE |
+|   58555.3391 | 20.7591 | 0.0703 |   gp | Las Cumbres |  FALSE |
+|   58555.3519 | 19.2945 | 0.0571 |   ip | Las Cumbres |  FALSE |
+|   58555.3557 | 19.2024 | 0.0611 |   ip | Las Cumbres |  FALSE |
+|   58558.1331 | 19.2884 | 0.0911 |   ip | Las Cumbres |  FALSE |
+|   58558.1369 | 19.6378 | 0.1321 |   ip | Las Cumbres |  FALSE |
+|   58561.3381 | 19.7478 | 0.1482 |   ip | Las Cumbres |  FALSE |
+|   58561.3419 | 19.6351 | 0.1263 |   ip | Las Cumbres |  FALSE |
+|   58562.1357 | 19.8567 | 0.2081 |   ip | Las Cumbres |  FALSE |
+|   58562.1395 | 19.5652 | 0.1821 |   ip | Las Cumbres |  FALSE |
+|   58565.1335 | 19.5004 | 0.2541 |   ip | Las Cumbres |  FALSE |
+|   58565.1373 | 19.4032 | 0.1921 |   ip | Las Cumbres |  FALSE |
+|   58568.1049 | 19.8368 | 0.0651 |   ip | Las Cumbres |  FALSE |
+|   58568.1011 | 19.8932 |  0.069 |   ip | Las Cumbres |  FALSE |
+|   58568.0895 | 20.7592 | 0.1141 |    V | Las Cumbres |  FALSE |
+|   58568.0857 |   20.75 | 0.1491 |    V | Las Cumbres |  FALSE |
+|   58571.2846 |  20.659 | 0.0681 |    V | Las Cumbres |  FALSE |
+|   58571.2884 |  20.593 |  0.066 |    V | Las Cumbres |  FALSE |
+|      58571.3 | 19.6903 | 0.0491 |   ip | Las Cumbres |  FALSE |
+|   58571.3038 | 19.5821 | 0.0511 |   ip | Las Cumbres |  FALSE |
+|   58574.2603 | 20.9275 | 0.1283 |    V | Las Cumbres |  FALSE |
+|   58574.2641 | 20.8453 | 0.1183 |    V | Las Cumbres |  FALSE |
+|   58574.2758 | 19.8564 | 0.0962 |   ip | Las Cumbres |  FALSE |
+|   58574.2796 | 19.6842 | 0.1041 |   ip | Las Cumbres |  FALSE |
+|    58577.115 | 19.6757 | 0.0351 |   ip | Las Cumbres |  FALSE |
+|   58577.1189 | 20.6223 | 0.0573 |    V | Las Cumbres |  FALSE |
+|   58577.1227 |  20.676 | 0.0757 |    V | Las Cumbres |  FALSE |
+|   58577.1343 | 19.8884 | 0.0461 |   ip | Las Cumbres |  FALSE |
+|   58577.1381 | 19.8626 | 0.0381 |   ip | Las Cumbres |  FALSE |
+|   58578.1132 | 19.6617 | 0.0441 |   ip | Las Cumbres |  FALSE |
+|    58578.117 | 19.6935 | 0.0421 |   ip | Las Cumbres |  FALSE |
+|    58578.127 |  20.654 | 0.0645 |    V | Las Cumbres |  FALSE |
+|   58578.1308 | 20.8496 | 0.0814 |    V | Las Cumbres |  FALSE |
+|   58578.1425 | 19.7546 | 0.0441 |   ip | Las Cumbres |  FALSE |
+|   58578.1463 | 19.8659 | 0.0461 |   ip | Las Cumbres |  FALSE |
+|   58591.5230 |   20.25 |    0.0 |    G |        Gaia |  FALSE |
+|   58591.5970 |   20.29 |    0.0 |    G |        Gaia |  FALSE |
+|   58593.1597 |  21.075 | 0.2271 |    V | Las Cumbres |  FALSE |
+|   58593.1635 | 21.0846 | 0.2732 |    V | Las Cumbres |  FALSE |
+|   58593.1752 | 20.1212 | 0.1141 |   ip | Las Cumbres |  FALSE |
+|    58593.179 | 20.0421 | 0.1111 |   ip | Las Cumbres |  FALSE |
+|   58601.1027 | 20.6225 | 0.1552 |    V | Las Cumbres |  FALSE |
+|   58601.1065 | 21.0241 | 0.1643 |    V | Las Cumbres |  FALSE |
+|    58601.122 | 20.0317 |  0.083 |   ip | Las Cumbres |  FALSE |
+|   58601.1182 | 19.6159 |   0.07 |   ip | Las Cumbres |  FALSE |
+|   58609.1213 | 18.0589 | 0.0433 |    V | Las Cumbres |  FALSE |
+|   58609.1251 | 17.4926 | 0.0424 |    V | Las Cumbres |  FALSE |
+|   58422.4679 | 17.0895 | 0.0209 |    g |         ZTF |  FALSE |
+|   58425.5163 | 17.1056 |  0.021 |    g |         ZTF |  FALSE |
+|   58427.3876 | 17.1934 | 0.0217 |    g |         ZTF |  FALSE |
+|   58428.5285 | 17.1533 | 0.0214 |    g |         ZTF |  FALSE |
+|   58430.3701 | 17.1977 | 0.0217 |    g |         ZTF |  FALSE |
+|   58431.4934 | 17.2255 |  0.022 |    g |         ZTF |  FALSE |
+|   58434.5109 | 17.3593 | 0.0232 |    g |         ZTF |  FALSE |
+|   58437.4658 |  17.446 | 0.0241 |    g |         ZTF |  FALSE |
+|   58443.5122 | 17.6776 | 0.0268 |    g |         ZTF |  FALSE |
+|   58450.4427 | 17.9439 | 0.0309 |    g |         ZTF |  FALSE |
+|   58464.4777 | 18.2989 |  0.038 |    g |         ZTF |  FALSE |
+|   58467.4339 | 18.3866 | 0.0402 |    g |         ZTF |  FALSE |
+|    58472.493 | 18.5611 |  0.045 |    g |         ZTF |  FALSE |
+|    58475.528 | 18.6152 | 0.0466 |    g |         ZTF |  FALSE |
+|   58480.4715 |  18.697 | 0.0493 |    g |         ZTF |  FALSE |
+|   58482.5527 | 18.6926 | 0.0491 |    g |         ZTF |  FALSE |
