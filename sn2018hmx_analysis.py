@@ -151,7 +151,6 @@ SN2018hmx_lightcurves = make_alllightcurve_df(SN2018hmx)
 ascii18hmx = save_ascii(SN2018hmx_lightcurves, 'ascii18hmx.ascii')
 
 
-exit()
 lightcurve.lightcurve_plot([SN2018hmx, SN1999em], main_SN='SN2018hmx')
 lightcurve.lightcurve_plot([SN2018hmx, SN2004ej], main_SN='SN2018hmx')
 lightcurve.lightcurve_plot([SN2018hmx, SN2012A], main_SN='SN2018hmx')
@@ -160,9 +159,16 @@ lightcurve.lightcurve_plot([SN2018hmx, ASASSN14kg], main_SN='SN2018hmx')
 # light curve parameters:
 # TODO also for bolometric, not only for the V
 
-s50V_2018hmx = lightcurve_param_fit.calc_s50V(SN2018hmx)
-p0_2018hmx = lightcurve_param_fit.calc_p0(SN2018hmx, time_range=[140, 190])
-Vmax_2018hmx, Vmax_err_2018hmx = lightcurve_param_fit.calc_Vmax(SN2018hmx)
+# calculate v magnitude at day 50 as the closest observation to day 50
+LCO_mag_df = SN2018hmx['lightcurve']['LCO']['df']
+vmag_df = LCO_mag_df.loc[LCO_mag_df['filter'] == 'V']
+vmag_50 = vmag_df.loc[vmag_df['t_from_discovery']<50, 'abs_mag'].iloc[-1]
+vmag_50_err = vmag_df.loc[vmag_df['t_from_discovery']<50, 'dmag'].iloc[-1]
+
+
+s50V, s50V_sigma = lightcurve_param_fit.calc_s50V(SN2018hmx)
+p0, p0_sigma = lightcurve_param_fit.calc_p0(SN2018hmx, time_range=[140, 190])
+Vmax, Vmax_err = lightcurve_param_fit.calc_Vmax(SN2018hmx)
 
 lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 'p0')
 lightcurve_param_fit.plot_v_lightcurve_with_slope(SN2018hmx, 's50V')
@@ -174,11 +180,16 @@ lightcurve_param_fit.plot_v_lightcurve_with_fit(SN2018hmx, sampler)
 
 # TODO what is the correct method for calculating parameter uncertainties? in particular p0 and s50v, but also MCMC.
 param_results = lightcurve_param_fit.get_param_results_dict(sampler)
-param_results['s50V'] = s50V_2018hmx
-param_results['p0'] = p0_2018hmx
-param_results['Vmax'] = Vmax_2018hmx
-param_results['e_Vmax'] = Vmax_err_2018hmx
+param_results['vmag_50'] = vmag_50
+param_results['vmag_50_err'] = vmag_50_err
+param_results['s50V'] = s50V
+param_results['s50V_err'] = s50V_sigma
+param_results['p0'] = p0
+param_results['p0_err'] = p0_sigma
+param_results['Vmax'] = Vmax
+param_results['e_Vmax'] = Vmax_err
 param_results['Name'] = 'SN2018hmx'
+print(param_results)
 param_results = pd.DataFrame(param_results, index=[0])
 param_results.to_csv('SN2018hmx_param_results.csv')
 
