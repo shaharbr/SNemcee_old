@@ -143,7 +143,7 @@ def make_SN_dict(SN_name, lightcurves_dict=False, z_dict=False, discovery_date_d
     # convert date to MJD
     discovery_date_dict[SN_name] = convert_to_mjd(discovery_date_dict[SN_name], from_datetime=True)
     SN_dict = {}
-    SN_dict['name'] = SN_name
+    SN_dict['Name'] = SN_name
     for i in range(len(fields)):
         if fields[i]:
             SN_dict[keys[i]] = fields[i][SN_name]
@@ -197,3 +197,49 @@ def SN14hls_expans_v(path):
 # def fit_with_errors(fit_function, x, y, err=False):
 #     popt, pcov = curve_fit(fit_function, x, y, sigma=err, absolute_sigma=True)
 #     return popt, pcov
+
+
+def dict_to_csv(dict, filename):
+    pd.DataFrame(dict, index=[0]).to_csv(r'data/' +filename)
+
+def correction_dict_to_csv(z_dict, discovery_date_dict, distance_modulus_dict, galactic_extinction_dict):
+    for SN in z_dict.keys():
+        dict = {'Name': SN}
+        dict['z'] = z_dict[SN]
+        dict['discovery_date'] = convert_to_mjd(discovery_date_dict[SN], from_datetime=True)
+        dict['distance_modulus'] = distance_modulus_dict[SN]
+        for filter in galactic_extinction_dict[SN].keys():
+            dict[filter] = galactic_extinction_dict[SN][filter]
+        pd.DataFrame(dict, index=[0]).to_csv(r'data/' + SN + '_correction.csv')
+
+
+
+def make_alllightcurve_df(SN_dict):
+    sources = SN_dict['lightcurve'].keys()
+    all_df = []
+    for source in sources:
+        df = SN_dict['lightcurve'][source]['df'].copy(deep=True)
+        df = df.loc[df['mag'] > 0]
+        df['source'] = source
+        all_df.append(df)
+    all_df = pd.concat(all_df, sort=False)
+    all_df = all_df[['mjd', 'mag', 'dmag', 'filter', 'source']]
+    all_df.reset_index(inplace=True, drop=True)
+    return all_df
+
+
+def save_ascii(dataframe, filename):
+    df = dataframe.copy(deep=True)
+    df.rename(columns={'mjd': 'MJD', 'filter': 'filt'}, inplace=True)
+    df['nondet |'] = 'FALSE |'
+    header_row = pd.DataFrame(np.array(df.keys()).reshape(1, 6), columns=list(df.keys()))
+    df = pd.concat([header_row, df], ignore_index=True)
+    def equalspace(x):
+        x = str(x)
+        len_x = len(x)
+        x = '|' + ' '*(30-len_x) + x
+        return x
+    for column in df.keys():
+        df[column] = df[column].apply(equalspace)
+    df.to_csv(filename, sep=str(' '), index=False, header=False)
+    return df
