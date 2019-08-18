@@ -24,11 +24,11 @@ lines_dict = {'Halpha': {'peak': 6562.81, 'absorption_range': [6200, 6500], 'emi
               'FeII 5169': {'peak': 5169, 'absorption_range': [5000, 5100], 'emission_range': [5100, 5500]}}
 
 
-SN18hmx_spect_dict = data_import.LCO_spect('snexdata_target5025')
-SN18aad_spect_dict = data_import.LCO_spect('snexdata_target4771')
+SN18hmx_spect_dict = data_import.LCO_spect(r'data\snexdata_target5025')
+SN18aad_spect_dict = data_import.LCO_spect(r'data\snexdata_target4771')
 
 # import expansion velocity file for iPTF14hls
-SN14hls_expans_v_df = data_import.SN14hls_expans_v('iPTF14hls_expansion_velocity.csv')
+SN14hls_expans_v_df = data_import.SN14hls_expans_v(r'results\iPTF14hls_expansion_velocity.csv')
 # TODO correct 14hls time from discovery
 
 spectra = {'SN2018hmx': SN18hmx_spect_dict,
@@ -58,11 +58,11 @@ for SN in [SN2018hmx]:
     SN['expansion_velocities'] = spectra_velocity.make_velocity_df(SN, lines_dict)
 
 spectra_velocity.plot_expansion_velocities([SN2018hmx['expansion_velocities'], SNiPTF14hls['expansion_velocities']], 'absorption')
-# spectra_velocity.plot_expansion_velocities([SN2018hmx['expansion_velocities'], SN2018aad['expansion_velocities']], 'absorption')
+spectra_velocity.plot_expansion_velocities([SN2018hmx['expansion_velocities'], SN2018aad['expansion_velocities']], 'absorption')
 
-SN2018hmx['expansion_velocities'].to_csv('sN2018hmx_expansion_velocities.csv')
-SNiPTF14hls['expansion_velocities'].to_csv('SNiPTF14hls_expansion_velocities.csv')
-# SN2018aad['expansion_velocities'].to_csv('SN2018aad_expansion_velocities.csv')
+SN2018hmx['expansion_velocities'].to_csv(r'results\sN2018hmx_expansion_velocities.csv')
+SNiPTF14hls['expansion_velocities'].to_csv(r'results\SNiPTF14hls_expansion_velocities.csv')
+SN2018aad['expansion_velocities'].to_csv(r'results\SN2018aad_expansion_velocities.csv')
 
 plt.show()
 
