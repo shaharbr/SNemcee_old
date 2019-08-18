@@ -4,24 +4,6 @@ import lightcurve_param_fit
 import lightcurve
 import pandas as pd
 import numpy as np
-'''
-# TODO - ask Iair:
-- what should I do regarding the G and o filters which dont have galactic extinction values in the NES?
-- removing R filter from bolometric - griffin's code limits to epoches with at least 3 filters by deafult.
-If removing R, much of the radioactive tail is excluded, or changing to to at least 2 filters (then high error) 
-
-# TODO additional analysis after GSP: 
-- add comparison of lightcurve params to valenti 2D plots
-- compare velocities to Gutierrez sample. (and light curves?)
-  (https://iopscience.iop.org/article/10.3847/1538-4357/aa8f52,
-  in particular Figures 11, and 18, and Table 8
-  values from the absorption method not the FWHM one).
-- Derive explosion time by comparing temperature and/or B-V colors to other SNe
-
-
-- check ATLAS and ZTF might have more photometry points on their webpage.
-
-'''
 
 
 # TODO add lightcurve compared to 18ad?
@@ -51,7 +33,7 @@ discovery_date = {'SN2018hmx': '2018-10-17 15:30:14',
 galactic_extinction = {'SN2018hmx': {'U': 0.206, 'B': 0.173, 'V': 0.131, 'R': 0.103, 'I': 0.072,
                        'u': 0.202, 'g': 0.157, 'r': 0.109, 'i': 0.081, 'z': 0.060,
                        'J': 0.034, 'H': 0.021, 'K': 0.014, 'L': 0.007,
-                       'G': 0, 'o': 0},
+                       'G': 0, 'o': 0, 'c': 0},
                        'SN1999em': {'U': 0.176, 'B': 0.147, 'V': 0.111, 'R': 0.088, 'I': 0.061,
                        'u': 0.172, 'g': 0.134, 'r': 0.093, 'i': 0.069, 'z': 0.051,
                        'J': 0.029, 'H': 0.018, 'K': 0.012, 'L': 0.006,
@@ -63,19 +45,25 @@ galactic_extinction = {'SN2018hmx': {'U': 0.206, 'B': 0.173, 'V': 0.131, 'R': 0.
 # define colormap for plotting, the colors each filter will be presented in
 colormap = {'i': 'firebrick', 'r': 'tomato', 'g': 'turquoise',
             'V': 'limegreen', 'B': 'blue', 'U': 'darkorchid', 'G': 'teal', 'R': 'tomato', 'I': 'firebrick',
-            'o': 'orange',
+            'o': 'orange', 'c': 'cyan',
             'UVW1': 'darkorchid', 'UVW2': 'darkorchid', 'UVM2': 'darkorchid'}
+
+# pd.DataFrame.from_dict(colormap).to_csv('colormap.csv')
 
 
 # import photometry data files
-lco_phot = data_import.lco_phot('sn2018hmx_20181101-20190505_lcophot.txt')
-gaia_phot = data_import.gaia_phot('gaia18doi.txt')
-atlas_phot = data_import.atlas_phot('ATLAS1_ACAM1.txt')
-ztf_phot_new = data_import.ztf_phot_new('ztf_dr1_lightcurve.txt')
-sn1999em_leonard_phot = data_import.leonard_phot('sn1999em_UBVRI_leonard02.txt')
-sn2004ej_phot = data_import.sne_catalog_phot('SN2004ej.csv')
-sn2012A_phot = data_import.sne_catalog_phot('SN2012A.csv')
-ASASSN14kg_phot = data_import.sne_catalog_phot('ASASSN-14kg.csv')
+atlas_phot_o = data_import.atlas_flux('data\SN2018hmx_flux_raw_wightedavg_orange.txt', 'o')
+atlas_phot_c = data_import.atlas_flux('data\SN2018hmx_flux_raw_wightedavg_cyan.txt', 'c')
+atlas_phot = pd.concat([atlas_phot_o, atlas_phot_c], ignore_index=True)
+lco_phot = data_import.lco_phot(r'data\sn2018hmx_20181101-20190505_lcophot.txt')
+gaia_phot = data_import.gaia_phot(r'data\gaia18doi.txt')
+# atlas_phot = data_import.atlas_phot(r'data\ATLAS1_ACAM1.txt')
+ztf_phot_new = data_import.ztf_phot_new(r'data\ztf_dr1_lightcurve.txt')
+sn1999em_leonard_phot = data_import.leonard_phot(r'data\sn1999em_UBVRI_leonard02.txt')
+sn2004ej_phot = data_import.sne_catalog_phot(r'data\SN2004ej.csv')
+sn2012A_phot = data_import.sne_catalog_phot(r'data\SN2012A.csv')
+ASASSN14kg_phot = data_import.sne_catalog_phot(r'data\ASASSN-14kg.csv')
+
 
 
 
@@ -138,7 +126,7 @@ def save_ascii(dataframe, filename):
     def equalspace(x):
         x = str(x)
         len_x = len(x)
-        x = '|' + ' '*(20-len_x) + x
+        x = '|' + ' '*(30-len_x) + x
         return x
     for column in df.keys():
         df[column] = df[column].apply(equalspace)
@@ -151,13 +139,17 @@ SN2018hmx_lightcurves = make_alllightcurve_df(SN2018hmx)
 ascii18hmx = save_ascii(SN2018hmx_lightcurves, 'ascii18hmx.ascii')
 
 
-lightcurve.lightcurve_plot([SN2018hmx, SN1999em], main_SN='SN2018hmx')
-lightcurve.lightcurve_plot([SN2018hmx, SN2004ej], main_SN='SN2018hmx')
-lightcurve.lightcurve_plot([SN2018hmx, SN2012A], main_SN='SN2018hmx')
-lightcurve.lightcurve_plot([SN2018hmx, ASASSN14kg], main_SN='SN2018hmx')
+lightcurve.lightcurve_plot([SN2018hmx], main_SN='SN2018hmx')
+lightcurve.lightcurve_plot_shift(SN2018hmx)
+
+# lightcurve.lightcurve_plot([SN2018hmx, SN1999em], main_SN='SN2018hmx')
+# lightcurve.lightcurve_plot([SN2018hmx, SN2004ej], main_SN='SN2018hmx')
+# lightcurve.lightcurve_plot([SN2018hmx, SN2012A], main_SN='SN2018hmx')
+# lightcurve.lightcurve_plot([SN2018hmx, ASASSN14kg], main_SN='SN2018hmx')
 
 # light curve parameters:
 # TODO also for bolometric, not only for the V
+
 
 # calculate v magnitude at day 50 as the closest observation to day 50
 LCO_mag_df = SN2018hmx['lightcurve']['LCO']['df']
@@ -191,7 +183,7 @@ param_results['e_Vmax'] = Vmax_err
 param_results['Name'] = 'SN2018hmx'
 print(param_results)
 param_results = pd.DataFrame(param_results, index=[0])
-param_results.to_csv('SN2018hmx_param_results.csv')
+param_results.to_csv('results\SN2018hmx_param_results.csv')
 
 
 lightcurve.BV_plot(SN2018hmx)
