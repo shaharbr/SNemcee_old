@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+import numpy as np
 
 # define colormap for plotting, the colors each filter will be presented in
 colormap = {'i': 'firebrick', 'r': 'tomato', 'g': 'turquoise',
@@ -6,9 +7,9 @@ colormap = {'i': 'firebrick', 'r': 'tomato', 'g': 'turquoise',
             'o': 'orange', 'c': 'cyan',
             'UVW1': 'darkorchid', 'UVW2': 'darkorchid', 'UVM2': 'darkorchid'}
 
-def add_rest_frame_days_from_discovery(SN_dict):
-    discovery_date = SN_dict['discovery_date']
-    z = SN_dict['z']
+def add_rest_frame_days_from_discovery(SN_dict, correction_df):
+    discovery_date = correction_df['discovery_date']
+    z = correction_df['z']
     lightcurve = SN_dict['lightcurve']
     for source in lightcurve.keys():
         timedelta = (lightcurve[source]['df']['mjd'] - discovery_date) / (1 + z)
@@ -26,32 +27,29 @@ def remove_data_before_discovery(SN_dict):
 
 
 
-def remove_glactic_extinction(SN_dict):
-    lightcurve = SN_dict['lightcurve']
-    galactic_extinction_values = SN_dict['galactic_extinction']
-    for source in lightcurve.keys():
-        df = lightcurve[source]['df']
+def remove_glactic_extinction(SN_dict, correction_df):
+    for source in SN_dict['lightcurve'].keys():
+        df = SN_dict['lightcurve'][source]['df']
         for filter in df['filter'].unique():
-            df.loc[df['filter'] == filter, 'mag'] = df.loc[df['filter'] == filter, 'mag'] - galactic_extinction_values[filter]
-    SN_dict['lightcurve'] = lightcurve
+            df.loc[df['filter'] == filter, 'mag'] = df.loc[df['filter'] == filter, 'mag'] - correction_df[filter]
+        SN_dict['lightcurve'][source]['df'] = df
     return SN_dict
 
 
-def add_absolute_magnitude(SN_dict):
-    lightcurve = SN_dict['lightcurve']
-    distance_modulus = SN_dict['distance_modulus']
-    for source in lightcurve.keys():
-        lightcurve[source]['df']['abs_mag'] = lightcurve[source]['df']['mag'] - distance_modulus
-    SN_dict['lightcurve'] = lightcurve
+def add_absolute_magnitude(SN_dict, correction_df):
+    distance_modulus = correction_df['distance_modulus']
+    for source in SN_dict['lightcurve'].keys():
+        SN_dict['lightcurve'][source]['df']['abs_mag'] = SN_dict['lightcurve'][source]['df']['mag'] - distance_modulus
     return SN_dict
 
 # TODO fix colormap
-def lightcurve_plot(SN_dict_list, main_SN):
+def lightcurve_plot(SN_dict_list, main_SN, correction_params):
+    distance_modulus = correction_params.loc[main_SN]['distance_modulus']
     fig, ax = plt.subplots(1, figsize=(9, 6))
     ax2 = ax.twinx()
     names= []
     for SN in SN_dict_list:
-        name = SN['name']
+        name = SN['Name']
         names.append(name)
         lightcurve = SN['lightcurve']
         for source in lightcurve.keys():
@@ -64,14 +62,13 @@ def lightcurve_plot(SN_dict_list, main_SN):
                                                     color=colormap[filter],
                                                     markeredgecolor='k', markeredgewidth =0.3,
                                                     label=source + ' (' + filter + ')',)
-                if SN['name'] == main_SN:
-                    distance_modulus = SN['distance_modulus']
+                if SN['Name'] == main_SN:
                     df.loc[df['filter'] == filter].plot(x='t_from_discovery', y='mag', yerr='dmag', ax=ax,
                                                         marker=marker, linestyle=linestyle,
                                                         color=colormap[filter],
                                                         markeredgecolor='k', markeredgewidth=0.3)
 
-    ax.set_title('Light-curve over time - '+str([SN['name'] for SN in SN_dict_list]), fontsize=16)
+    ax.set_title('Light-curve over time - '+str([SN['Name'] for SN in SN_dict_list]), fontsize=16)
     ax.set_xlabel('Time since discovery (rest-frame days)', size=16)
     ax.set_ylabel('Apparent Magnitude', size=16)
     ax.set_ylim(14, 27)
@@ -93,17 +90,17 @@ def lightcurve_plot(SN_dict_list, main_SN):
 
 
 
-def lightcurve_plot_shift(SN_dict):
+def lightcurve_plot_shift(SN_dict, correction_params):
+    distance_modulus = correction_params.loc[SN_dict['Name']]['distance_modulus']
     fig, ax = plt.subplots(1, figsize=(9, 10))
     ax2 = ax.twinx()
-    distance_modulus = SN_dict['distance_modulus']
     lightcurve = SN_dict['lightcurve']
     for source in lightcurve.keys():
         df = lightcurve[source]['df']
         marker = lightcurve[source]['marker']
         linestyle = lightcurve[source]['Linestyle']
         # TODO sort the legend but sorting the order in which they are plotted -only by order of filter, not depending on which source plotted first
-        shifts = {'B': +4, 'c': +3, 'g': +1.5, 'G': +1.5 , 'V': 0, 'o': -1, 'r': -2, 'i': -3}
+        shifts = {'B': +4, 'c': +3, 'g': +2, 'G': +1 , 'V': 0, 'o': -1, 'r': -2, 'i': -3}
         for filter in shifts.keys():
             if filter in df['filter'].unique():
                 filter_df = df.loc[df['filter'] == filter]
@@ -120,13 +117,14 @@ def lightcurve_plot_shift(SN_dict):
                          markeredgecolor='k', markeredgewidth=0.3,
                          label=filter + ' ' + str(shifts[filter]) + ' (' + source + ')', )
 
-    ax.set_title('Light-curve over time - '+str(SN_dict['name']), fontsize=16)
+    ax.set_title('Light-curve over time - '+str(SN_dict['Name']), fontsize=16)
     ax.set_xlabel('Time since discovery (rest-frame days)', size=16)
     ax.set_ylabel('Apparent Magnitude', size=16)
     ax.set_ylim(13, 26)
     ax2.set_ylabel('Absolute Magnitude', size=16)
     # TODO remember that the distance module difference between the y axes is hardcoded here -
     # TODO need to find way to me this automatic
+    ax2.set_yticks(np.arange(int(13 - distance_modulus),  int(26 - distance_modulus + 1), 1))
     ax2.set_ylim(13 - distance_modulus, 26 - distance_modulus)
     ax2.legend(ncol=2)
     ax.invert_yaxis()
@@ -134,7 +132,7 @@ def lightcurve_plot_shift(SN_dict):
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax2.tick_params(axis='both', which='major', labelsize=14)
 
-    fig.savefig(r'figures\light-curve over time stacked ' + str(SN_dict['name']) + '.png')
+    fig.savefig(r'figures\light-curve over time stacked ' + str(SN_dict['Name']) + '.png')
 
 def remove_LCO_outlier(SN_dict):
     df = SN_dict['lightcurve']['LCO']['df']
