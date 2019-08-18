@@ -1,10 +1,8 @@
 import pandas as pd
-import numpy as np
 from matplotlib import pyplot as plt
-import data_import
 
-SN2018hmx_param_Vband = pd.read_csv('SN2018hmx_param_results.csv')
-SN2018hmx_Ni = pd.read_csv('SN2018hmx_Ni_results.csv')
+SN2018hmx_param_Vband = pd.read_csv(r'results\SN2018hmx_param_results.csv')
+SN2018hmx_Ni = pd.read_csv(r'results\SN2018hmx_Ni_results.csv')
 
 
 def object_to_numeric(series):
@@ -13,29 +11,16 @@ def object_to_numeric(series):
     return series
 
 
-# valenti_Vband_param = pd.read_csv('valenti2016_MCMC_parameters_on_V_band_light_curves.tsv', sep='\t', header=50)
-# valenti_Vband_param.drop([0, 1], inplace=True)
-# for column in valenti_Vband_param.keys():
-#     valenti_Vband_param[column] = valenti_Vband_param[column].str.strip()
-#     if column != 'Name':
-#         valenti_Vband_param[column] = pd.to_numeric(valenti_Vband_param[column])
 
-
-valenti_s50v = pd.read_csv('valenti_result_s50_V2.tsv', sep='\t',
+valenti_s50v = pd.read_csv(r'data\valenti_result_s50_V2.tsv', sep='\t',
                            names=['Name', 's50V', 'e_s50V', 'NA1', 'NA2', 'NA3', 'NA4', 'NA5', ],
                            usecols=['Name', 's50V', 'e_s50V'])
 valenti_s50v['e_s50V'] = object_to_numeric(valenti_s50v['e_s50V'])
-
-# valenti_s50v.drop([0, 1]+list(np.arange(97, 109)), inplace=True)
-# for column in valenti_s50v.keys():
-#     valenti_s50v[column] = valenti_s50v[column].str.strip()
-#     if column != 'Name':
-#         valenti_s50v[column] = pd.to_numeric(valenti_s50v[column])
 valenti_s50v['s50V'] = 50 * valenti_s50v['s50V']
 valenti_s50v['e_s50V'] = 50 * valenti_s50v['e_s50V']
 
 
-valenti_bolometric = pd.read_csv('valenti2016_bolometric.tsv', sep='\t', header=51,
+valenti_bolometric = pd.read_csv(r'data\valenti2016_bolometric.tsv', sep='\t', header=51,
                                  usecols=['Name', 'MNi', 'e_MNi'])
 valenti_bolometric.drop([0, 1], inplace=True)
 for column in ['MNi', 'e_MNi']:
@@ -44,38 +29,16 @@ for column in ['MNi', 'e_MNi']:
 
 
 
-valenti_vmag_50 = pd.read_csv('valenti_result_mag50_2.tsv', sep='\t',
+valenti_vmag_50 = pd.read_csv(r'data\valenti_result_mag50_2.tsv', sep='\t',
                               names=['Name', 'vmag_50', 'e_vmag_50', 'jd', 'filter', 'NA1', 'NA2', 'NA3'],
                               usecols=['Name', 'vmag_50', 'e_vmag_50'])
 valenti_vmag_50['e_vmag_50'] = object_to_numeric(valenti_vmag_50['e_vmag_50'])
-# for column in valenti_vmag_50.keys():
-#     if column != 'Name' and column != 'filter':
-#         valenti_vmag_50[column] = pd.to_numeric(valenti_vmag_50[column])
 
 
 
-
-valenti_vmax = pd.read_csv('valenti_result_mag_at_max.tsv', sep='\t',
+valenti_vmax = pd.read_csv(r'data\valenti_result_mag_at_max.tsv', sep='\t',
                               names=['Name', 'Vmax', 'e_Vmax', 'NA1', 'NA2', 'NA3', 'NA4', 'NA5', 'NA6', 'NA7'],
                               usecols=['Name', 'Vmax', 'e_Vmax'])
-# for column in valenti_vmag_50.keys():
-#     if column != 'Name' and column != 'filter':
-#         valenti_vmag_50[column] = pd.to_numeric(valenti_vmag_50[column])
-
-
-# valenti_phot = pd.read_csv('valenti2016_photometry.tsv', sep='\t', header=39 ,
-#                                  usecols=['Name', 'JD', 'mag', 'Filter'])
-# valenti_phot.drop([0, 1], inplace=True)
-# for column in valenti_phot.keys():
-#     valenti_phot[column] = valenti_phot[column].str.strip()
-#     if column == 'JD' or column == 'mag':
-#         valenti_phot[column] = pd.to_numeric(valenti_phot[column])
-# valenti_phot = valenti_phot.loc[valenti_phot['Filter'] == 'V']
-# for SN in valenti_phot['Name'].unique():
-#     SN_df = valenti_phot.loc[valenti_phot['Name'] == SN]
-#     discovery_t = np.min(SN_df['JD'])
-#     SN_df['JD'] = SN_df['JD'] - discovery_t
-#     regression_params = np.polyfit(SN_df['JD'], SN_df['mag'], deg=1)
 
 
 
@@ -112,7 +75,7 @@ ax.set_xlabel('s50V', size=12)
 ax.set_xlim(left=-0.2)
 ax.legend()
 ax.tick_params(axis='both', which='major', labelsize=14)
-fig.savefig('SN2018hmx_Vmax_s50V_against_valenti' + '.png')
+fig.savefig(r'figures\SN2018hmx_Vmax_s50V_against_valenti' + '.png')
 
 
 
@@ -136,13 +99,13 @@ ax.set_ylabel('Ni mass (solar masses)', size=12)
 ax.set_xlabel('V band absolute mag at day 50', size=12)
 ax.legend()
 ax.tick_params(axis='both', which='major', labelsize=14)
-fig.savefig('SN2018hmx_vmag50_Ni_against_valenti' + '.png')
+fig.savefig(r'figures\SN2018hmx_vmag50_Ni_against_valenti' + '.png')
 
 
 
 
 
-gutierrez_veloc = pd.read_csv('Gutierrez_2017_apjaa8f52t8_ascii.txt', sep='\t', header=2,
+gutierrez_veloc = pd.read_csv(r'data\Gutierrez_2017_apjaa8f52t8_ascii.txt', sep='\t', header=2,
                            usecols=['Epoch', r'${{\rm{H}}}_{\alpha }$.1', r'${{\rm{H}}}_{\beta }$',
                                     'Fe II lambda5169'])
 gutierrez_veloc.rename(columns={r'${{\rm{H}}}_{\alpha }$.1': 'Halpha',
@@ -161,9 +124,9 @@ for column in gutierrez_veloc.keys():
 
 colors = {'Halpha': '#1b9e77', 'Hbeta': '#7570b3', 'FeII 5169': '#d95f02'}
 
-SN2018hmx_veloc = pd.read_csv('sN2018hmx_expansion_velocities.csv')
-SNiPTF14hls_veloc = pd.read_csv('SNiPTF14hls_expansion_velocities.csv')
-SN2018aad_veloc = pd.read_csv('SN2018aad_expansion_velocities.csv')
+SN2018hmx_veloc = pd.read_csv(r'results\sN2018hmx_expansion_velocities.csv')
+SNiPTF14hls_veloc = pd.read_csv(r'results\SNiPTF14hls_expansion_velocities.csv')
+SN2018aad_veloc = pd.read_csv(r'results\SN2018aad_expansion_velocities.csv')
 # TODO correct 14hls time from discovery
 
 
@@ -219,7 +182,7 @@ ax.set_xlabel('Days from discovery', size=12)
 ax.legend(ncol=3)
 ax.set_ylim(bottom=0)
 ax.tick_params(axis='both', which='major', labelsize=14)
-fig.savefig('SN2018hmx_SN2018aad_SNiPTF14hls_absorption_velocities_against_gutierrez' + '.png')
+fig.savefig(r'figures\SN2018hmx_SN2018aad_SNiPTF14hls_absorption_velocities_against_gutierrez' + '.png')
 
 
 
