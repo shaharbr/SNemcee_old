@@ -3,6 +3,7 @@ from pandas.io.json import json_normalize
 import pandas as pd
 import re
 import os
+import numpy as np
 
 # from scipy.optimize import curve_fit
 
@@ -35,6 +36,18 @@ def sne_catalog_phot(path):
     phot = pd.read_csv(path)
     phot.rename(columns={'time': 'mjd', 'magnitude': 'mag', 'e_magnitude': 'dmag', 'band': 'filter'}, inplace=True)
     return phot
+
+
+def atlas_flux(path, filter):
+    df = pd.read_csv(path, sep='\t', header=0)
+    df['filter'] = filter
+    df = df.loc[df['flux'] > (3 * df['flux_error'])]
+    df['mag'] = -2.5 * np.log10(df['flux'] * 10**(-6)) + 8.9
+    df['dmag'] = -2.5 * np.log10(np.exp(1)) / df['flux'] * df['flux_error']
+    # filter nondetection
+    return df
+
+
 
 
 def gaia_phot(path):
@@ -79,7 +92,7 @@ def ztf_phot(path):
 
 def ztf_phot_new(path):
     # import re-analyzed ZTF photometry dataset (ASCII file)
-    ztf_phot_new = pd.read_csv('ztf_dr1_lightcurve.txt', sep=r'\s+', header=50,
+    ztf_phot_new = pd.read_csv(r'data\ztf_dr1_lightcurve.txt', sep=r'\s+', header=50,
                                usecols=['mjd|', 'mag|', 'hjd|', 'catflags|'])
     ztf_phot_new.drop([0, 1, 2], inplace=True)
     # standardize column names and fill missing fields
