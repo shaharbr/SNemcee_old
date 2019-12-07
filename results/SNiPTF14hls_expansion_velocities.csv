@@ -1,4 +1,4 @@
-,datetime,line,absorption_mean_velocity,absorption_std_velocity,t_from_discovery,name
+,datetime,line,absorption_mean_velocity,absorption_std_velocity,t_from_discovery,Name
 0,57030.5,FeII 5169,4339.39,45.5,107.9701388888061,SNiPTF14hls
 1,57040.5,FeII 5169,3874.65,79.18,117.9701388888061,SNiPTF14hls
 2,57054.5,FeII 5169,4293.67,57.17,131.9701388888061,SNiPTF14hls
