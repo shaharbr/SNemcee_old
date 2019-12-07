@@ -1,9 +1,20 @@
 from matplotlib import pyplot as plt
 import numpy as np
 
+plt.rc('font', size=20)          # controls default text sizes
+plt.rc('axes', titlesize=20)     # fontsize of the axes title
+plt.rc('axes', labelsize=20)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=20)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=20)    # fontsize of the tick labels
+plt.rc('legend', fontsize=14)    # legend fontsize
+plt.rc('figure', titlesize=30)  # fontsize of the figure title
+plt.rcParams['font.sans-serif'] = 'Arial'
+
+
+
 # define colormap for plotting, the colors each filter will be presented in
 colormap = {'i': 'firebrick', 'r': 'tomato', 'g': 'turquoise',
-            'V': 'limegreen', 'B': 'blue', 'U': 'darkorchid', 'G': 'teal', 'R': 'tomato', 'I': 'firebrick',
+            'V': 'limegreen', 'B': 'blue', 'U': 'darkorchid', 'G': 'indianred', 'R': 'tomato', 'I': 'firebrick',
             'o': 'orange', 'c': 'cyan',
             'UVW1': 'darkorchid', 'UVW2': 'darkorchid', 'UVM2': 'darkorchid'}
 
@@ -68,22 +79,24 @@ def lightcurve_plot(SN_dict_list, main_SN, correction_params):
                                                         color=colormap[filter],
                                                         markeredgecolor='k', markeredgewidth=0.3)
 
-    ax.set_title('Light-curve over time - '+str([SN['Name'] for SN in SN_dict_list]), fontsize=16)
-    ax.set_xlabel('Time since discovery (rest-frame days)', size=16)
-    ax.set_ylabel('Apparent Magnitude', size=16)
-    ax.set_ylim(14, 27)
-    ax2.set_ylabel('Absolute Magnitude', size=16)
+    ax.set_title('Light-curve over time - '+str([SN['Name'] for SN in SN_dict_list]))
+    ax.set_xlabel('Rest-frame days from discovery')
+    ax.set_ylabel('Apparent Magnitude')
+    ax.set_ylim(13, 27)
+    ax2.set_ylabel('Absolute Magnitude')
     # TODO remember that the distance module difference between the y axes is hardcoded here -
     # TODO need to find way to me this automatic
-    ax2.set_ylim(14 - distance_modulus, 27 - distance_modulus)
+    ax2.set_ylim(13 - distance_modulus, 27 - distance_modulus)
     ax2.legend(ncol=2)
     ax.invert_yaxis()
     ax.get_legend().remove()
     ax2.invert_yaxis()
-    ax.tick_params(axis='both', which='major', labelsize=14)
-    ax2.tick_params(axis='both', which='major', labelsize=14)
+    ax.tick_params(axis='both', which='major')
+    ax2.tick_params(axis='both', which='major')
 
     fig.savefig(r'figures\light-curve over time ' + str(names) + '.png')
+    fig.savefig(r'figures\light-curve over time ' + str(names) + '.svg')
+
 
 
 
@@ -92,56 +105,64 @@ def lightcurve_plot(SN_dict_list, main_SN, correction_params):
 
 def lightcurve_plot_shift(SN_dict, correction_params):
     distance_modulus = correction_params.loc[SN_dict['Name']]['distance_modulus']
-    fig, ax = plt.subplots(1, figsize=(9, 10))
+    fig, ax = plt.subplots(1, figsize=(12, 8))
     ax2 = ax.twinx()
     lightcurve = SN_dict['lightcurve']
-    for source in lightcurve.keys():
-        df = lightcurve[source]['df']
-        marker = lightcurve[source]['marker']
-        linestyle = lightcurve[source]['Linestyle']
-        # TODO sort the legend but sorting the order in which they are plotted -only by order of filter, not depending on which source plotted first
-        shifts = {'B': +4, 'c': +3, 'g': +2, 'G': +1 , 'V': 0, 'o': -1, 'r': -2, 'i': -3}
-        for filter in shifts.keys():
-            if filter in df['filter'].unique():
+    shifts = {'B': '+3', 'c': '+2', 'g': '+1', 'V': '+0', 'o': '-1', 'r': '-2', 'G': '-3', 'i': '-4'}
+    for filter in shifts.keys():
+        for source in lightcurve.keys():
+            if filter in lightcurve[source]['df']['filter'].unique():
+                df = lightcurve[source]['df']
+                marker = lightcurve[source]['marker']
+                linestyle = lightcurve[source]['Linestyle']
+                # TODO sort the legend but sorting the order in which they are plotted -only by order of filter, not depending on which source plotted first
                 filter_df = df.loc[df['filter'] == filter]
                 x = filter_df['t_from_discovery']
-                y_abs_mag = filter_df['abs_mag'] + shifts[filter]
+                y_abs_mag = filter_df['abs_mag'] + int(shifts[filter])
+
+                if filter == 'V':
+                    vmax = np.min(y_abs_mag)
+                    # print(vmax)
+                    ax2.axhline(y=vmax, color='limegreen', alpha=0.5, linestyle='--')
+
                 ax2.errorbar(x, y_abs_mag, marker=marker, linestyle=linestyle,
                                         color=colormap[filter],
                                         markeredgecolor='k', markeredgewidth =0.3,
                                         label=filter + ' ' + str(shifts[filter]) + ' (' + source + ')',)
-                y_mag = filter_df['mag'] + shifts[filter]
+                y_mag = filter_df['mag'] + int(shifts[filter])
                 y_mag_err = filter_df['dmag']
                 ax.errorbar(x, y_mag, yerr=y_mag_err, marker=marker, linestyle=linestyle,
                          color=colormap[filter],
                          markeredgecolor='k', markeredgewidth=0.3,
                          label=filter + ' ' + str(shifts[filter]) + ' (' + source + ')', )
 
-    ax.set_title('Light-curve over time - '+str(SN_dict['Name']), fontsize=16)
-    ax.set_xlabel('Time since discovery (rest-frame days)', size=16)
-    ax.set_ylabel('Apparent Magnitude', size=16)
-    ax.set_ylim(13, 26)
-    ax2.set_ylabel('Absolute Magnitude', size=16)
+
+    ax.set_title('Light-curve over time - '+str(SN_dict['Name']) + '\n')
+    ax.set_xlabel('Rest-frame days from discovery')
+    ax.set_ylabel('Apparent Magnitude')
+    ax.set_ylim(10, 24)
+    ax2.set_ylabel('Absolute Magnitude')
     # TODO remember that the distance module difference between the y axes is hardcoded here -
     # TODO need to find way to me this automatic
-    ax2.set_yticks(np.arange(int(13 - distance_modulus),  int(26 - distance_modulus + 1), 1))
-    ax2.set_ylim(13 - distance_modulus, 26 - distance_modulus)
-    ax2.legend(ncol=2)
+    ax2.set_yticks(np.arange(int(10 - distance_modulus),  int(24 - distance_modulus + 1), 1))
+    ax2.set_ylim(10 - distance_modulus, 24 - distance_modulus)
+    ax2.legend(ncol=2, loc='upper right')
     ax.invert_yaxis()
     ax2.invert_yaxis()
-    ax.tick_params(axis='both', which='major', labelsize=14)
-    ax2.tick_params(axis='both', which='major', labelsize=14)
+    ax.tick_params(axis='both', which='major')
+    ax2.tick_params(axis='both', which='major')
 
     fig.savefig(r'figures\light-curve over time stacked ' + str(SN_dict['Name']) + '.png')
+    fig.savefig(r'figures\light-curve over time stacked ' + str(SN_dict['Name']) + '.svg')
 
 def remove_LCO_outlier(SN_dict):
-    df = SN_dict['lightcurve']['LCO']['df']
+    df = SN_dict['lightcurve']['Las Cumbres']['df']
     df = df.loc[df['t_from_discovery'] < 190]
     return df
 
 
 def BV_plot(SN_dict):
-    df = SN_dict['lightcurve']['LCO']['df']
+    df = SN_dict['lightcurve']['Las Cumbres']['df']
     B = df.loc[df['filter'] == 'B', ('t_from_discovery', 'abs_mag')]
     B['t_from_discovery'] = B['t_from_discovery'].astype(int)
     B = B.groupby('t_from_discovery').mean()

@@ -3,7 +3,7 @@ import bolometric
 
 from matplotlib import pyplot as plt
 
-blackbody_data = pd.read_csv('blackbody_results.csv')
+blackbody_data = pd.read_csv(r'results\blackbody_results.csv')
 
 Lum_vec = list(blackbody_data['Lum']) #  erg/s
 Lum_vec = [x * 86400 * 10**7 for x in Lum_vec] #  erg/s
@@ -11,11 +11,12 @@ Lum_vec = [x * 86400 * 10**7 for x in Lum_vec] #  erg/s
 
 
 time_vec = list(blackbody_data['t_from_discovery']) #  erg/s
+print(time_vec)
 # print(time_vec)
 
 len = len(time_vec)
 
-Ni_mass = pd.read_csv('Ni_mass_SN2018hmx.csv')
+Ni_mass = pd.read_csv(r'results\Ni_mass_SN2018hmx.csv')
 
 Ni_vec = list(Ni_mass['Ni_mass']) #  erg/s
 Ni_vec = [x * 86400 * 10**43 for x in Ni_vec] #  erg/s
@@ -43,6 +44,17 @@ plt.xlim(left=0)
 plt.legend()
 plt.ylim(bottom=0)
 
-print([ET_vec[i] * 86400 for i in range(len-2)])
+Fe_v = 5600 * (10**5) # cm/s
+
+
+final_ET =  ET_vec[-1]  * 86400# erg/s -> g*cm^2/s^3
+print(final_ET)
+
+# ET/v50
+# (g * cm^2 / s^3) / (cm/s) = g * cm
+ET_div_v50 = final_ET / Fe_v
+print(ET_div_v50)
+
+# TODO save as csv
 
 plt.show()

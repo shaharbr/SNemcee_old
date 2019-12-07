@@ -31,6 +31,21 @@ def lco_phot(path):
     return lco_phot
 
 
+def sn18aad_phot(path):
+    # import LCO photometry dataset (TSV file)
+    phot = pd.read_csv(path, sep=r'\s+', names=['date', 'mjd', 'mag', 'dmag', 'telescope', 'filter'])
+    #TODO sort the title here
+    print(phot)
+    phot['mjd'] = convert_to_mjd(phot['mjd'])
+    return phot
+
+
+def ksp_phot(path):
+    # import KSP photometry dataset (TSV file)
+    ksp_phot = pd.read_csv(path, sep=r'\s+', names=['mjd', 'filter', 'mag', 'dmag'])
+    return ksp_phot
+
+
 def sne_catalog_phot(path):
     # import SNE catalog photometry dataset (CSV file)
     phot = pd.read_csv(path)
@@ -48,8 +63,6 @@ def atlas_flux(path, filter):
     return df
 
 
-
-
 def gaia_phot(path):
     # import Gaia photometry dataset (CSV file)
     gaia_phot = pd.read_csv(path, header=1)
@@ -62,7 +75,6 @@ def gaia_phot(path):
     # sort filter names
     gaia_phot['filter'] = 'G'
     return gaia_phot
-
 
 
 def atlas_phot(path):
@@ -177,9 +189,9 @@ def LCO_spect(dir_path):
         else:
             LCO_spect_dict[date] = {'df': pd.read_csv(folder_join(dir_path, file), sep=' ', names=["x", "y"])}
         if 'redblu' in os.path.basename(file):
-            LCO_spect_dict[date]['telescope'] = 'LCO'
+            LCO_spect_dict[date]['telescope'] = 'Las Cumbres'
         elif 'ZTF' in os.path.basename(file):
-            LCO_spect_dict[date]['telescope'] = 'ZTF'
+            LCO_spect_dict[date]['telescope'] = 'P60'
         elif 'HET' in os.path.basename(file):
             LCO_spect_dict[date]['telescope'] = 'HET'
         else:

@@ -2,6 +2,19 @@ import emcee
 import numpy as np
 from matplotlib import pyplot as plt
 
+
+
+plt.rc('font', size=20)          # controls default text sizes
+plt.rc('axes', titlesize=20)     # fontsize of the axes title
+plt.rc('axes', labelsize=20)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=20)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=20)    # fontsize of the tick labels
+plt.rc('legend', fontsize=14)    # legend fontsize
+plt.rc('figure', titlesize=30)  # fontsize of the figure title
+plt.rcParams['font.sans-serif'] = 'Arial'
+
+
+
 def log_prior(theta):
     # theta is a vector containing a specific set of parameters theta = [m0, a0, tPT, w0]
     m_Ni_min = 0
@@ -81,17 +94,18 @@ def plot_v_lightcurve_with_fit(blackbody_results, sampler):
 
     print(Ni)
     print(Ni_std)
-
     data = blackbody_results
     x = data['t_from_discovery']
     y = data['Lum'] / 10 ** 43
     dy = data['dLum0'] / 10 ** 43
     y_fit = Ni * (6.45 * np.exp(-x / 8.8) + 1.45 * np.exp(-x / 111.3))
-    plt.figure()
-    plt.errorbar(x, y, yerr=dy, marker='o', linestyle='None', label='bolometric luminosity')
-    plt.ylabel('bolometric luminosity (10^43 erg/s)')
-    plt.xlabel('time after discovery (days)')
-    plt.plot(x, y_fit, label='Ni mass fit')
-    plt.legend()
+    fig, ax = plt.subplots(1, figsize=(5, 5))
+    ax.errorbar(x, y, yerr=dy, marker='o', linestyle='None', label='bolometric luminosity')
+    ax.set_ylabel('bolometric luminosity (10^43 erg/s)')
+    ax.set_xlabel('Rest-frame days from discovery')
+    ax.plot(x, y_fit, label='Ni fit')
+    ax.legend()
+    fig.savefig(r'figures\SN2018hmx_Ni_mass_luminosity_fit_to_bolometric' + '.png')
+    fig.savefig(r'figures\SN2018hmx_Ni_mass_luminosity_fit_to_bolometric' + '.svg')
     return y_fit
 

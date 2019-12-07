@@ -77,7 +77,7 @@ def emcee_fit_params(v_time_vec, v_mag_vec, v_dmag_vec):
 
 
 def get_LCO_V_df(SN_dict):
-    LCO_lighcurve = SN_dict['lightcurve']['LCO']['df']
+    LCO_lighcurve = SN_dict['lightcurve']['Las Cumbres']['df']
     V_LCO_lightcurve = LCO_lighcurve.loc[LCO_lighcurve['filter'] == 'V']
     return V_LCO_lightcurve
 
@@ -137,7 +137,7 @@ def plot_v_lightcurve_with_fit(SN_dict, sampler):
     tPT = param_dict['tPT']
     w0 = param_dict['w0']
 
-    print('m0:', m0, 'a0:', a0, 'tPT:', tPT, 'w0:', w0)
+    # print('m0:', m0, 'a0:', a0, 'tPT:', tPT, 'w0:', w0)
     p0 = 0.0089
     data = get_LCO_V_df(SN_dict)
     data = data.loc[data['t_from_discovery'] < 190]
@@ -151,6 +151,7 @@ def plot_v_lightcurve_with_fit(SN_dict, sampler):
     plt.gca().invert_yaxis()
 
 
+
 def calc_Vmag_slope_param(data, time_range):
     first_day = time_range[0]
     last_day = time_range[1]
@@ -159,9 +160,9 @@ def calc_Vmag_slope_param(data, time_range):
     x = list(data['t_from_discovery'])
     y = list(data['mag'])
     regression_params, cov = np.polyfit(x, y, deg=1, cov=True)
-    print('polyfit', regression_params, cov)
+    # print('polyfit', regression_params, cov)
     sigma = np.sqrt(np.diag(cov))
-    print('sigma', sigma)
+    # print('sigma', sigma)
     return regression_params, sigma
 
 def calc_s50V(SN_dict, get_all_params=False):
@@ -214,10 +215,11 @@ def plot_v_lightcurve_with_slope(SN_dict, param):
     plt.errorbar(data_x, data_y, yerr=data_dy, marker='o', linestyle='None')
     plt.plot(slope_x, slope_y)
     plt.gca().invert_yaxis()
+    # TODO fix
 
 
 def calc_Vmax(SN_dict):
-    V_df = SN_dict['lightcurve']['LCO']['df']
+    V_df = SN_dict['lightcurve']['Las Cumbres']['df']
     Vmag = V_df.loc[V_df['filter'] == 'V', 'abs_mag']
     Vmax = np.min(Vmag)
     Vmax_err = np.min(V_df.loc[(V_df['filter'] == 'V') & (V_df['abs_mag'] == Vmax), 'dmag'])

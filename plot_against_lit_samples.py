@@ -1,5 +1,29 @@
 import pandas as pd
 from matplotlib import pyplot as plt
+import numpy as np
+
+plt.rc('font', size=20)          # controls default text sizes
+plt.rc('axes', titlesize=20)     # fontsize of the axes title
+plt.rc('axes', labelsize=20)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=18)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=18)    # fontsize of the tick labels
+plt.rc('legend', fontsize=12)    # legend fontsize
+plt.rc('figure', titlesize=30)  # fontsize of the figure title
+plt.rcParams['font.sans-serif'] = 'Arial'
+
+
+
+
+KSP_s50v = 0.3124
+KSP_s50v_err = 0.006248
+KSP_Vmax = -17.95999
+KSP_Vmax_err = 0.39
+KSP_v50 = -17.2099999
+KSP_v50_err = 0.05
+KSP_Ni_mass = 0.10
+KSP_Ni_err = 0.01
+
+
 
 SN2018hmx_param_Vband = pd.read_csv(r'results\SN2018hmx_param_results.csv')
 SN2018hmx_Ni = pd.read_csv(r'results\SN2018hmx_Ni_results.csv')
@@ -44,12 +68,6 @@ valenti_vmax = pd.read_csv(r'data\valenti_result_mag_at_max.tsv', sep='\t',
 
 
 
-# TODO Ni mass against Vmag at day 50
-# TODO error bars for Vmax too small?
-# TODO how to calculate std for SV50 and other params?
-# TODO use mag at 50 from valenti
-# TODO check valenti method for bolometric calculation
-# TODO add ATLAS data
 
 
 for df in [valenti_s50v, valenti_vmax, valenti_vmag_50, valenti_bolometric]:
@@ -60,49 +78,62 @@ valenti_SN_param = valenti_s50v\
     .merge(valenti_bolometric, on='Name', how='outer')
 
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(8, 6))
 ax.errorbar(y=valenti_SN_param['Vmax'], yerr=valenti_SN_param['e_Vmax'],
             x=valenti_SN_param['s50V'], xerr=valenti_SN_param['e_s50V'],
-            marker='.', fillstyle='none', Linestyle='None', color='k', label='Valenti SNe')
+            marker='.', fillstyle='none', Linestyle='None', color='k', label='Valenti et al. SNe', alpha=0.2)
 ax.errorbar(y=SN2018hmx_param_Vband['Vmax'], yerr=SN2018hmx_param_Vband['e_Vmax'],
             x=SN2018hmx_param_Vband['s50V'], xerr=SN2018hmx_param_Vband['s50V_err'],
-            marker='.', fillstyle='none', Linestyle='None', color='orange', label='SN2018hmx')
-# TODO need errorbars for 18hmx
+            marker='o', fillstyle='full', markersize=9, Linestyle='None', color='#FF3333', label='SN 2018hmx')
+ax.errorbar(y=KSP_Vmax, yerr=KSP_Vmax_err,
+            x=KSP_s50v, xerr=KSP_s50v_err,
+            marker='.', fillstyle='full', markersize=5, Linestyle='None', color='#CC6600', label='KSP-SN-2016kf',
+            alpha=0.6)
 ax.invert_yaxis()
-ax.set_title('Vmax vs s50V', fontsize=16)
-ax.set_ylabel('Vmax', size=12)
-ax.set_xlabel('s50V', size=12)
+ax.set_title('Vmax vs s50V')
+ax.set_ylabel('V-band at Max')
+ax.set_xlabel('V-band decline (mag/50d)')
 ax.set_xlim(left=-0.2)
 ax.legend()
-ax.tick_params(axis='both', which='major', labelsize=14)
+ax.tick_params(axis='both', which='major')
 fig.savefig(r'figures\SN2018hmx_Vmax_s50V_against_valenti' + '.png')
+fig.savefig(r'figures\SN2018hmx_Vmax_s50V_against_valenti' + '.svg')
 
 
-
-
-
-
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(9, 7))
 ax.errorbar(y=valenti_SN_param['MNi'], yerr=valenti_SN_param['e_MNi'],
             x=valenti_SN_param['vmag_50'], xerr=valenti_SN_param['e_vmag_50'],
-            marker='.', fillstyle='none', Linestyle='None', color='k', label='Valenti SNe')
-# TODO get the 18hmx values from the table
+            marker='.', fillstyle='none', Linestyle='None', color='k', label='Valenti et al. SNe', alpha=0.2)
 
+
+ax.arrow(float(SN2018hmx_param_Vband['vmag_50']), float(SN2018hmx_Ni['Ni_mass']), 0, 0.05,
+         shape='full', color='#FF3333', head_length=0.03, head_width=0.1)
 ax.errorbar(y=SN2018hmx_Ni['Ni_mass'], yerr=[SN2018hmx_Ni['Ni_lower'], SN2018hmx_Ni['Ni_upper']],
             x=SN2018hmx_param_Vband['vmag_50'], xerr=SN2018hmx_param_Vband['vmag_50_err'],
-            marker='.', fillstyle='none', Linestyle='None', color='orange', label='SN2018hmx')
-# TODO need errorbars for 18hmx
+            marker='o', fillstyle='full', markersize=7, Linestyle='None', color='#FF3333', label='SN 2018hmx\n by Ni curve fit')
+
+ax.arrow(float(SN2018hmx_param_Vband['vmag_50']), 0.170639494, 0, 0.05,
+         shape='full', color='#911310', head_length=0.03, head_width=0.1)
+ax.errorbar(y=0.170639494,
+            x=SN2018hmx_param_Vband['vmag_50'], xerr=SN2018hmx_param_Vband['vmag_50_err'],
+            marker='o', fillstyle='full', markersize=7, Linestyle='None', color='#911310', label='SN 2018hmx\n by ratio to 1987A')
+
+
+ax.errorbar(y=KSP_Ni_mass, yerr=KSP_Ni_err,
+            x=KSP_v50, xerr=KSP_v50_err,
+            marker='.', fillstyle='full', markersize=5, Linestyle='None', color='#CC6600', label='KSP-SN-2016kf', alpha=0.6)
+
 ax.invert_xaxis()
 ax.set_yscale('log')
-ax.set_title('Ni mass vs V band absolute mag at day 50', fontsize=16)
-ax.set_ylabel('Ni mass (solar masses)', size=12)
-ax.set_xlabel('V band absolute mag at day 50', size=12)
-ax.legend()
-ax.tick_params(axis='both', which='major', labelsize=14)
+ax.set_title('Ni mass vs V band absolute mag at day 50')
+ax.set_ylabel('Ni mass (solar masses)')
+ax.set_xlabel('V band absolute mag at day 50')
+ax.set_xlim(left=-13, right=-19)
+ax.set_ylim(top=0.3)
+ax.legend(loc='lower right')
+ax.tick_params(axis='y', which='major', labelsize=24)
 fig.savefig(r'figures\SN2018hmx_vmag50_Ni_against_valenti' + '.png')
-
-
-
+fig.savefig(r'figures\SN2018hmx_vmag50_Ni_against_valenti' + '.svg')
 
 
 gutierrez_veloc = pd.read_csv(r'data\Gutierrez_2017_apjaa8f52t8_ascii.txt', sep='\t', header=2,
@@ -116,6 +147,8 @@ gutierrez_veloc['Halpha'], gutierrez_veloc['e_Halpha'] = gutierrez_veloc['Halpha
 gutierrez_veloc['Hbeta'], gutierrez_veloc['e_Hbeta'] = gutierrez_veloc['Hbeta'].str.split('or', 2).str
 gutierrez_veloc['FeII 5169'], gutierrez_veloc['e_FeII 5169'] = gutierrez_veloc['FeII 5169'].str.split('or', 2).str
 
+
+
 for column in gutierrez_veloc.keys():
     gutierrez_veloc[column].replace(regex=True, inplace=True, to_replace=r'\+|\-|\s|cdots', value='')
     gutierrez_veloc[column] = pd.to_numeric(gutierrez_veloc[column])
@@ -125,65 +158,101 @@ for column in gutierrez_veloc.keys():
 colors = {'Halpha': '#1b9e77', 'Hbeta': '#7570b3', 'FeII 5169': '#d95f02'}
 
 SN2018hmx_veloc = pd.read_csv(r'results\sN2018hmx_expansion_velocities.csv')
-SNiPTF14hls_veloc = pd.read_csv(r'results\SNiPTF14hls_expansion_velocities.csv')
+iPTF14hls_veloc = pd.read_csv(r'results\SNiPTF14hls_expansion_velocities.csv')
 SN2018aad_veloc = pd.read_csv(r'results\SN2018aad_expansion_velocities.csv')
 # TODO correct 14hls time from discovery
 
-
-fig, ax = plt.subplots(figsize=(12, 6))
-
-for line_name in colors.keys():
-    ax.fill_between(gutierrez_veloc['Epoch'],
-                    gutierrez_veloc[line_name] - gutierrez_veloc['e_' + line_name],
-                    gutierrez_veloc[line_name] + gutierrez_veloc['e_' + line_name],
-                    linestyle='--',
-                    color=colors[line_name],
-                    alpha=0.2)
-
-    ax.plot(gutierrez_veloc['Epoch'], gutierrez_veloc[line_name],
-            label='Gutierrez ' + line_name + r' mean $\pm$std',
-            marker='None',
-            linestyle='--',
-            color=colors[line_name],
-            alpha=0.6)
-
-    linedf = SN2018hmx_veloc.loc[SN2018hmx_veloc['line'] == line_name]
-    ax.errorbar(x=linedf['t_from_discovery'], y=linedf['absorption_mean_velocity'],
-                yerr=linedf['absorption_std_velocity'],
-                label='SN2018hmx ' + line_name,
-                marker='s',
-                fillstyle='full',
-                linestyle='None',
-                color=colors[line_name])
-
-    linedf = SNiPTF14hls_veloc.loc[SNiPTF14hls_veloc['line'] == line_name]
-    ax.errorbar(x=linedf['t_from_discovery'], y=linedf['absorption_mean_velocity'],
-                yerr=linedf['absorption_std_velocity'],
-                label='SNiPTF14hls ' + line_name,
-                marker='s',
-                fillstyle='none',
-                linestyle='None',
-                color=colors[line_name])
-
-    linedf = SN2018aad_veloc.loc[SN2018aad_veloc['line'] == line_name]
-    ax.errorbar(x=linedf['t_from_discovery'], y=linedf['absorption_mean_velocity'],
-                yerr=linedf['absorption_std_velocity'],
-                label='SN2018aad ' + line_name,
-                marker='^',
-                fillstyle='none',
-                linestyle='None',
-                color=colors[line_name])
+SN_veloc_dict = {'SN 2018hmx': SN2018hmx_veloc, 'iPTF14hls': iPTF14hls_veloc, 'SN 2018aad': SN2018aad_veloc}
+formatting_dict = {'SN 2018hmx': ['s', 'full', 'None'],
+                   'iPTF14hls': ['o', 'none', 'None'],
+                   'SN 2018aad': ['^', 'none', 'None']}
 
 
 
-ax.set_title('Expansion velocity over time', fontsize=16)
-ax.set_ylabel('Expansion velocity (km/s)', size=12)
-ax.set_xlabel('Days from discovery', size=12)
-ax.legend(ncol=3)
-ax.set_ylim(bottom=0)
-ax.tick_params(axis='both', which='major', labelsize=14)
-fig.savefig(r'figures\SN2018hmx_SN2018aad_SNiPTF14hls_absorption_velocities_against_gutierrez' + '.png')
+
+def plot_velocities(SN_veloc_dict, gutierrez_veloc, line_list, formatting_dict):
+    line_names_formatted = {'Halpha': r'H$\alpha$', 'Hbeta': r'H$\beta$', 'FeII 5169': r'FeII 5169$\AA$'}
+    line_num = len(line_list)
+    fig2, axes = plt.subplots(line_num, 1, sharex='col', figsize=(10, 15))
+    for i in range(len(line_list)):
+        line_name = line_list[i]
+        # gutierrez sample range
+        axes[i].fill_between(gutierrez_veloc['Epoch'],
+                        gutierrez_veloc[line_name] - gutierrez_veloc['e_' + line_name],
+                        gutierrez_veloc[line_name] + gutierrez_veloc['e_' + line_name],
+                        linestyle='--',
+                        color='gray',
+                        alpha=0.1)
+        # SN-of-interest mean + error bars
+        max_y = []
+        for SN_name in SN_veloc_dict.keys():
+            if SN_name == 'SN 2018hmx':
+                color = colors[line_name]
+            else:
+                color = 'gray'
+
+            SN_veloc = SN_veloc_dict[SN_name]
+            linedf = SN_veloc.loc[SN_veloc['line'] == line_name]
+            axes[i].errorbar(x=linedf['t_from_discovery'], y=linedf['absorption_mean_velocity'],
+                        yerr=linedf['absorption_std_velocity'],
+                        label=SN_name,
+                        marker=formatting_dict[SN_name][0],
+                        fillstyle=formatting_dict[SN_name][1],
+                        linestyle=formatting_dict[SN_name][2],
+                        color=color)
+            max_y = np.append(max_y, np.max(linedf['absorption_mean_velocity']))
+        max_y = np.max(max_y)
+        ticks = np.arange(0, max_y + 3000, 2500)
+        axes[i].set_yticks(ticks)
+        axes[i].set_ylim(top=np.max(ticks)*1.15)
+        axes[i].text(160, np.max(ticks)*0.95, line_names_formatted[line_name], horizontalalignment='center')
+        # gutierrez sample mean
+        axes[i].plot(gutierrez_veloc['Epoch'], gutierrez_veloc[line_name],
+                     label='Gutierrez at al. mean $\pm$std',
+                     marker='None',
+                     linestyle='--',
+                     color='gray',
+                     alpha=0.4)
+        # axes[i].set_title(line_names_formatted[line_name])
 
 
+    axes[0].errorbar(x=93, y=7960, yerr=60,
+                     label='KSP-SN-2016kf',
+                     marker='*',
+                     markersize=10,
+                     fillstyle='none',
+                     linestyle='None',
+                     color='gray')
+
+    axes[1].errorbar(x=93, y=5860, yerr=45,
+                     label='KSP-SN-2016kf',
+                     marker='*',
+                     markersize=10,
+                     fillstyle='none',
+                     linestyle='None',
+                     color='gray')
+    #
+    axes[2].errorbar(x=93, y=3192, yerr=63,
+                     label='KSP-SN-2016kf',
+                     marker='*',
+                     markersize=10,
+                     fillstyle='none',
+                     linestyle='None',
+                     color='gray')
+
+
+    for ax in axes:
+        ax.legend(loc='upper right')
+        ax.set_ylim(bottom=0)
+        ax.set_xlim(-5, 350)
+        ax.tick_params(axis='both', which='major')
+    axes[1].set_ylabel('Expansion velocity (km/s)')
+    plt.xlabel('Days from discovery')
+    # plt.suptitle('Expansion velocity over time')
+    fig2.savefig(r'figures\SN2018hmx_SN2018aad_iPTF14hls_absorption_velocities_against_gutierrez' + '.png')
+    fig2.savefig(r'figures\SN2018hmx_SN2018aad_iPTF14hls_absorption_velocities_against_gutierrez' + '.svg')
+
+
+plot_velocities(SN_veloc_dict, gutierrez_veloc, ['Halpha', 'Hbeta', 'FeII 5169'], formatting_dict)
 
 plt.show()
