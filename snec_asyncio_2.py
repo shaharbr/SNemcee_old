@@ -79,14 +79,14 @@ async def snec(Mzams, Ni_mass, E_final, Ni_boundary, R_CSM, K_CSM, semaphore):
 
 
 async def main():
-    semaphore = asyncio.BoundedSemaphore(2)
+    semaphore = asyncio.BoundedSemaphore(12)
     await asyncio.gather(*[snec(Mzams, Ni_mass, E_final, Ni_boundary, R_CSM, K_CSM, semaphore)
                            for Mzams in [10.0, 13.0, 16.0, 19.0]
                            for Ni_mass in [0.10, 0.13, 0.16]
                            for E_final in [1.0, 1.4, 1.8, 2.2]
                            for Ni_boundary in [3.0]
                            for R_CSM in [500, 1000, 1500, 2000, 2500]
-                           for K_CSM in [0, 20, 40, 60, 80]
+                           for K_CSM in [0.001, 20, 40, 60, 80]
                          ])
 
 
