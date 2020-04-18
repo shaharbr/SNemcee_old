@@ -34,7 +34,7 @@ def log_prior(theta):
 
 def log_likelihood(theta, data_x, data_y, data_dy):
     [m0, a0, tPT, w0] = theta
-    p0 = 0.0089
+    p0 = 0.013174860582548461
     y_fit = m0 + p0 * data_x - a0 / (1 + np.exp((data_x - tPT) / w0))
     chi2 = (data_y - y_fit) ** 2. / (2. * data_dy ** 2.) + np.log(data_y)
     ln_like = -np.sum(chi2)
@@ -138,7 +138,7 @@ def plot_v_lightcurve_with_fit(SN_dict, sampler):
     w0 = param_dict['w0']
 
     # print('m0:', m0, 'a0:', a0, 'tPT:', tPT, 'w0:', w0)
-    p0 = 0.0089
+    p0 = 0.013174860582548461
     data = get_LCO_V_df(SN_dict)
     data = data.loc[data['t_from_discovery'] < 190]
     x = data['t_from_discovery']
@@ -159,7 +159,8 @@ def calc_Vmag_slope_param(data, time_range):
                     (data['t_from_discovery'] <= last_day)]
     x = list(data['t_from_discovery'])
     y = list(data['mag'])
-    regression_params, cov = np.polyfit(x, y, deg=1, cov=True)
+    weights = list(1/data['dmag'])
+    regression_params, cov = np.polyfit(x, y, deg=1, w=weights, cov=True)
     # print('polyfit', regression_params, cov)
     sigma = np.sqrt(np.diag(cov))
     # print('sigma', sigma)
@@ -169,7 +170,7 @@ def calc_s50V(SN_dict, get_all_params=False):
     data = get_LCO_V_df(SN_dict)
     peak_mag = np.min(data.loc[data['t_from_discovery'] < 100, 'mag'])
     first_day = float(data.loc[data['mag'] == peak_mag, 't_from_discovery'])
-    last_day = first_day + 50
+    last_day = first_day + 97
     V50_regression_params, sigma = calc_Vmag_slope_param(data, time_range=[first_day, last_day])
     if get_all_params:
         s50V = V50_regression_params
@@ -213,7 +214,7 @@ def plot_v_lightcurve_with_slope(SN_dict, param):
 
     plt.figure()
     plt.errorbar(data_x, data_y, yerr=data_dy, marker='o', linestyle='None')
-    plt.plot(slope_x, slope_y)
+    plt.plot(slope_x, slope_y, color='purple')
     plt.gca().invert_yaxis()
     # TODO fix
 

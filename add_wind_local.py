@@ -8,9 +8,6 @@ This code was adapted from the original wind adding code written by K. Azalee Bo
 
 def add_wind(K, R, Mzams, dir):
     KK = K *(10**17)
-
-    print(K, KK)
-
     msol = 1.98e33
     rsol = 6.96e10
     ggrav = 6.6742e-8
@@ -97,7 +94,7 @@ def add_wind(K, R, Mzams, dir):
             vel_wind.append(velocity_of_wind)
 
     mass_in_wind = mass_wind[-1] - mass[-1]
-    print('mass in wind', mass_in_wind)
+    # print('mass in wind', mass_in_wind)
     mass_in_wind_gl.append(mass_in_wind)
 
     ### ------------ calculating the optical depth of the wind --------------

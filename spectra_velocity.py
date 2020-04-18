@@ -48,8 +48,8 @@ def normalize_spectra(SN_dict):
 def smooth_spectrum(spectrum_y):
     var_list = list(spectrum_y)
     var_list = [x for x in var_list if str(x) != 'nan']
-    var_list = var_list[0:200]
-    start_variability = np.std(var_list)
+    var_list = var_list[0:100]
+    start_variability = np.std(var_list) / 2
     smoothing_window = int(len(spectrum_y)/50 * start_variability)+1
     smooth_y = spectrum_y.rolling(smoothing_window, center=True).mean()
     return smooth_y
@@ -172,18 +172,18 @@ def plot_stacked_spectra(SN_dict, lines_dict, plot_curve_fits=False, line_veloci
     for date in dates:
         date_dict = SN_dict['spectra'][date]
         df = date_dict['df']
-        if date_dict['t_from_discovery'] < 20:
-            y_shift = y_shift - 0.6
-            smooth_y = df['y']
-        else:
-            smooth_y = smooth_spectrum(df['y'])
+        # if date_dict['t_from_discovery'] < 20:
+            # y_shift = y_shift - 0.6
+            # smooth_y = df['y']
+        smooth_y = smooth_spectrum(df['y'])
         if line_velocity:
-            if line_velocity != 'Halpha':
-                y_shift_delta = 0.3
-                if date_dict['t_from_discovery'] < 20:
-                    y_shift = y_shift - 0.6
-            else:
-                y_shift_delta = 0.8
+            # if line_velocity != 'Halpha':
+            #     y_shift_delta = 0.3
+            #     if date_dict['t_from_discovery'] < 20:
+            #         y_shift = y_shift - 0.6
+            # else:
+            #     y_shift_delta = 0.8
+            y_shift_delta = 1
             min_x = lines_dict[line_velocity]['absorption_range'][0] - 150
             max_x = lines_dict[line_velocity]['peak'] + 200
             bool_x = (df['x'] > min_x) & (df['x'] < max_x)
@@ -192,31 +192,34 @@ def plot_stacked_spectra(SN_dict, lines_dict, plot_curve_fits=False, line_veloci
             # y = df['y'].loc[bool_x]
             wavelength_expected = lines_dict[line_velocity]['peak']
             x = calculate_expansion_velocity(wavelength_expected, x)
-            max_x = np.nanmax(x)
-            min_x = np.nanmin(x)
+            if len(x) > 0:
+                max_x = np.nanmax(x)
+                min_x = np.nanmin(x)
+                ax.set_xlim(min_x, max_x)
+                label_x = min_x - 150
             y = y + y_shift
-            ax.set_xlim(min_x, max_x)
-            label_x = min_x - 150
             ax.invert_xaxis()
             ax.set_title(line_velocity)
             ax.set_xlabel('Velocity (km/s)')
         else:
             x = df['x']
-            y_shift_delta = (np.max(smooth_y) - np.min(smooth_y)) / 3
+            # y_shift_delta = (np.max(smooth_y) - np.min(smooth_y)) / 3
+            y_shift_delta = (np.max(smooth_y) - np.min(smooth_y)) / 1
             y = smooth_y + y_shift
             ax.set_xlim(3300, 9700)
             label_x = 9780
             ax.set_title(name + ' spectra over time')
             ax.set_xlabel('Rest (z = 0.038) Wavelength (Å)')
-        # plot
-        ax.plot(x, y, color='k', linewidth=1)
-        # spectrum labeled with day from explosion
-        spectrum_date_label = str(int(date_dict['t_from_discovery'])) + 'd (' + date_dict['telescope'] + ')'
-        label_ypos = np.mean(y) - 0.7
-        ax.text(label_x, label_ypos, spectrum_date_label, color='k', fontsize=15)
-        # adding the polyfit curves if asked
-        if plot_curve_fits:
-            add_fitted_curves_to_plot(date_dict, lines_dict, ax, y_shift, line_velocity, number_curves_to_draw=10)
+        if len(x) > 0 and len(y) > 0:
+            # plot
+            ax.plot(x, y, color='k', linewidth=1)
+            # spectrum labeled with day from explosion
+            spectrum_date_label = str(int(date_dict['t_from_discovery'])) + 'd (' + date_dict['telescope'] + ')'
+            label_ypos = np.mean(y) - 0.7
+            ax.text(label_x, label_ypos, spectrum_date_label, color='k', fontsize=15)
+            # adding the polyfit curves if asked
+            if plot_curve_fits:
+                add_fitted_curves_to_plot(date_dict, lines_dict, ax, y_shift, line_velocity, number_curves_to_draw=10)
         y_shift += y_shift_delta
     ax.set_ylabel('Normalized fλ + shift')
     ax.set_yticks([])
@@ -323,6 +326,7 @@ def plot_expansion_velocities(df_list, absorptionORemission):
     markers_fill = {'SN2018hmx': 'full', 'SNiPTF14hls': 'none', 'SN2018aad': 'none'}
     names = []
     for df in df_list:
+        print(df['Name'])
         SN_name = pd.unique(df['Name'])[0]
         names.append(SN_name)
         lines = colors.keys()
@@ -353,10 +357,14 @@ def plot_expansion_velocities(df_list, absorptionORemission):
 
 def pEW(spectra_dict, line_name, date):
     result = []
-    plt.figure()
+    # plt.figure()
     t_from_discovery = spectra_dict[date]['t_from_discovery']
-    plt.title('day '+ str(int(t_from_discovery)))
+    # plt.title('day '+ str(int(t_from_discovery)))
     for i in np.arange(20):
+        # print(spectra_dict[date])
+        # print(spectra_dict.keys())
+        # print(spectra_dict[date].keys())
+        # print(spectra_dict[date].keys())
         line_xslice = spectra_dict[date]['line'][line_name]['line_xslices']['absorption'][i]
         if line_xslice is not None:
             f_polyfit = spectra_dict[date]['line'][line_name]['polyfits']['absorption'][i]
@@ -374,32 +382,32 @@ def pEW(spectra_dict, line_name, date):
                 df_slice = spectra_df.loc[(spectra_df['x'] > x_min) & (spectra_df['x'] < x_max)]
                 fit_slice.append(df_slice)
                 range_scatter = spectra_df.loc[(spectra_df['x'] > x_min) & (spectra_df['x'] < x_max)]
-                plt.scatter(range_scatter['x'], range_scatter['y'], color='blue', alpha=0.1)
+                # plt.scatter(range_scatter['x'], range_scatter['y'], color='blue', alpha=0.1)
             fit_slice = pd.concat(fit_slice, ignore_index=True)
             line_fit = np.poly1d(np.polyfit(fit_slice['x'], fit_slice['y'], deg=1))
 
             range_scatter = spectra_df.loc[(spectra_df['x'] > x_left - 50) & (spectra_df['x'] < x_right + 50)]
-            plt.scatter(range_scatter['x'], range_scatter['y'], color='orange', alpha=0.1)
+            # plt.scatter(range_scatter['x'], range_scatter['y'], color='orange', alpha=0.1)
 
             common_x = list(range_scatter['x'])
             line_y = line_fit(common_x)
             curve_y = f_polyfit(common_x)
-            plt.plot(common_x, line_y, 'k', alpha=0.1)
-            plt.plot(common_x, curve_y, '#1D78EF', alpha=0.1)
+            # plt.plot(common_x, line_y, 'k', alpha=0.1)
+            # plt.plot(common_x, curve_y, '#1D78EF', alpha=0.1)
 
 
             intersect_i = np.argwhere(np.diff(np.sign(line_y - curve_y))).flatten()
             x_intersect = [common_x[i] for i in intersect_i]
             y_intersect = [line_fit(x) for x in x_intersect]
-            plt.plot(x_intersect, y_intersect, 'ro', alpha=0.1)
-            plt.xlabel('Rest (z = 0.038) Wavelength (Å)')
-            plt.ylabel('Normalized fλ')
+            # plt.plot(x_intersect, y_intersect, 'ro', alpha=0.1)
+            # plt.xlabel('Rest (z = 0.038) Wavelength (Å)')
+            # plt.ylabel('Normalized fλ')
             if len(x_intersect) > 1:
                 result.append(integrate.quad(lambda x: 1 - (f_polyfit(x) / (line_fit(x))), x_intersect[0], x_intersect[1])[0])
     n = len(result)
     result_mean = np.mean(result)
     result_std = np.std(result)
-    print('final', str(t_from_discovery), 'days',  result_mean, result_std, 'n=', n)
+    # print('final', str(t_from_discovery), 'days',  result_mean, result_std, 'n=', n)
     return result_mean, result_std
         # plt.plot(common_x, curve_y /line_y)
         # plt.plot(common_x, 1 - (curve_y / (line_y + 0.1)))

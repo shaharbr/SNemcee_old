@@ -9,41 +9,68 @@ import matplotlib.pyplot as plt
 
 # TODO update bolometric table according to new phot data, and also with atlas
 
-lc = LC.read(r'data\ascii18aad_BVgri.ascii')
+lc = LC.read(r'data\ascii18hmx.ascii')
+# lc = LC.read(r'data\ascii18aad_BVgri.ascii')
 
-discovery_date = 58182.7996
+discovery_date = 58408.646
+# discovery_date = 58182.7996
 
 extinction = {
-    'U': 0,
-    'B': 0,
-    'V': 0,
-    'R': 0,
-    'I': 0,
-    'u': 0,
-    'g': 0,
-    'r': 0,
-    'i': 0,
-    'z': 0,
-    'J': 0,
-    'H': 0,
-    'K': 0,
-    'L': 0,
+    'U': 0.206,
+    'B': 0.173,
+    'V': 0.131,
+    'R': 0.103,
+    'I': 0.072,
+    'u': 0.202,
+    'g': 0.157,
+    'r': 0.109,
+    'i': 0.081,
+    'z': 0.060,
+    'J': 0.034,
+    'H': 0.021,
+    'K': 0.014,
+    'L': 0.007,
     'G': 0,
     'o': 0
 }
 
-z = 0.024
-lc.calcAbsMag(dm=35.21, extinction=extinction)
+
+
+# extinction = {
+#     'U': 0,
+#     'B': 0,
+#     'V': 0,
+#     'R': 0,
+#     'I': 0,
+#     'u': 0,
+#     'g': 0,
+#     'r': 0,
+#     'i': 0,
+#     'z': 0,
+#     'J': 0,
+#     'H': 0,
+#     'K': 0,
+#     'L': 0,
+#     'G': 0,
+#     'o': 0
+# }
+
+z = 0.038
+# z = 0.024
+lc.calcAbsMag(dm=36.01, extinction=extinction)
+# lc.calcAbsMag(dm=35.178, extinction=extinction)
 lc.calcLum()
 
 print(lc)
 
-outpath = '/Users/Shahar/sn2018hmx/SN2018aad_BVgri_bolometric_allsources'
+outpath = '/Users/Shahar/sn2018hmx/SN2018hmx_BVgi_bolometric_allsources'
+# outpath = '/Users/Shahar/sn2018hmx/SN2018aad_BVgri_bolometric_allsources'
 
-t = bolometric.calculate_bolometric(lc, z, outpath, save_table_as='bolometric_tabe_SN2018aad')
+t = bolometric.calculate_bolometric(lc, z, outpath, save_table_as='bolometric_tabe_SN2018hmx_BVgi')
+# t = bolometric.calculate_bolometric(lc, z, outpath, save_table_as='bolometric_tabe_SN2018aad_BVgri')
 
-# fig = bolometric.plot_bolometric_results(t, save_plot_as='results_fig_allsources.png')
-fig = bolometric.plot_bolometric_results(t)
+fig = bolometric.plot_bolometric_results(t, save_plot_as='results_fig_allsources.png')
+# fig = bolometric.plot_bolometric_results(t)
 
 blackbody_data = {'t_from_discovery': np.array(t['MJD']) - discovery_date, # subtract discovery date
                   'temp': np.array(t['temp_mcmc']),
@@ -59,7 +86,8 @@ blackbody_data = {'t_from_discovery': np.array(t['MJD']) - discovery_date, # sub
 
 blackbody_data = pd.DataFrame.from_dict(blackbody_data)
 
-blackbody_data.to_csv(r'results\blackbody_results_18aad_BVgri.csv')
+blackbody_data.to_csv(r'results\blackbody_results_18hmx_BVgi.csv')
+# blackbody_data.to_csv(r'results\blackbody_results_18aad_BVgri.csv')
 
 
 

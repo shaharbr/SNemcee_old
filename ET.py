@@ -3,7 +3,7 @@ import bolometric
 
 from matplotlib import pyplot as plt
 
-blackbody_data = pd.read_csv(r'results\blackbody_results.csv')
+blackbody_data = pd.read_csv(r'results\blackbody_results_18hmx.csv')
 
 Lum_vec = list(blackbody_data['Lum']) #  erg/s
 Lum_vec = [x * 86400 * 10**7 for x in Lum_vec] #  erg/s

@@ -82,11 +82,11 @@ def lightcurve_plot(SN_dict_list, main_SN, correction_params):
     ax.set_title('Light-curve over time - '+str([SN['Name'] for SN in SN_dict_list]))
     ax.set_xlabel('Rest-frame days from discovery')
     ax.set_ylabel('Apparent Magnitude')
-    ax.set_ylim(13, 27)
+    ax.set_ylim(15, 23)
     ax2.set_ylabel('Absolute Magnitude')
     # TODO remember that the distance module difference between the y axes is hardcoded here -
     # TODO need to find way to me this automatic
-    ax2.set_ylim(13 - distance_modulus, 27 - distance_modulus)
+    ax2.set_ylim(15 - distance_modulus, 23 - distance_modulus)
     ax2.legend(ncol=2)
     ax.invert_yaxis()
     ax.get_legend().remove()
@@ -140,12 +140,12 @@ def lightcurve_plot_shift(SN_dict, correction_params):
     ax.set_title('Light-curve over time - '+str(SN_dict['Name']) + '\n')
     ax.set_xlabel('Rest-frame days from discovery')
     ax.set_ylabel('Apparent Magnitude')
-    ax.set_ylim(10, 24)
+    ax.set_ylim(12, 21)
     ax2.set_ylabel('Absolute Magnitude')
     # TODO remember that the distance module difference between the y axes is hardcoded here -
     # TODO need to find way to me this automatic
-    ax2.set_yticks(np.arange(int(10 - distance_modulus),  int(24 - distance_modulus + 1), 1))
-    ax2.set_ylim(10 - distance_modulus, 24 - distance_modulus)
+    ax2.set_yticks(np.arange(int(12 - distance_modulus),  int(21 - distance_modulus + 1), 1))
+    ax2.set_ylim(12 - distance_modulus, 21 - distance_modulus)
     ax2.legend(ncol=2, loc='upper right')
     ax.invert_yaxis()
     ax2.invert_yaxis()
