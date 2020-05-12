@@ -3,10 +3,18 @@ import numpy as np
 from matplotlib import pyplot as plt
 import snec_result_interpolator as interp
 import pandas as pd
+import datetime
+from pathlib import Path
+import os
+import corner
+
+
 '''
 parts of this code are based on code by Griffin Hosseinzadeh
 '''
-
+# TODO run MCMC
+# TODO run mmc with more burn in + 350, wlaker 50. remove constant parameters
+#
 
 plt.rc('font', size=20)          # controls default text sizes
 plt.rc('axes', titlesize=20)     # fontsize of the axes title
@@ -18,16 +26,31 @@ plt.rc('figure', titlesize=30)  # fontsize of the figure title
 plt.rcParams['font.sans-serif'] = 'Arial'
 
 
-Mzams_range = [13.0, 16.0, 19.0]
+Mzams_range = [13.0, 16.0, 19.0, 21.0]
 Ni_range = [0.07, 0.10, 0.13, 0.16, 0.19]
 E_final_range = [1.5, 1.8, 2.4]
 Mix_range = [3.0]
 R_range = [600, 2400]
-K_range = [0.001, 30]
+K_range = [0.001, 30, 90]
+
+n_walkers = 14
+n_steps = 2
+n_params = 6
+
+time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+Path(os.path.join('mcmc_results', str(time_now))).mkdir(parents=True, exist_ok=True)
+
+run_param_df = pd.DataFrame({'parameter_ranges': {'Mzams_range': Mzams_range, 'Ni_range': Ni_range,
+                                                  'E_final_range': E_final_range, 'Mix_range': Mix_range,
+                                                  'R_range': R_range, 'K_range': K_range},
+                             'MCMC_parameters': {'n_walkers': n_walkers, 'n_steps': n_steps, 'n_params': n_params},
+                             'time': time_now})
+run_param_df.to_csv(os.path.join('mcmc_results', str(time_now), 'run_parameters.csv'))
+
 
 m_Solar = 1.989 * (10 ** 33)  # gram
 
-sn18hmx = pd.read_csv(r'results\blackbody_results_18hmx.csv')
+sn18hmx = pd.read_csv('blackbody_results_18hmx_BVgi.csv')
 
 # convert watt to erg/s
 sn18hmx['Lum'] = sn18hmx['Lum'] * 10**7
@@ -35,7 +58,7 @@ sn18hmx['dLum0'] = sn18hmx['dLum0'] * 10**7
 sn18hmx['dLum1'] = sn18hmx['dLum1'] * 10**7
 
 
-interp_days = np.arange(15, 170, 1)
+interp_days = np.arange(15, 382, 1)
 interp_lum = np.interp(interp_days, sn18hmx['t_from_discovery'], sn18hmx['Lum'])
 interp_dlum0 = np.interp(interp_days, sn18hmx['t_from_discovery'], sn18hmx['dLum0'])
 interp_dlum1 = np.interp(interp_days, sn18hmx['t_from_discovery'], sn18hmx['dLum1'])
@@ -117,9 +140,6 @@ def log_posterior(theta, data_x, data_y, data_dy):
 
 
 def emcee_fit_params(data_time, data_lum, data_dlum):
-    n_walkers = 30
-    n_steps = 100
-    n_params = 6
     args = [data_time, data_lum, data_dlum]
     # TODO only using dLum0, not dLum1?
     sampler = emcee.EnsembleSampler(n_walkers, n_params, log_posterior, args=args)
@@ -153,39 +173,55 @@ def SN_lightcurve_params(SN_data):
     return sampler
 
 
-def chain_plots(chain, **kwargs):
-    plt.figure()
+def chain_plots(sampler, **kwargs):
+    chain = sampler.chain
+
+    f_Mzams = plt.figure()
     plt.plot(chain[:, :, 0].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('Mzams')
+    plt.tight_layout()
+    f_Mzams.savefig(os.path.join('mcmc_results', str(time_now), 'Mzams.png'))
 
-    plt.figure()
+    f_Ni = plt.figure()
     plt.plot(chain[:, :, 1].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('Ni')
+    plt.tight_layout()
+    f_Ni.savefig(os.path.join('mcmc_results', str(time_now), 'Ni.png'))
 
-    plt.figure()
+    f_E = plt.figure()
     plt.plot(chain[:, :, 2].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('E')
+    plt.tight_layout()
+    f_E.savefig(os.path.join('mcmc_results', str(time_now), 'E.png'))
 
-    plt.figure()
+
+    f_Mix = plt.figure()
     plt.plot(chain[:, :, 3].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('Mix')
+    plt.tight_layout()
+    f_Mix.savefig(os.path.join('mcmc_results', str(time_now), 'Mix.png'))
 
-    plt.figure()
+    f_R = plt.figure()
     plt.plot(chain[:, :, 4].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('R')
+    plt.tight_layout()
+    f_R.savefig(os.path.join('mcmc_results', str(time_now), 'R.png'))
 
-    plt.figure()
+    f_K = plt.figure()
     plt.plot(chain[:, :, 5].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('K')
+    plt.tight_layout()
+    f_K.savefig(os.path.join('mcmc_results', str(time_now), 'K.png'))
 
 # [walkers, step, dim]
 
+import csv
 
 def get_param_results_dict(sampler):
     params = ['Mzams', 'Ni', 'E', 'Mix', 'R', 'K']
@@ -195,25 +231,36 @@ def get_param_results_dict(sampler):
         avg = np.average(last_results)
         sigma_lower, sigma_upper = np.percentile(last_results, [16, 84])
         dict[params[i]] = avg
-        dict[params[i]+'_all_walkers'] = last_results
+        # dict[params[i]+'_all_walkers'] = last_results
         dict[params[i]+'_lower'] = avg - sigma_lower
         dict[params[i] + '_upper'] = sigma_upper - avg
     print(dict)
+
+    with open(os.path.join('mcmc_results', str(time_now), 'final_results.csv'), 'w') as f:  # Just use 'w' mode in 3.x
+        w = csv.DictWriter(f, dict.keys())
+        w.writeheader()
+        w.writerow(dict)
+
+
+    # df = pd.DataFrame.from_dict(data=dict, orient='index', index=)
+    # df.to_csv(os.path.join('mcmc_results', str(time_now), 'final_results.csv'))
     return dict
 
 
 
 def calc_chi_square_sampled(data, x_fit, y_fit):
-    sampling = np.arange(15, 170, 5)
+    sampling = np.arange(15, 382, 5)
     data_sampled = np.interp(sampling, data['t_from_discovery'], data['Lum'])
     data_err_sampled = np.interp(sampling, data['t_from_discovery'], data['dLum0'])
     model_sampled = np.interp(sampling, x_fit, y_fit)
     chisq = np.sum(((data_sampled - model_sampled) /
                     data_err_sampled) ** 2)
     chisq_reduced = chisq / (len(sampling) - 1)
-    plt.figure()
+    f_chi = plt.figure()
     plt.plot(sampling, data_sampled, marker='o')
     plt.plot(sampling, model_sampled, marker='o')
+    plt.tight_layout()
+    f_chi.savefig(os.path.join('mcmc_results', str(time_now), 'chi_square_sampling.png'))
     return chisq_reduced
 
 
@@ -237,21 +284,36 @@ def plot_lightcurve_with_fit(SN_data, sampler):
     sampled = [Mzams_range, Ni_range, E_final_range, Mix_range, R_range, K_range]
     y_fit = interp.snec_interpolator(requested, sampled)
 
-    fig, ax = plt.subplots(figsize=(10, 8), constrained_layout=True)
+    f_fit, ax = plt.subplots(figsize=(10, 8))
     ax.errorbar(data_x, data_y, yerr=[dy0, dy1], marker='o', linestyle='None', label='SN 2018hmx')
     ax.plot(x_fit, y_fit, label='best fit:\n'+results_text)
     ax.legend()
     chisq = calc_chi_square_sampled(SN_data, x_fit, y_fit)
     ax.set_title('chi_sq_red = ' + str(int(chisq)), fontsize=14)
+    plt.tight_layout()
+    f_fit.savefig(os.path.join('mcmc_results', str(time_now), 'lightcurve_fit.png'))
 
 
 
 
 
 sampler = SN_lightcurve_params(interp_sn18hmx)
-chain_plots(sampler.chain)
+chain_plots(sampler)
 results_vec = plot_lightcurve_with_fit(sn18hmx, sampler)
 
+
+flat_sampler = sampler.get_chain(flat=True)
+np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler.csv'), flat_sampler, delimiter=",")
+
+flat_sampler_no_burnin = sampler.get_chain(discard=1, flat=True)
+np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler_no_burnin.csv'), flat_sampler_no_burnin, delimiter=",")
+
+
+labels = ['Mzams', 'Ni', 'E', 'Mix', 'R', 'K']
+corner_range = [1., 1., 1., (2.9, 3.1),1., 1.,]
+f_corner = corner.corner(flat_sampler_no_burnin, labels=labels, range=corner_range)
+plt.tight_layout()
+f_corner.savefig(os.path.join('mcmc_results', str(time_now), 'corner_plot.png'))
 
 MCMC_results = get_param_results_dict(sampler)
 # Ni_results['Ni_87A'] = np.average([Ni_mass_by_slope(i, line, SN87A_line) for i in [150, 300]])
@@ -263,7 +325,7 @@ print(sampler.chain.shape)
 
 
 
-fig, ax = plt.subplots(figsize=(10, 8), constrained_layout=True)
+# fig, ax = plt.subplots(figsize=(10, 8))
 
 
 # Mzams = 10
