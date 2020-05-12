@@ -13,9 +13,7 @@ import matplotlib.pyplot as plt
 # print(getshape(snec_dict))
 # data_dir = '/home/sbracha/SNEC/all_data/'
 
-data_dir = os.path.join(r'C:\Users','Shahar','Documents', 'all_lum_data')
-
-
+data_dir = os.path.join(r'C:\Users','Shaharbr','Documents', 'git_sn2018hmx', 'all_lum_data')
 
 # Mzams_range = [13.0, 15.0]
 # Ni_range = [0.1, 0.2]
@@ -71,7 +69,7 @@ def simple_interpolator(requested, sampled):
                                      names=['t_from_discovery', 'Lum'], sep=r'\s+')
             time_col = snec_model['t_from_discovery'] / 86400
             snec_model = snec_model['Lum']
-            interp_days = np.arange(15, 170, 1)
+            interp_days = np.arange(15, 382, 1)
             snec_model = np.interp(interp_days, time_col, snec_model)
             snec_dict[Mdir][Nidir]['snec'] = snec_model
         Ni_below = snec_dict[Mdir]['below']['snec']
@@ -134,7 +132,8 @@ def snec_interpolator(requested_list, sampled_list):
 
 
     # hierarchy of nested dict: 'M', 'Ni', 'E', 'Mix', 'R', 'K'
-    param_keys = list(param_dict.keys())
+    # param_keys = list(param_dict.keys())
+    param_keys = ['M', 'Ni', 'E', 'Mix', 'R', 'K']
     num_param = len(param_keys)
     snec_dict = {'below': {}, 'above': {}, 'requested': {}}
     for n in range(num_param - 1):
@@ -168,7 +167,7 @@ def snec_interpolator(requested_list, sampled_list):
 
                             time_col = snec_model['t_from_discovery'] / 86400
                             snec_model = snec_model['Lum']
-                            interp_days = np.arange(15, 170, 1)
+                            interp_days = np.arange(15, 382, 1)
                             snec_model = np.interp(interp_days, time_col, snec_model)
                             snec_dict[Mdir][Nidir][Edir][Mixdir][Rdir][Kdir]['snec'] = snec_model
                         K_below = snec_dict[Mdir][Nidir][Edir][Mixdir][Rdir]['below']['snec']
@@ -262,7 +261,7 @@ def old_snec_interpolator(M_requested, Ni_requested, E_requested, Mix_requested,
 
 
     # hierarchy of nested dict: 'M', 'Ni', 'E', 'Mix', 'R', 'K'
-    param_keys = list(param_dict.keys())
+    # param_keys = list(param_dict.keys())
     num_param = len(param_keys)
     snec_dict = {'below': 0, 'above': 0, 'requested': 0}
     for n in range(num_param - 1):
