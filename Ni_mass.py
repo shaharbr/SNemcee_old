@@ -3,6 +3,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
+# TODO in scipy too, least suare fitting
+# TODO check about the two outlier bolometric points, whats going on in the filters
+
 
 plt.rc('font', size=20)          # controls default text sizes
 plt.rc('axes', titlesize=20)     # fontsize of the axes title
@@ -94,8 +97,8 @@ def plot_v_lightcurve_with_fit(blackbody_results, sampler):
 
     Ni_std = np.std(sampler.chain[:, -1, 0])
 
-    print(Ni)
-    print(Ni_std)
+    # print(Ni)
+    # print(Ni_std)
     data = blackbody_results
     x = data['t_from_discovery']
     y = data['Lum'] / 10 ** 43
@@ -137,19 +140,19 @@ def fit_to_log_slope(SN_bolometric_df):
     y_fit_log = line[1] + x_fit * line[0]
 
     sigma_log = np.sqrt(np.diag(cov))
-    print('line', line)
-    print('cov', cov, sigma_log)
+    # print('line', line)
+    # print('cov', cov, sigma_log)
     sigma_log = np.sqrt((sigma_log[0] * x_fit) ** 2 + sigma_log[1] ** 2)
 
     y_fit = np.power(10, y_fit_log)
     y_fit_sigma = sigma_log * np.log(10) * np.power(10, y_fit_log)
-    print('yfit')
-    print(y_fit_log)
-    print(y_fit)
+    # print('yfit')
+    # print(y_fit_log)
+    # print(y_fit)
 
-    print('sigma')
-    print(sigma_log)
-    print(y_fit_sigma)
+    # print('sigma')
+    # print(sigma_log)
+    # print(y_fit_sigma)
     return x_fit, y_fit, y_fit_sigma
 
 
