@@ -32,10 +32,12 @@ SN1987A_bolometric['Lum'] = 10 ** SN1987A_bolometric['Lum']
 # TODO data should load into dicts and then the loop runs on the dict by name of SN
 blackbody_data = {'SN2018hmx': [], 'SN2018aad': []}
 velocity_data = {'SN2018hmx': [], 'SN2018aad': []}
-
+# blackbody_data['SN2018hmx'] = blackbody_data['SN2018hmx'].loc[blackbody_data['SN2018hmx'] > ]
 blackbody_data['SN2018hmx'] = pd.read_csv(r'results\blackbody_results_18hmx_BVgi.csv')
-velocity_data['SN2018hmx'] = pd.read_csv(r'results\sN2018hmx_expansion_velocities.csv')
 
+velocity_data['SN2018hmx'] = pd.read_csv(r'results\sN2018hmx_expansion_velocities.csv')
+print(blackbody_data['SN2018hmx'])
+# exit()
 blackbody_data['SN2018aad'] = pd.read_csv(r'results\blackbody_results_18aad_BVgri.csv')
 velocity_data['SN2018aad'] = pd.read_csv(r'results\SN2018aad_expansion_velocities.csv')
 
@@ -50,11 +52,11 @@ def convert_to_erg_s(blackbody_data):
 
 
 
-for SN in ['SN2018hmx', 'SN2018aad']:
+for SN in ['SN2018hmx']:
     blackbody_data[SN] = convert_to_erg_s(blackbody_data[SN])
 
 
-for SN in ['SN2018hmx', 'SN2018aad']:
+for SN in ['SN2018hmx']:
     print(SN)
     velocity_data[SN] = velocity_data[SN].loc[velocity_data[SN]['line'] == 'FeII 5169'].reset_index()
     velocity_data[SN]['vt'] = velocity_data[SN]['t_from_discovery'] * velocity_data[SN]['absorption_mean_velocity'] * 86400 #vt and multiplied by seconds in a day (v in km/s)
@@ -127,16 +129,12 @@ for SN in ['SN2018hmx', 'SN2018aad']:
     # y_fit_87A = np.power(10, SN87A_line[1] + x * SN87A_line[0])
 
 
-    print('SN')
     x_fit_SN, y_fit_SN, y_fit_SN_sigma = Ni_mass.fit_to_log_slope(blackbody_data[SN])
-    print('87A')
     x_fit_87A, y_fit_87A, y_fit_87A_sigma = Ni_mass.fit_to_log_slope(SN1987A_bolometric)
     # plt.figure()
     # plt.plot(x_fit_SN, y_fit_SN_sigma)
     # plt.figure()
     # plt.plot(x_fit_87A,y_fit_87A_sigma)
-    # plt.show()
-    # exit()
 
 
     plt.errorbar(x=x_fit_SN, y=y_fit_SN, yerr=y_fit_SN_sigma)
