@@ -26,15 +26,15 @@ plt.rc('figure', titlesize=30)  # fontsize of the figure title
 plt.rcParams['font.sans-serif'] = 'Arial'
 
 
-Mzams_range = [13.0, 16.0, 19.0, 21.0]
-Ni_range = [0.07, 0.10, 0.13, 0.16, 0.19]
-E_final_range = [1.5, 1.8, 2.4]
+Mzams_range = [13.0, 21.0]
+Ni_range = [0.10, 0.19]
+E_final_range = [1.5, 2.4]
 Mix_range = [3.0]
-R_range = [600, 2400]
-K_range = [0.001, 30, 90]
+R_range = [600, 3000]
+K_range = [0.001, 90]
 
 n_walkers = 14
-n_steps = 2
+n_steps = 3
 n_params = 6
 
 time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -50,7 +50,7 @@ run_param_df.to_csv(os.path.join('mcmc_results', str(time_now), 'run_parameters.
 
 m_Solar = 1.989 * (10 ** 33)  # gram
 
-sn18hmx = pd.read_csv('blackbody_results_18hmx_BVgi.csv')
+sn18hmx = pd.read_csv('blackbody_results_18hmx_BVgi_wo2outliers.csv')
 
 # convert watt to erg/s
 sn18hmx['Lum'] = sn18hmx['Lum'] * 10**7
@@ -305,14 +305,14 @@ results_vec = plot_lightcurve_with_fit(sn18hmx, sampler)
 flat_sampler = sampler.get_chain(flat=True)
 np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler.csv'), flat_sampler, delimiter=",")
 
-flat_sampler_no_burnin = sampler.get_chain(discard=1, flat=True)
-np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler_no_burnin.csv'), flat_sampler_no_burnin, delimiter=",")
+flat_sampler_no_burnin = sampler.get_chain(discard=100, flat=True)
+np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler_without100burnin.csv'), flat_sampler_no_burnin, delimiter=",")
 
 
 labels = ['Mzams', 'Ni', 'E', 'Mix', 'R', 'K']
 corner_range = [1., 1., 1., (2.9, 3.1),1., 1.,]
 f_corner = corner.corner(flat_sampler_no_burnin, labels=labels, range=corner_range)
-plt.tight_layout()
+# plt.tight_layout()
 f_corner.savefig(os.path.join('mcmc_results', str(time_now), 'corner_plot.png'))
 
 MCMC_results = get_param_results_dict(sampler)
@@ -367,5 +367,3 @@ print(sampler.chain.shape)
 # chisq = calc_chi_square_sampled(sn18hmx, x_fit, y_fit)
 # ax.set_title('chi_sq_red = ' + str(int(chisq)), fontsize=14)
 
-
-plt.show()
