@@ -29,19 +29,18 @@ plt.rcParams['font.sans-serif'] = 'Arial'
 Mzams_range = [13.0, 21.0]
 Ni_range = [0.10, 0.19]
 E_final_range = [1.5, 2.4]
-Mix_range = [3.0]
 R_range = [600, 3000]
 K_range = [0.001, 90]
 
 n_walkers = 14
-n_steps = 3
-n_params = 6
+n_steps = 30
+n_params = 5
 
 time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 Path(os.path.join('mcmc_results', str(time_now))).mkdir(parents=True, exist_ok=True)
 
 run_param_df = pd.DataFrame({'parameter_ranges': {'Mzams_range': Mzams_range, 'Ni_range': Ni_range,
-                                                  'E_final_range': E_final_range, 'Mix_range': Mix_range,
+                                                  'E_final_range': E_final_range,
                                                   'R_range': R_range, 'K_range': K_range},
                              'MCMC_parameters': {'n_walkers': n_walkers, 'n_steps': n_steps, 'n_params': n_params},
                              'time': time_now})
@@ -58,22 +57,22 @@ sn18hmx['dLum0'] = sn18hmx['dLum0'] * 10**7
 sn18hmx['dLum1'] = sn18hmx['dLum1'] * 10**7
 
 
-interp_days = np.arange(15, 382, 1)
-interp_lum = np.interp(interp_days, sn18hmx['t_from_discovery'], sn18hmx['Lum'])
-interp_dlum0 = np.interp(interp_days, sn18hmx['t_from_discovery'], sn18hmx['dLum0'])
-interp_dlum1 = np.interp(interp_days, sn18hmx['t_from_discovery'], sn18hmx['dLum1'])
-
-interp_sn18hmx = pd.DataFrame(
-    {'t_from_discovery': interp_days,
-     'Lum': interp_lum,
-     'dLum0': interp_dlum0,
-     'dLum1': interp_dlum1
-    })
+# interp_days = np.arange(15, 382, 1)
+# interp_lum = np.interp(interp_days, sn18hmx['t_from_discovery'], sn18hmx['Lum'])
+# interp_dlum0 = np.interp(interp_days, sn18hmx['t_from_discovery'], sn18hmx['dLum0'])
+# interp_dlum1 = np.interp(interp_days, sn18hmx['t_from_discovery'], sn18hmx['dLum1'])
+#
+# interp_sn18hmx = pd.DataFrame(
+#     {'t_from_discovery': interp_days,
+#      'Lum': interp_lum,
+#      'dLum0': interp_dlum0,
+#      'dLum1': interp_dlum1
+#     })
 
 
 
 def log_prior(theta):
-    # theta is a vector containing a specific set of parameters theta = [M, Ni, E, Mix, R, K]
+    # theta is a vector containing a specific set of parameters theta = [M, Ni, E, R, K]
 
     # Mzams (M)
     if Mzams_range[0] <= theta[0] <= Mzams_range[-1]:
@@ -93,35 +92,29 @@ def log_prior(theta):
     else:
         prob_E = 0.
 
-    # Ni_boundary (Mix)
-    if Mix_range[0] <= theta[3] <= Mix_range[-1]:
-        prob_Mix = 1. / theta[3]
-    else:
-        prob_Mix = 0.
-
     # R_CSM (R)
-    if R_range[0] <= theta[4] <= R_range[-1]:
-        prob_R = 1. / theta[4]
+    if R_range[0] <= theta[3] <= R_range[-1]:
+        prob_R = 1. / theta[3]
     else:
         prob_R = 0.
 
     # K_CSM (K)
-    if K_range[0] <= theta[5] <= K_range[-1]:
-        prob_K = 1. / theta[5]
+    if K_range[0] <= theta[4] <= K_range[-1]:
+        prob_K = 1. / theta[4]
     else:
         prob_K = 0.
 
     # sum probabilities
-    prob_total = np.log(prob_M * prob_Ni * prob_E * prob_Mix * prob_R * prob_K)
+    prob_total = np.log(prob_M * prob_Ni * prob_E * prob_R * prob_K)
     return prob_total
 
 
 def log_likelihood(theta, data_x, data_y, data_dy):
-    sampled = [Mzams_range, Ni_range, E_final_range, Mix_range, R_range, K_range]
+    sampled = [Mzams_range, Ni_range, E_final_range, R_range, K_range]
     if (Mzams_range[0] <= theta[0] <= Mzams_range[-1]) & (Ni_range[0] <= theta[1] <= Ni_range[-1])\
-        & (E_final_range[0] <= theta[2] <= E_final_range[-1])& (Mix_range[0] <= theta[3] <= Mix_range[-1])\
-        & (R_range[0] <= theta[4] <= R_range[-1])& (K_range[0] <= theta[5] <= K_range[-1]):
-        y_fit = interp.snec_interpolator(theta, sampled)
+        & (E_final_range[0] <= theta[2] <= E_final_range[-1])\
+        & (R_range[0] <= theta[3] <= R_range[-1])& (K_range[0] <= theta[4] <= K_range[-1]):
+        y_fit = interp.snec_interpolator(theta, sampled, data_x)
         chi2 = (data_y - y_fit) ** 2. / (2. * data_dy ** 2.) + np.log(data_y)
     else:
         chi2 = 10000000000
@@ -147,11 +140,10 @@ def emcee_fit_params(data_time, data_lum, data_dlum):
     Mzams_random = np.random.rand(n_walkers) * (Mzams_range[-1] - Mzams_range[0]) + Mzams_range[0]
     Ni_random = np.random.rand(n_walkers) * (Ni_range[-1] - Ni_range[0]) + Ni_range[0]
     E_random = np.random.rand(n_walkers) * (E_final_range[-1] - E_final_range[0]) + E_final_range[0]
-    Mix_random = np.random.rand(n_walkers) * (Mix_range[-1] - Mix_range[0]) + Mix_range[0]
     R_random = np.random.rand(n_walkers) * (R_range[-1] - R_range[0]) + R_range[0]
     K_random = np.random.rand(n_walkers) * (K_range[-1] - K_range[0]) + K_range[0]
 
-    initial_guesses = np.array([Mzams_random, Ni_random, E_random, Mix_random, R_random, K_random])
+    initial_guesses = np.array([Mzams_random, Ni_random, E_random, R_random, K_random])
     initial_guesses = initial_guesses.T
 
     sampler.run_mcmc(initial_guesses, n_steps)
@@ -197,14 +189,6 @@ def chain_plots(sampler, **kwargs):
     plt.tight_layout()
     f_E.savefig(os.path.join('mcmc_results', str(time_now), 'E.png'))
 
-
-    f_Mix = plt.figure()
-    plt.plot(chain[:, :, 3].T, **kwargs)
-    plt.xlabel('Step Number')
-    plt.ylabel('Mix')
-    plt.tight_layout()
-    f_Mix.savefig(os.path.join('mcmc_results', str(time_now), 'Mix.png'))
-
     f_R = plt.figure()
     plt.plot(chain[:, :, 4].T, **kwargs)
     plt.xlabel('Step Number')
@@ -213,7 +197,7 @@ def chain_plots(sampler, **kwargs):
     f_R.savefig(os.path.join('mcmc_results', str(time_now), 'R.png'))
 
     f_K = plt.figure()
-    plt.plot(chain[:, :, 5].T, **kwargs)
+    plt.plot(chain[:, :, 4].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('K')
     plt.tight_layout()
@@ -224,7 +208,7 @@ def chain_plots(sampler, **kwargs):
 import csv
 
 def get_param_results_dict(sampler):
-    params = ['Mzams', 'Ni', 'E', 'Mix', 'R', 'K']
+    params = ['Mzams', 'Ni', 'E', 'R', 'K']
     dict = {}
     for i in range(len(params)):
         last_results = sampler.chain[:, -1:, i]
@@ -248,17 +232,17 @@ def get_param_results_dict(sampler):
 
 
 
-def calc_chi_square_sampled(data, x_fit, y_fit):
-    sampling = np.arange(15, 382, 5)
-    data_sampled = np.interp(sampling, data['t_from_discovery'], data['Lum'])
-    data_err_sampled = np.interp(sampling, data['t_from_discovery'], data['dLum0'])
-    model_sampled = np.interp(sampling, x_fit, y_fit)
-    chisq = np.sum(((data_sampled - model_sampled) /
-                    data_err_sampled) ** 2)
-    chisq_reduced = chisq / (len(sampling) - 1)
+def calc_chi_square_sampled(data, y_fit):
+    # sampling = np.arange(15, 382, 5)
+    # data_sampled = np.interp(sampling, data['t_from_discovery'], data['Lum'])
+    # data_err_sampled = np.interp(sampling, data['t_from_discovery'], data['dLum0'])
+    # model_sampled = np.interp(sampling, x_fit, y_fit)
+    chisq = np.sum(((data['Lum'] - y_fit) /
+                    data['dLum0']) ** 2)
+    chisq_reduced = chisq / (len(data['t_from_discovery']) - 1)
     f_chi = plt.figure()
-    plt.plot(sampling, data_sampled, marker='o')
-    plt.plot(sampling, model_sampled, marker='o')
+    plt.plot(data['t_from_discovery'], data['Lum'], marker='o')
+    plt.plot(data['t_from_discovery'], y_fit, marker='o')
     plt.tight_layout()
     f_chi.savefig(os.path.join('mcmc_results', str(time_now), 'chi_square_sampling.png'))
     return chisq_reduced
@@ -269,26 +253,24 @@ def plot_lightcurve_with_fit(SN_data, sampler):
     Mzams = param_dict['Mzams']
     Ni = param_dict['Ni']
     E = param_dict['E']
-    Mix = param_dict['Mix']
     R = param_dict['R']
     K = param_dict['K']
-    results_text = 'Mzams: '+str(round(Mzams, 1))+' Ni: '+str(round(Ni, 3))+' E: '+str(round(E, 1))+' Mix: '+str(Mix)+' R: '+str(int(R))+' K: '+str(int(K))
+    results_text = 'Mzams: '+str(round(Mzams, 1))+' Ni: '+str(round(Ni, 3))+' E: '+str(round(E, 1))+' R: '+str(int(R))+' K: '+str(int(K))
     print(results_text)
-    x_fit = interp_days
     data_x = SN_data['t_from_discovery']
     data_y = SN_data['Lum']
     dy0 = SN_data['dLum0']
     dy1 = SN_data['dLum1']
 
-    requested = [Mzams, Ni, E, Mix, R, K]
-    sampled = [Mzams_range, Ni_range, E_final_range, Mix_range, R_range, K_range]
-    y_fit = interp.snec_interpolator(requested, sampled)
+    requested = [Mzams, Ni, E, R, K]
+    sampled = [Mzams_range, Ni_range, E_final_range, R_range, K_range]
+    y_fit = interp.snec_interpolator(requested, sampled, data_x)
 
     f_fit, ax = plt.subplots(figsize=(10, 8))
     ax.errorbar(data_x, data_y, yerr=[dy0, dy1], marker='o', linestyle='None', label='SN 2018hmx')
-    ax.plot(x_fit, y_fit, label='best fit:\n'+results_text)
+    ax.plot(data_x, y_fit, label='best fit:\n'+results_text)
     ax.legend()
-    chisq = calc_chi_square_sampled(SN_data, x_fit, y_fit)
+    chisq = calc_chi_square_sampled(SN_data, y_fit)
     ax.set_title('chi_sq_red = ' + str(int(chisq)), fontsize=14)
     plt.tight_layout()
     f_fit.savefig(os.path.join('mcmc_results', str(time_now), 'lightcurve_fit.png'))
@@ -297,7 +279,7 @@ def plot_lightcurve_with_fit(SN_data, sampler):
 
 
 
-sampler = SN_lightcurve_params(interp_sn18hmx)
+sampler = SN_lightcurve_params(sn18hmx)
 chain_plots(sampler)
 results_vec = plot_lightcurve_with_fit(sn18hmx, sampler)
 
@@ -305,12 +287,12 @@ results_vec = plot_lightcurve_with_fit(sn18hmx, sampler)
 flat_sampler = sampler.get_chain(flat=True)
 np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler.csv'), flat_sampler, delimiter=",")
 
-flat_sampler_no_burnin = sampler.get_chain(discard=100, flat=True)
+flat_sampler_no_burnin = sampler.get_chain(discard=0, flat=True)
 np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler_without100burnin.csv'), flat_sampler_no_burnin, delimiter=",")
 
 
-labels = ['Mzams', 'Ni', 'E', 'Mix', 'R', 'K']
-corner_range = [1., 1., 1., (2.9, 3.1),1., 1.,]
+labels = ['Mzams', 'Ni', 'E', 'R', 'K']
+corner_range = [1., 1., 1., 1., 1.,]
 f_corner = corner.corner(flat_sampler_no_burnin, labels=labels, range=corner_range)
 # plt.tight_layout()
 f_corner.savefig(os.path.join('mcmc_results', str(time_now), 'corner_plot.png'))
