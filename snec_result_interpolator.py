@@ -66,10 +66,7 @@ def snec_interpolator(requested_list, sampled_list, data_days):
                         # TODO if something isnt working here it might be because i need to replace the
                         # TODO instantaneous objects like snec_model, K_below etc with deepcopies
                         name = name[:-1]
-                        print(name)
-
                         snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['name'] = name
-
                         snec_model = pd.read_csv(os.path.join(data_dir, name, 'lum_observed.dat'),
                                  names=['t_from_discovery', 'Lum'], sep=r'\s+')
 

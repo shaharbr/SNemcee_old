@@ -32,8 +32,8 @@ E_final_range = [1.5, 2.4]
 R_range = [600, 3000]
 K_range = [0.001, 90]
 
-n_walkers = 14
-n_steps = 30
+n_walkers = 20
+n_steps = 300
 n_params = 5
 
 time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -49,7 +49,7 @@ run_param_df.to_csv(os.path.join('mcmc_results', str(time_now), 'run_parameters.
 
 m_Solar = 1.989 * (10 ** 33)  # gram
 
-sn18hmx = pd.read_csv('blackbody_results_18hmx_BVgi_wo2outliers.csv')
+sn18hmx = pd.read_csv(os.path.join('results', 'blackbody_results_18hmx_BVgri.csv'))
 
 # convert watt to erg/s
 sn18hmx['Lum'] = sn18hmx['Lum'] * 10**7
@@ -237,6 +237,7 @@ def calc_chi_square_sampled(data, y_fit):
     # data_sampled = np.interp(sampling, data['t_from_discovery'], data['Lum'])
     # data_err_sampled = np.interp(sampling, data['t_from_discovery'], data['dLum0'])
     # model_sampled = np.interp(sampling, x_fit, y_fit)
+    # TODO is the chisq formula here correct? should be np.sum(((data_y - y_fit_filt)**2 /data_y)) ?
     chisq = np.sum(((data['Lum'] - y_fit) /
                     data['dLum0']) ** 2)
     chisq_reduced = chisq / (len(data['t_from_discovery']) - 1)
@@ -287,7 +288,7 @@ results_vec = plot_lightcurve_with_fit(sn18hmx, sampler)
 flat_sampler = sampler.get_chain(flat=True)
 np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler.csv'), flat_sampler, delimiter=",")
 
-flat_sampler_no_burnin = sampler.get_chain(discard=0, flat=True)
+flat_sampler_no_burnin = sampler.get_chain(discard=200, flat=True)
 np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler_without100burnin.csv'), flat_sampler_no_burnin, delimiter=",")
 
 
