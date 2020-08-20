@@ -52,7 +52,7 @@ K_range = [0.001, 30, 90]
 
 
 n_walkers = 10
-n_steps = 50
+n_steps = 20
 n_params = 5
 
 time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -123,6 +123,7 @@ def log_likelihood(theta, data):
         y_fit = interp.snec_interpolator(theta, sampled, data_x_allfilt, filters)
         y_fit['time'] = data_x_allfilt
         for filt in filters:
+            print(filt)
             data_filt = data.loc[data['filter'] == filt]
             data_x = data_filt['t_from_discovery']
             data_y = data_filt['abs_mag']
@@ -234,11 +235,11 @@ def chain_plots(sampler, **kwargs):
 
 import csv
 
-def get_param_results_dict(sampler):
+def get_param_results_dict(sampler, step):
     params = ['Mzams', 'Ni', 'E', 'R', 'K']
     dict = {}
     for i in range(len(params)):
-        last_results = sampler.chain[:, -1:, i]
+        last_results = sampler.chain[:, step:, i]
         avg = np.average(last_results)
         sigma_lower, sigma_upper = np.percentile(last_results, [16, 84])
         dict[params[i]] = avg
@@ -267,8 +268,8 @@ def plot_chi2(SN_filt_data, y_fit, filter):
     f_chi.savefig(os.path.join('mcmc_results', str(time_now), 'chi_square_sampling_'+filter+'.png'))
 
 
-def plot_lightcurve_with_fit(SN_data, sampler):
-    param_dict = get_param_results_dict(sampler)
+def plot_lightcurve_with_fit(SN_data, sampler, step):
+    param_dict = get_param_results_dict(sampler, step)
     Mzams = param_dict['Mzams']
     Ni = param_dict['Ni']
     E = param_dict['E']
@@ -298,7 +299,7 @@ def plot_lightcurve_with_fit(SN_data, sampler):
         ax.errorbar(data_x, data_y, yerr=data_dy, marker='o', linestyle='None', label=filt + '_SN 2018hmx', color=colors[filt])
         # plot_chi2(data_filt, y_fit_filt, filt)
     chi2_reduced = chi2 / (len(SN_data['t_from_discovery']) - 1)
-    ax.set_title('chi_sq_red = ' + str(int(chi2_reduced)), fontsize=14)
+    ax.set_title('step '+str(step)+'\nchi_sq_red = ' + str(int(chi2_reduced)), fontsize=14)
     plt.tight_layout()
     ax.legend()
     f_fit.savefig(os.path.join('mcmc_results', str(time_now), 'lightcurve_fit.png'))
@@ -309,13 +310,14 @@ def plot_lightcurve_with_fit(SN_data, sampler):
 
 sampler = SN_lightcurve_params(SN)
 chain_plots(sampler)
-results_vec = plot_lightcurve_with_fit(SN, sampler)
+results_vec = plot_lightcurve_with_fit(SN, sampler, 0)
+results_vec = plot_lightcurve_with_fit(SN, sampler, 19)
 
 
 flat_sampler = sampler.get_chain(flat=True)
 np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler.csv'), flat_sampler, delimiter=",")
 
-flat_sampler_no_burnin = sampler.get_chain(discard=30, flat=True)
+flat_sampler_no_burnin = sampler.get_chain(discard=0, flat=True)
 np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler_without100burnin.csv'), flat_sampler_no_burnin, delimiter=",")
 
 
@@ -325,7 +327,7 @@ f_corner = corner.corner(flat_sampler_no_burnin, labels=labels, range=corner_ran
 # plt.tight_layout()
 f_corner.savefig(os.path.join('mcmc_results', str(time_now), 'corner_plot.png'))
 
-MCMC_results = get_param_results_dict(sampler)
+# MCMC_results = get_param_results_dict(sampler)
 
 print(sampler.chain.shape)
 
