@@ -1,0 +1,17 @@
+This directory contains all V-band photometry used in the analysis of
+Anderson et al. (2014), A14. In a future publication, local sequence photometry,
+together with details of each telescope/instrument used to obtain the photometry of
+each individual supernova will be presented.
+
+Here, we also include a file (upperlimits.dat) which contains published
+upper limits for the non-detection of the supernovae used in A14.
+
+Finally, this directory also contains a file (Measurements_A14.dat), which
+has all measured/defined parameters used to obtain the results of A14, some of
+which were not published in the actual paper, together with a separate file
+explaining its contents (measurements_caption.dat).
+
+If there are any doubts about any of the above, please contact the first author
+of A14, Joe Anderson at: janderso@eso.org.
+
+Enjoy!

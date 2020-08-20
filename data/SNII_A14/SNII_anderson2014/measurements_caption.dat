@@ -1,0 +1,30 @@
+This file contains the details of what is listed in the data 
+file: 'Measurements_A14.dat':
+
+SN: SN name
+Galaxy: SN host galaxy name
+Vr(hel): heliocentric recession velocity of host galaxy
+Mbhost: SN host galaxy absolute B-band magnitude
+DM: distance modulus of galaxy used for absolute magnitude estimations
+NaDEW: NaD EW measurements (Angstroms) from spectra used for host galaxy Av estimations
+Av: host galaxy extinction in the V-band estimation
+t_0: explosion epoch (MJD)
+type: type of measurement used for explosion epoch estimation
+tPT: transition time epoch between plateau and late phases (MJD)
+t_tran: epoch of transition between s1 and s2 (MJD)
+t_end: epoch of end of plateau phase (MJD)
+max: absolute V-band magnitude at maximum light, uncorrected for host Av
+Mmax: absolute V-band magnitude at maximum light, corrected for host Av
+end: absolute V-band magnitude at end of plateau phase, uncorrected for host Av
+Mend: absolute V-band magnitude at end of plateau phase, corrected for host Av
+tail: absolute V-band magnitude at start of tail phase, uncorrected for host Av
+Mtail: absolute V-band magnitude at start of tail phase, corrected for host Av
+s1: initial decline of light-curve in mag per 100 days
+s2: plateau decline of light-curve in mag per 100 days
+s3: late phase decline of light-curve in mag per 100 days
+Nimass: derived Ni56 masses, or upper limits (indicated by *)
+Pd: plateau length in days
+OPTd: optically thick phase duration in days
+sstart: epoch defined as start of s1/s2 (MJD)
+send: epoch defined as end of s2 (MJD)
+s3start: epoch of first photometry included in s3 measurement (MJD)

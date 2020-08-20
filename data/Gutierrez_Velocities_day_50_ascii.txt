@@ -1,0 +1,113 @@
+Table 3 
+Velocity Values at 50 Days from Explosion
+
+
+SN	vel(${{\rm{H}}}_{\alpha }$)	vel(${{\rm{H}}}_{\alpha }$)	vel(${{\rm{H}}}_{\beta }$)	vel(Fe	vel(Fe II	vel(Fe II	vel(Fe II	vel(Sc II	vel(Na I D)	vel(Ba II)	vel(Sc II)	vel(O I)	
+				II lambda4924)	lambda5018)	lambda5169)	/Sc II)	Mult.)					
+	(km s^-1)	(km s^-1)	(km s^-1)	(km s^-1)	(km s^-1)	(km s^-1)	(km s^-1)	(km s^-1)	(km s^-1)	(km s^-1)	(km s^-1)	(km s^-1)	
+1986L	7707 +or- 710	6204 +or- 476	6722 +or- 434	4946 +or- 245	4311 +or- 672	4406 +or- 411	4778 +or- 456	4316 +or- 336	5512 +or- 486	cdots	cdots	cdots	
+1990K	7841 +or- 432	6958 +or- 426	6563 +or- 381	cdots	4440 +or- 298	3942 +or- 204	4886 +or- 450	4604 +or- 239	6363 +or- 391	4468 +or- 312	4139 +or- 238	cdots	
+1991al	8897 +or- 496	7950 +or- 615	7789 +or- 634	4921 +or- 244	4790 +or- 588	4982 +or- 548	5256 +or- 261	4575 +or- 227	7835 +or- 876	5696 +or- 282	4149 +or- 206	cdots	
+1992af	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+1992ba	6276 +or- 665	4559 +or- 439	5100 +or- 374	3160 +or- 157	3388 +or- 487	3464 +or- 483	3479 +or- 173	3322 +or- 165	4325 +or- 847	3042 +or- 151	3060 +or- 152	cdots	
+1993K	7099 +or- 551	7151 +or- 358	6326 +or- 444	4903 +or- 269	3536 +or- 490	4390 +or- 218	4479 +or- 222	3767 +or- 270	5488 +or- 520	3998 +or- 199	4053 +or- 420	4500 +or- 466	
+1993S	7800 +or- 630	6132 +or- 620	6886 +or- 670	3269 +or- 340	4822 +or- 470	4943 +or- 300	cdots	cdots	6071 +or- 620	cdots	cdots	cdots	
+1999br	3611 +or- 588	3082 +or- 265	3191 +or- 243	1511 +or- 258	1753 +or- 223	1746 +or- 305	2101 +or- 272	1527 +or- 443	1519 +or- 759	1229 +or- 61	1891 +or- 94	1100 +or- 100	
+1999ca	7375 +or- 348	7039 +or- 364	6840 +or- 338	cdots	5618 +or- 278	5191 +or- 257	6103 +or- 302	5727 +or- 284	6825 +or- 337	5833 +or- 289	5043 +or- 250	cdots	
+1999cr	5960 +or- 361	5477 +or- 323	4932 +or- 478	cdots	3495 +or- 195	3655 +or- 212	cdots	3909 +or- 194	4504 +or- 224	cdots	cdots	cdots	
+1999em	6025 +or- 622	5591 +or- 595	5709 +or- 626	3768 +or- 187	3337 +or- 394	3464 +or- 365	3383 +or- 168	2992 +or- 149	3722 +or- 451	3048 +or- 152	3107 +or- 154	cdots	
+S0210	7955 +or- 492	8197 +or- 762	7050 +or- 619	cdots	6846 +or- 424	4998 +or- 326	6276 +or- 311	5374 +or- 550	6810 +or- 455	cdots	cdots	cdots	
+2002fa	7649 +or- 649	6184 +or- 435	6359 +or- 410	3567 +or- 268	3832 +or- 337	4133 +or- 260	4163 +or- 207	3603 +or- 179	5741 +or- 663	cdots	cdots	cdots	
+2002gd	4138 +or- 563	3717 +or- 266	3414 +or- 703	2257 +or- 196	2730 +or- 204	2448 +or- 236	3165 +or- 297	3005 +or- 409	3406 +or- 273	2105 +or- 177	2414 +or- 325	1870 +or- 200	
+2002gw	6674 +or- 474	5454 +or- 487	5299 +or- 518	3253 +or- 329	3295 +or- 494	3623 +or- 357	3221 +or- 345	3233 +or- 247	3889 +or- 304	3036 +or- 211	2976 +or- 185	3120 +or- 325	
+2002hj	7933 +or- 661	6540 +or- 532	6447 +or- 451	3432 +or- 579	3787 +or- 338	4192 +or- 405	4645 +or- 230	3592 +or- 220	5239 +or- 345	cdots	cdots	4080 +or- 420	
+2002hx	8070 +or- 434	5722 +or- 504	6455 +or- 554	3255 +or- 337	3506 +or- 215	3806 +or- 284	3021 +or- 157	3623 +or- 200	5408 +or- 477	2532 +or- 160	3213 +or- 302	cdots	
+2002ig	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2003B	6256 +or- 339	4604 +or- 622	5524 +or- 478	3204 +or- 575	3458 +or- 297	3509 +or- 251	3643 +or- 260	3523 +or- 307	4051 +or- 228	3343 +or- 265	3121 +or- 188	2970 +or- 270	
+2003bl	3958 +or- 481	3679 +or- 435	3849 +or- 326	4297 +or- 255	2342 +or- 213	2093 +or- 190	2451 +or- 263	2456 +or- 207	2712 +or- 582	2780 +or- 426	2265 +or- 184	cdots	
+2003bn	6892 +or- 638	5887 +or- 545	5688 +or- 471	3639 +or- 265	3611 +or- 607	3612 +or- 530	3457 +or- 302	3254 +or- 327	4077 +or- 397	3296 +or- 300	3134 +or- 178	3000 +or- 280	
+2003ci	7219 +or- 280	5648 +or- 357	5916 +or- 293	3007 +or- 150	3832 +or- 190	3677 +or- 183	4761 +or- 236	4449 +or- 483	5907 +or- 292	3142 +or- 156	4254 +or- 211	cdots	
+2003cn	5409 +or- 293	4223 +or- 501	4521 +or- 946	2399 +or- 119	2778 +or- 138	2699 +or- 197	2962 +or- 147	2533 +or- 126	3836 +or- 695	2817 +or- 140	2980 +or- 148	cdots	
+2003cx	9001 +or- 870	5960 +or- 600	7038 +or- 720	4753 +or- 460	4130 +or- 400	4788 +or- 420	cdots	cdots	5993 +or- 610	cdots	cdots	cdots	
+2003E	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2003ef	7703 +or- 367	6416 +or- 610	4261 +or- 494	3930 +or- 364	4121 +or- 534	4116 +or- 516	4044 +or- 575	3738 +or- 395	4316 +or- 484	3582 +or- 299	3638 +or- 181	3750 +or- 390	
+2003eg	8560 +or- 725	7619 +or- 675	6705 +or- 418	cdots	4669 +or- 405	4727 +or- 456	4168 +or- 207	4235 +or- 210	6993 +or- 468	3100 +or- 320	3390 +or- 410	cdots	
+2003ej	6897 +or- 630	9181 +or- 1000	5968 +or- 600	cdots	4998 +or- 480	4381 +or- 405	cdots	cdots	6244 +or- 600	cdots	cdots	cdots	
+2003fb	7583 +or- 561	6132 +or- 625	5840 +or- 854	3906 +or- 754	4033 +or- 738	3819 +or- 722	3996 +or- 704	3516 +or- 677	4749 +or- 668	4319 +or- 649	3430 +or- 627	cdots	
+2003gd	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2003hd	7850 +or- 519	6809 +or- 539	5960 +or- 717	3864 +or- 192	3956 +or- 260	4025 +or- 289	3779 +or- 188	3393 +or- 169	4725 +or- 234	cdots	cdots	cdots	
+2003hg	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	4090 +or- 420	
+2003hk	6622 +or- 349	7062 +or- 328	5682 +or- 281	4053 +or- 201	4144 +or- 206	4161 +or- 207	cdots	cdots	5767 +or- 286	cdots	cdots	cdots	
+2003hl	6579 +or- 738	5623 +or- 462	4550 +or- 439	3961 +or- 382	3899 +or- 287	3819 +or- 402	3787 +or- 329	3783 +or- 283	4527 +or- 318	3276 +or- 252	3501 +or- 244	3570 +or- 368	
+2003hn	7016 +or- 387	6594 +or- 462	5336 +or- 442	3455 +or- 281	3425 +or- 249	3484 +or- 379	3466 +or- 286	3148 +or- 293	4470 +or- 339	3596 +or- 189	3039 +or- 375	3480 +or- 360	
+2003ho	8312 +or- 755	7459 +or- 520	6102 +or- 302	3463 +or- 172	3739 +or- 186	3989 +or- 198	4309 +or- 214	3969 +or- 197	5010 +or- 248	cdots	cdots	3970 +or- 410	
+2003ib	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2003ip	8629 +or- 486	8059 +or- 533	6813 +or- 388	cdots	5391 +or- 341	4536 +or- 309	5773 +or- 286	5058 +or- 251	6501 +or- 413	4858 +or- 241	5337 +or- 264	6100 +or- 600	
+2003iq	7483 +or- 741	5953 +or- 386	5483 +or- 350	4254 +or- 211	4213 +or- 225	4329 +or- 216	4171 +or- 207	3935 +or- 195	5123 +or- 360	3743 +or- 186	3920 +or- 195	3950 +or- 330	
+2003T	6954 +or- 403	5994 +or- 634	4039 +or- 226	3967 +or- 341	3807 +or- 218	3896 +or- 276	3777 +or- 190	3390 +or- 222	3996 +or- 292	4223 +or- 257	4039 +or- 240	cdots	
+2004ej	635 +or- 501	5522 +or- 429	5389 +or- 600	3535 +or- 505	3440 +or- 307	3301 +or- 221	3556 +or- 536	3291 +or- 319	4005 +or- 326	2880 +or- 191	3178 +or- 223	3380 +or- 350	
+2004er	965 +or- 582	8323 +or- 549	7878 +or- 600	6040 +or- 427	5396 +or- 386	5219 +or- 436	5501 +or- 311	3372 +or- 470	5771 +or- 506	5284 +or- 634	5306 +or- 475	5065 +or- 520	
+2004fb	769 +or- 636	6678 +or- 444	5884 +or- 435	3926 +or- 283	4228 +or- 425	4178 +or- 300	4368 +or- 217	3750 +or- 186	4798 +or- 340	5254 +or- 261	3805 +or- 410	cdots	
+2004fc	633 +or- 645	5639 +or- 976	4056 +or- 329	3690 +or- 236	3675 +or- 291	3581 +or- 256	3760 +or- 270	3591 +or- 261	4194 +or- 541	3195 +or- 229	3386 +or- 266	3319 +or- 325	
+2004fx	572 +or- 525	4856 +or- 446	4194 +or- 318	2385 +or- 206	2700 +or- 209	2786 +or- 401	3002 +or- 177	3386 +or- 168	2884 +or- 389	3180 +or- 158	2459 +or- 133	2300 +or- 210	
+2005af	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2005an	7656 +or- 888	8325 +or- 494	5346 +or- 1497	4356 +or- 219	4333 +or- 325	4011 +or- 303	4753 +or- 289	4551 +or- 293	4738 +or- 560	cdots	cdots	4580 +or- 470	
+2005dk	7926 +or- 531	6887 +or- 470	6883 +or- 359	4541 +or- 312	4535 +or- 289	4603 +or- 306	4418 +or- 311	3937 +or- 329	6317 +or- 709	5112 +or- 457	4039 +or- 256	4420 +or- 420	
+2005dn	9500 +or- 672	8420 +or- 576	7613 +or- 484	2360 +or- 118	5750 +or- 1511	4712 +or- 434	cdots	4857 +or- 241	6518 +or- 627	cdots	cdots	cdots	
+2005dt	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2005dx	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2005dz	7591 +or- 595	6182 +or- 434	5934 +or- 430	925 +or- 88	3927 +or- 499	4101 +or- 310	cdots	cdots	7397 +or- 735	cdots	cdots	cdots	
+2005J	8434 +or- 755	6353 +or- 668	6380 +or- 404	4235 +or- 273	4129 +or- 406	4224 +or- 437	4151 +or- 402	4190 +or- 265	4994 +or- 386	4097 +or- 297	4581 +or- 272	4500 +or- 460	
+2005lw	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2005Z	9479 +or- 661	8538 +or- 582	7879 +or- 843	5673 +or- 281	5646 +or- 384	5196 +or- 411	5633 +or- 489	5435 +or- 359	7375 +or- 560	6432 +or- 655	4671 +or- 480	6040 +or- 640	
+2006ai	7480 +or- 821	6949 +or- 559	6301 +or- 560	4135 +or- 353	4424 +or- 427	4623 +or- 340	4396 +or- 258	3379 +or- 526	6184 +or- 434	cdots	cdots	6750 +or- 710	
+2006be	7441 +or- 474	6360 +or- 625	5868 +or- 755	3760 +or- 742	3682 +or- 738	3690 +or- 722	3870 +or- 694	3305 +or- 677	4431 +or- 668	4921 +or- 620	cdots	cdots	
+2006bl	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2006ee	5209 +or- 426	5370 +or- 675	3020 +or- 619	3213 +or- 254	3125 +or- 194	3024 +or- 255	3101 +or- 299	2708 +or- 316	3239 +or- 267	2734 +or- 262	2738 +or- 202	cdots	
+2006it	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2006iw	7373 +or- 671	6104 +or- 566	5337 +or- 694	4352 +or- 687	4127 +or- 678	4148 +or- 722	3790 +or- 688	3352 +or- 682	5074 +or- 724	cdots	cdots	cdots	
+2006ms	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2006qr	6501 +or- 419	5558 +or- 487	5103 +or- 285	3166 +or- 872	3593 +or- 221	3643 +or- 200	3780 +or- 188	3529 +or- 175	4844 +or- 554	3795 +or- 188	2932 +or- 146	cdots	
+2006Y	9007 +or- 619	7770 +or- 589	6958 +or- 464	3748 +or- 186	4946 +or- 731	5076 +or- 546	cdots	cdots	7004 +or- 613	cdots	cdots	cdots	
+2007aa	5985 +or- 539	5102 +or- 550	4264 +or- 374	3148 +or- 398	3179 +or- 378	3148 +or- 396	3099 +or- 324	2880 +or- 266	3864 +or- 321	2697 +or- 187	2907 +or- 267	2650 +or- 300	
+2007ab	9768 +or- 505	8495 +or- 600	8205 +or- 405	cdots	7140 +or- 353	4776 +or- 237	6957 +or- 344	6418 +or- 318	7285 +or- 404	6743 +or- 337	5949 +or- 614	cdots	
+2007av	7234 +or- 338	6065 +or- 402	5366 +or- 311	3664 +or- 182	3874 +or- 192	3847 +or- 191	3847 +or- 191	3714 +or- 185	3957 +or- 605	3662 +or- 182	3452 +or- 172	3240 +or- 299	
+2007bf	5498 +or- 580	3830 +or- 410	4110 +or- 420	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2007hm	8237 +or- 383	6197 +or- 544	6404 +or- 432	4289 +or- 213	4039 +or- 201	4403 +or- 515	4835 +or- 240	3341 +or- 166	5278 +or- 262	cdots	cdots	cdots	
+2007il	8022 +or- 809	7390 +or- 482	5916 +or- 505	4220 +or- 281	4100 +or- 481	4282 +or- 383	4017 +or- 370	4493 +or- 420	4798 +or- 769	5544 +or- 560	2709 +or- 250	cdots	
+2007it	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2007ld	7176 +or- 700	11416 +or- 990	6024 +or- 580	cdots	3695 +or- 350	3589 +or- 350	cdots	cdots	5922 +or- 600	cdots	cdots	cdots	
+2007oc	6749 +or- 492	7072 +or- 435	5239 +or- 436	2274 +or- 198	3281 +or- 315	3694 +or- 343	4188 +or- 480	3859 +or- 378	5019 +or- 450	2887 +or- 218	3266 +or- 291	4700 +or- 500	
+2007od	7171 +or- 655	7163 +or- 428	6698 +or- 545	cdots	5188 +or- 363	3863 +or- 300	cdots	3876 +or- 193	6202 +or- 427	5100 +or- 525	4846 +or- 240	cdots	
+2007P	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2007sq	8298 +or- 943	8409 +or- 437	7410 +or- 366	5270 +or- 390	5249 +or- 260	5350 +or- 265	4978 +or- 247	4135 +or- 205	5662 +or- 280	cdots	cdots	44780 +or- 430	
+2007U	8037 +or- 837	7395 +or- 516	6911 +or- 721	cdots	5541 +or- 274	5439 +or- 550	5923 +or- 293	5429 +or- 269	6480 +or- 340	cdots	cdots	cdots	
+2007W	4754 +or- 935	4125 +or- 558	3203 +or- 269	2343 +or- 182	2612 +or- 337	2437 +or- 454	2543 +or- 156	2505 +or- 164	2618 +or- 186	2086 +or- 104	2485 +or- 124	2000 +or- 195	
+2007X	8597 +or- 675	8418 +or- 537	6685 +or- 601	cdots	5466 +or- 383	4619 +or- 762	6339 +or- 399	5555 +or- 354	6170 +or- 708	5160 +or- 427	5021 +or- 496	5980 +or- 610	
+2008ag	6906 +or- 463	6284 +or- 426	4583 +or- 473	4045 +or- 292	3951 +or- 324	3939 +or- 311	3862 +or- 326	3521 +or- 283	4215 +or- 426	3223 +or- 230	3499 +or- 233	3460 +or- 330	
+2008aw	8257 +or- 621	7783 +or- 911	6641 +or- 530	4728 +or- 376	4724 +or- 526	4532 +or- 654	5027 +or- 458	4429 +or- 372	6436 +or- 478	4545 +or- 394	4458 +or- 271	cdots	
+2008bh	7824 +or- 688	7263 +or- 430	6297 +or- 375	4236 +or- 210	4339 +or- 232	4189 +or- 637	4327 +or- 215	4180 +or- 207	4683 +or- 378	4466 +or- 222	3990 +or- 198	cdots	
+2008bk	4115 +or- 390	3313 +or- 707	2401 +or- 224	1867 +or- 133	2256 +or- 153	2910 +or- 460	2266 +or- 276	2437 +or- 310	2019 +or- 171	1846 +or- 137	1998 +or- 180	1780 +or- 194	
+2008bm	1765 +or- 56	11118 +or- 88	1385 +or- 69	1559 +or- 78	1649 +or- 82	1277 +or- 64	cdots	cdots	1762 +or- 88	cdots	cdots	cdots	
+2008bp	6795 +or- 710	8613 +or- 830	7497 +or- 700	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2008br	4070 +or- 491	3682 +or- 258	2484 +or- 169	1665 +or- 178	1832 +or- 142	1633 +or- 218	2161 +or- 108	2547 +or- 127	1922 +or- 96	1386 +or- 69	1670 +or- 83	1420 +or- 180	
+2008bu	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2008ga	7313 +or- 589	6400 +or- 653	5357 +or- 768	3307 +or- 754	3390 +or- 732	3253 +or- 757	4665 +or- 694	3179 +or- 677	4785 +or- 663	cdots	cdots	cdots	
+2008gi	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2008gr	8832 +or- 752	8361 +or- 435	7548 +or- 385	cdots	5412 +or- 268	5013 +or- 249	5918 +or- 293	5572 +or- 276	7487 +or- 708	cdots	cdots	cdots	
+2008H	6608 +or- 790	6734 +or- 703	5355 +or- 941	3863 +or- 420	3791 +or- 360	3738 +or- 350	3821 +or- 400	3678 +or- 783	4669 +or- 760	3390 +or- 325	3430 +or- 410	cdots	
+2008hg	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2008ho	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2008if	8534 +or- 1126	8717 +or- 549	7226 +or- 642	3198 +or- 200	4929 +or- 298	4758 +or- 398	5062 +or- 272	4785 +or- 251	7404 +or- 633	3802 +or- 189	4619 +or- 234	4975 +or- 515	
+2008il	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2008in	4283 +or- 721	4422 +or- 768	3234 +or- 310	2768 +or- 259	2839 +or- 373	2831 +or- 455	2679 +or- 283	2680 +or- 251	2917 +or- 321	2378 +or- 203	2574 +or- 227	2430 +or- 266	
+2008K	7885 +or- 619	7987 +or- 793	6868 +or- 701	cdots	6197 +or- 352	5359 +or- 437	cdots	5491 +or- 301	7066 +or- 501	cdots	cdots	cdots	
+2008M	6872 +or- 862	6123 +or- 631	5709 +or- 474	3508 +or- 214	3457 +or- 345	3647 +or- 458	3772 +or- 271	3616 +or- 198	4793 +or- 1056	3388 +or- 217	3507 +or- 275	3040 +or- 290	
+2008W	7013 +or- 665	6016 +or- 435	5873 +or- 435	3455 +or- 335	3743 +or- 233	3846 +or- 297	3733 +or- 224	3506 +or- 278	5244 +or- 470	3094 +or- 255	3314 +or- 185	3100 +or- 324	
+2009aj	3112 +or- 455	2800 +or- 183	2814 +or- 470	2090 +or- 161	2431 +or- 197	2849 +or- 315	cdots	cdots	3026 +or- 240	cdots	cdots	200 +or- 80	
+2009ao	5979 +or- 859	6753 +or- 544	5240 +or- 471	3792 +or- 334	3695 +or- 256	3597 +or- 210	4155 +or- 206	3770 +or- 230	4687 +or- 335	cdots	3416 +or- 170	3120 +or- 290	
+2009au	2586 +or- 524	2613 +or- 215	1985 +or- 165	1618 +or- 113	1732 +or- 161	1474 +or- 175	1775 +or- 237	1919 +or- 296	1949 +or- 118	1289 +or- 64	1704 +or- 85	1520 +or- 130	
+2009bu	7400 +or- 596	6430 +or- 521	5567 +or- 604	3996 +or- 267	3975 +or- 436	4034 +or- 456	4233 +or- 210	3460 +or- 172	4378 +or- 308	cdots	cdots	cdots	
+2009bz	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	cdots	
+2009N	4514 +or- 377	4069 +or- 909	2815 +or- 259	2527 +or- 282	2651 +or- 299	2600 +or- 439	2549 +or- 238	2500 +or- 195	2705 +or- 186	2299 +or- 206	2397 +or- 156	2190 +or- 185	
+Note. Columns: (1) SN name; (2) velocity of ${{\rm{H}}}_{\alpha }$ absorption component; (3) velocity of ${{\rm{H}}}_{\alpha }$ emission component; (4) velocity of ${{\rm{H}}}_{\beta };$ (5) velocity of Fe II lambda4924; (6) velocity of Fe II lambda5018; (7) velocity of Fe II lambda5169; (8) velocity of Fe II/Sc II; (9) velocity of Sc II Multiplet; (10) velocity of Na I D; (11) velocity of Ba II; (12) velocity of Sc II; and (13) velocity of O I.

@@ -1,0 +1,121 @@
+# List of non-deteciton upper limiting magnitudes and epochs for A14 sample.
+# Upper limits are only included if they are within 4 weeks before
+# SN discovery.
+
+SN		Epoch (MJD)	Upper limit (band)	Reference
+1986L	46705.5		15.5	(mv)		Evans et al. IAUC4260
+1991al	NA
+1992ad 	NA
+1992af 	NA
+1992am 	NA
+1992ba  NA
+1993A   48985.5		20		(mpg)		Maza et al. IAUC5693
+1993K 	49056.5     ???					Williams et al. IAUC5733
+1993S 	NA
+1999br 	51264.5		18.5	(?)			Garnavich et al. IAUC7143
+1999ca 	51270.5		19		(R?)		Woodings et al. IAUC7158
+1999cr  NA
+1999eg 	NA
+1999em 	51471.5		19.0	(unfil)		Li IAUC7294	
+0210 	NA
+2002ew 	52490.5		19.5	(?)			Hutchings et al. IAUC7964
+2002fa 	52489.5		20.5	(?)			Wood-Vasey et al. IAUC7967		
+2002gd 	NA
+2002gw  NA
+2002hj 	52556.5		19.5	(unfil) 	Wood-Vasey et al. IAUC8006
+2002hx 	52573.5		19.5	(unfil)		Graham & Li IAUC8015
+2002ig 	NA
+2003B 	NA
+2003E 	NA
+2003T 	52644.5		19		(?)			Poznanski et al. IAUC8058
+2003bl  NA
+2003bn  52691.5		21		(unfil)		Wood-Vasey et al. IAUC8088
+2003ci  52703.5		19		(unfil)		Nakano et al. IAUC8097
+2003cn  52705.5		19.5	(unfil)		Wood-Vasey et al. IAUC8101
+2003cx  NA
+2003dq 	52723.5		21.3	(unfil)		Puckett et al. IAUC8117
+2003ef  NA
+2003eg 	NA
+2003ej  52770.5		18.5	(unfil)		Ganeshalingham et al. IAUC8134
+2003fb  NA
+2003gd  NA
+2003hd  NA
+2003hg  52860.5		19.0	(unfil)		Moore et al. CBET40
+2003hk 	NA
+2003hl 	52862.5		19.0	(unfil)		Moore et al. IAUC8184
+2003hn  52856.5		15.5	(m_v)		Evans et al. IAUC8186
+2003ho 	52830.5		18.5	(red)		Monard IAUC8186
+2003ib  52866.5		18.5	(unfil)		Singer et al. IAUC8201
+2003ip  NA
+2003iq  52917.5		17.5	(?)			Llapasset et al. CBET48
+2004dy  53238.5		20.0	(unfil)		Ganeshalingham et al. IAUC8395
+2004ej  NA
+2004er  53269.5		19.0	(unfil)		Pugh & Li CBET93
+2004fb  NA
+2004fc 	53292.5		19.0	(unfil)		Shimasaki et al. IAUC8422
+2004fx  53300.5		19.0	(unfil)		Park & Li IAUC8431
+2005J   NA
+2005K 	NA
+2005Z   53390.5		19.0	(unfil)		Khandrika et al. IAUC8476
+2005af  NA
+2005an 	NA
+2005dk 	NA
+2005dn 	NA
+2005dt 	53596.5		19.0	(unfil)		Lee & Li, CBET213
+2005dw  53594.5		18.5	(unfil)		Ponticello et al. CBET219
+2005dx  NA
+2005dz  53615.5		19.0	(unfil)		Puckett et al. CBET222
+2005es  53634.5		18.0	(unfil)		Ponticello et al. IAUC8608
+2005gk  NA
+2005hd  NA
+2005lw  53695.5		18.5	(unfil)		Prasad & Li CBET318
+2005me  53706.5		18.7	(unfil)		Monard CBET333
+2006Y 	53762.5		18.5	(unfil)		Lukas et al. IAUC8668
+2006ai  NA
+2006bc  53810.5		18.5	(red?)		Martin CBET446
+2006be  NA
+2006bl  NA
+2006ee  53957.5		18.7	(unfil)		Joubert & Li CBET597
+2006it  54004.5     19.2	(unfil)		Lee & Li CBET660
+2006iw  54009.5		22.6	(g)			Bassett et al. CBET663
+2006ms  54020.5		18.5	(red?)		Monard CBET725
+2006qr  54055.5		19.0	(unfil)		Prasad et al. CBET766
+2007P   54113.5     18.1	(unfil)		Winslow & Li CBET819	
+2007U   54111.5		19.0	(?)			Newton et al. CBET835
+2007W 	NA
+2007X   NA
+2007aa  NA
+2007ab  NA
+2007av  NA
+2007hm  NA
+2007il  54345.5		19.3	(unfil)		Chu & Li CBET1062
+2007it  54347.5		14		(V)			Pojmanski IAUC8875
+2007ld  NA
+2007oc  54381.5		17.5	(unfil)		Pignata et al. CBET1114
+2007od  NA
+2007sq  NA
+2008F   NA
+2008K   NA
+2008M   54462.5		19.0	(unfil)		Colesanti et al. CBET1214
+2008W   NA
+2008ag  NA
+2008aw  54507.5		18.3	(unfil)		Winslow et al. CBET1279
+2008bh  54538.5		17.5	(unfil)		Narla et al. CBET1311
+2008bk  NA
+2008bm  NA
+2008bp  54545.5		18.0	(unfil)		Pignata et al. CBET1326
+2008br  54545.5		18.5	(red?)		Monard CBET1332
+2008bu  NA
+2008ga  NA
+2008gi  54733.5		19.4	(unfil)		Chu et al. CBET1539
+2008gr  NA
+2008hg  54774.5		18.0	(unfil)		Pignata et al. CBET1571
+2008ho  54787.5		17.5	(unfil)		Pignata et al. CBET1587
+2008if  54802.5		18.0	(unfil)		Pignata et al. CBET1619
+2008il  54822.5		18.0	(unfil)		Pignata et al. CBET1634
+2008in  NA
+2009N   54834.5		18.0	(unfil)		Nakano et al. CBET1670
+2009ao  54886.5		18.0	(unfil)		Pignata et al. CBET1711
+2009au  54893.5		17.5	(unfil)		Pignata et al. CBET1719
+2009bu  NA
+2009bz  54911.5		19.1	(unfil)		Narla et al. CBET1748
