@@ -4,36 +4,36 @@ import lightcurve_param_fit
 import lightcurve
 import pandas as pd
 import numpy as np
-
+import os
 
 
 
 # import photometry data files for 2018hmx
-atlas_phot_o = data_import.atlas_flux('data\SN2018hmx_flux_raw_wightedavg_orange.txt', 'o')
-atlas_phot_c = data_import.atlas_flux('data\SN2018hmx_flux_raw_wightedavg_cyan.txt', 'c')
+atlas_phot_o = data_import.atlas_flux(os.path.join('data', 'SN2018hmx_flux_raw_wightedavg_orange.txt'), 'o')
+atlas_phot_c = data_import.atlas_flux(os.path.join('data', 'SN2018hmx_flux_raw_wightedavg_cyan.txt'), 'c')
 atlas_phot = pd.concat([atlas_phot_o, atlas_phot_c], ignore_index=True)
-lco_phot = data_import.lco_phot(r'data\sn2018hmx_20181101-20190505_lcophot.txt')
-gaia_phot = data_import.gaia_phot(r'data\gaia18doi.txt')
-ztf_phot_new = data_import.ztf_phot_new(r'data\ztf_dr1_lightcurve.txt')
-arizona_phot = pd.read_csv(r'data\SN2018hmx_phot_arizona.csv')
+lco_phot = data_import.lco_phot(os.path.join('data', 'sn2018hmx_20181101-20190505_lcophot.txt'))
+gaia_phot = data_import.gaia_phot(os.path.join('data', 'gaia18doi.txt'))
+ztf_phot_new = data_import.ztf_phot_new(os.path.join('data', 'ztf_dr1_lightcurve.txt'))
+arizona_phot = pd.read_csv(os.path.join('data', 'SN2018hmx_phot_arizona.csv'))
 
 
 # import photometry data files for other comparison SNe
-sn1999em_leonard_phot = data_import.leonard_phot(r'data\sn1999em_UBVRI_leonard02.txt')
-ASASSN14kg_phot = data_import.sne_catalog_phot(r'data\ASASSN-14kg.csv')
-ksp_phot = data_import.ksp_phot('data\KSP-SN-2016kf.txt')
-sn2018aad_phot = data_import.sn18aad_phot(r'data\sn2018aad_20180305-20190325_pyzogy_lcophot.txt')
+sn1999em_leonard_phot = data_import.leonard_phot(os.path.join('data', 'sn1999em_UBVRI_leonard02.txt'))
+ASASSN14kg_phot = data_import.sne_catalog_phot(os.path.join('data', 'ASASSN-14kg.csv'))
+ksp_phot = data_import.ksp_phot(os.path.join('data', 'KSP-SN-2016kf.txt'))
+sn2018aad_phot = data_import.sn18aad_phot(os.path.join('data', 'sn2018aad_20180305-20190325_pyzogy_lcophot.txt'))
 
 # import correction params
 correction_params = pd.concat([
-    pd.read_csv(r'data\SN2018hmx_correction.csv'),
-    pd.read_csv(r'data\ASASSN14kg_correction.csv'),
-    pd.read_csv(r'data\SN1999em_correction.csv'),
-    pd.read_csv(r'data\KSP_correction.csv'),
-    pd.read_csv(r'data\SN2018aad_correction.csv')
+    pd.read_csv(os.path.join('data', 'SN2018hmx_correction.csv')),
+    pd.read_csv(os.path.join('data', 'ASASSN14kg_correction.csv')),
+    pd.read_csv(os.path.join('data', 'SN1999em_correction.csv')),
+    pd.read_csv(os.path.join('data', 'KSP_correction.csv')),
+    pd.read_csv(os.path.join('data', 'SN2018aad_correction.csv'))
     ], sort=False, ignore_index=True)
 correction_params.set_index('Name', inplace=True)
-colormap = pd.read_csv(r'data\colormap.csv')
+colormap = pd.read_csv(os.path.join('data', 'colormap.csv'))
 
 # print(correction_params)
 
@@ -80,10 +80,15 @@ SN2018aad = lightcurve.add_absolute_magnitude(SN2018aad, correction_params.loc['
 
 
 SN2018hmx_lightcurves = data_import.make_alllightcurve_df(SN2018hmx)
-# ascii18hmx = data_import.save_ascii(SN2018hmx_lightcurves, r'data\ascii18hmx.ascii')
+ascii18hmx = data_import.save_ascii(SN2018hmx_lightcurves, os.path.join('data', 'ascii18hmx.ascii'))
+SN2018hmx_lightcurves['abs_mag'] = SN2018hmx_lightcurves['mag'] - correction_params.loc['SN2018hmx']['distance_modulus']
+SN2018hmx_lightcurves['t_from_discovery'] = SN2018hmx_lightcurves['mjd'] - correction_params.loc['SN2018hmx']['discovery_date']
+SN2018hmx_lightcurves.to_csv(os.path.join('results', 'SN2018hmx_lightcurves'))
+
 
 SN2018aad_lightcurves = data_import.make_alllightcurve_df(SN2018aad)
-ascii18aad = data_import.save_ascii(SN2018aad_lightcurves, r'data\ascii18aad.ascii')
+SN2018aad_lightcurves.to_csv(os.path.join('results', 'SN2018aad_lightcurves'))
+ascii18aad = data_import.save_ascii(SN2018aad_lightcurves, os.path.join('data', 'ascii18aad.ascii'))
 
 lightcurve.lightcurve_plot_shift(ksp, correction_params)
 
@@ -103,8 +108,18 @@ lightcurve.lightcurve_plot([SN2018aad], 'SN2018aad', correction_params)
 
 # calculate v magnitude at day 50 as the closest observation to day 50
 
-print('SN2018hmx')
+
+
+# print('SN2018hmx')
 LCO_mag_df = SN2018hmx['lightcurve']['Las Cumbres']['df']
+Arizona_mag_df = SN2018hmx['lightcurve']['Arizona']['df']
+LCO_Arizona_mag_df = pd.concat([LCO_mag_df, Arizona_mag_df])
+LCO_Arizona_mag_df.to_csv(os.path.join('results', 'SN2018hmx_Arizona_LCO_mag_df'))
+
+
+plt.show()
+exit()
+
 vmag_df = LCO_mag_df.loc[LCO_mag_df['filter'] == 'V']
 vmag_50 = vmag_df.loc[vmag_df['t_from_discovery']<50, 'abs_mag'].iloc[-1]
 vmag_50_err = vmag_df.loc[vmag_df['t_from_discovery']<50, 'dmag'].iloc[-1]
@@ -137,7 +152,7 @@ param_results['e_Vmax'] = Vmax_err
 param_results['Name'] = 'SN2018hmx'
 print(param_results)
 param_results = pd.DataFrame(param_results, index=[0])
-param_results.to_csv('results\SN2018hmx_param_results.csv')
+param_results.to_csv(os.path.join('results', 'SN2018hmx_param_results.csv'))
 
 lightcurve.BV_plot(SN2018hmx)
 
@@ -176,7 +191,7 @@ param_results['e_Vmax'] = Vmax_err
 param_results['Name'] = 'SN2018aad'
 print(param_results)
 param_results = pd.DataFrame(param_results, index=[0])
-param_results.to_csv('results\SN2018aad_param_results.csv')
+param_results.to_csv(os.path.join('results', 'SN2018aad_param_results.csv'))
 
 lightcurve.BV_plot(SN2018aad)
 

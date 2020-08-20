@@ -1,13 +1,14 @@
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
+import os
 
 plt.rc('font', size=20)          # controls default text sizes
-plt.rc('axes', titlesize=30)     # fontsize of the axes title
+plt.rc('axes', titlesize=24)     # fontsize of the axes title
 plt.rc('xtick', labelsize=18)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=18)    # fontsize of the tick labels
 plt.rc('legend', fontsize=18)    # legend fontsize
-plt.rc('figure', titlesize=30)  # fontsize of the figure title
+plt.rc('figure', titlesize=26)  # fontsize of the figure title
 plt.rcParams['font.sans-serif'] = 'Arial'
 
 
@@ -25,11 +26,13 @@ KSP_Ni_err = 0.01
 
 
 
-SN2018hmx_param_Vband = pd.read_csv(r'results\SN2018hmx_param_results.csv')
-SN2018hmx_Ni = pd.read_csv(r'results\Ni_results_SN2018hmx_BVgri.csv')
+SN2018hmx_param_Vband = pd.read_csv(os.path.join('results', 'SN2018hmx_param_results.csv'))
+SN2018hmx_Ni = pd.read_csv(os.path.join('results', 'Ni_results_SN2018hmx_BVgri.csv'))
 
-SN2018aad_param_Vband = pd.read_csv(r'results\SN2018aad_param_results.csv')
-SN2018aad_Ni = pd.read_csv(r'results\Ni_results_SN2018aad_BVgri.csv')
+SN2018hmx_Ni_wo2outliers = pd.read_csv(os.path.join('results', 'Ni_results_SN2018hmx_BVgri.csv'))
+
+SN2018aad_param_Vband = pd.read_csv(os.path.join('results', 'SN2018aad_param_results.csv'))
+SN2018aad_Ni = pd.read_csv(os.path.join('results', 'Ni_results_SN2018aad_BVgri.csv'))
 
 
 
@@ -41,7 +44,7 @@ def object_to_numeric(series):
 
 
 
-valenti_s50v = pd.read_csv(r'data\valenti_result_s50_V2.tsv', sep='\t',
+valenti_s50v = pd.read_csv(os.path.join('data', 'valenti_result_s50_V2.tsv'), sep='\t',
                            names=['Name', 's50V', 'e_s50V', 'NA1', 'NA2', 'NA3', 'NA4', 'NA5', ],
                            usecols=['Name', 's50V', 'e_s50V'])
 valenti_s50v['e_s50V'] = object_to_numeric(valenti_s50v['e_s50V'])
@@ -49,7 +52,7 @@ valenti_s50v['s50V'] = 50 * valenti_s50v['s50V']
 valenti_s50v['e_s50V'] = 50 * valenti_s50v['e_s50V']
 
 
-valenti_bolometric = pd.read_csv(r'data\valenti2016_bolometric.tsv', sep='\t', header=51,
+valenti_bolometric = pd.read_csv(os.path.join('data', 'valenti2016_bolometric.tsv'), sep='\t', header=51,
                                  usecols=['Name', 'MNi', 'e_MNi'])
 valenti_bolometric.drop([0, 1], inplace=True)
 for column in ['MNi', 'e_MNi']:
@@ -58,14 +61,14 @@ for column in ['MNi', 'e_MNi']:
 
 
 
-valenti_vmag_50 = pd.read_csv(r'data\valenti_result_mag50_2.tsv', sep='\t',
+valenti_vmag_50 = pd.read_csv(os.path.join('data', 'valenti_result_mag50_2.tsv'), sep='\t',
                               names=['Name', 'vmag_50', 'e_vmag_50', 'jd', 'filter', 'NA1', 'NA2', 'NA3'],
                               usecols=['Name', 'vmag_50', 'e_vmag_50'])
 valenti_vmag_50['e_vmag_50'] = object_to_numeric(valenti_vmag_50['e_vmag_50'])
 
 
 
-valenti_vmax = pd.read_csv(r'data\valenti_result_mag_at_max.tsv', sep='\t',
+valenti_vmax = pd.read_csv(os.path.join('data', 'valenti_result_mag_at_max.tsv'), sep='\t',
                               names=['Name', 'Vmax', 'e_Vmax', 'NA1', 'NA2', 'NA3', 'NA4', 'NA5', 'NA6', 'NA7'],
                               usecols=['Name', 'Vmax', 'e_Vmax'])
 
@@ -108,27 +111,41 @@ ax.set_xlabel('Decline rate (V mag/50d)')
 ax.set_xlim(left=-0.2)
 ax.legend()
 ax.tick_params(axis='both', which='major')
-fig.savefig(r'figures\SN2018hmx_Vmax_s50V_against_valenti' + '.png')
-fig.savefig(r'figures\SN2018hmx_Vmax_s50V_against_valenti' + '.svg')
+fig.savefig(os.path.join('figures', 'SN2018hmx_Vmax_s50V_against_valenti' + '.png'))
+fig.savefig(os.path.join('figures', 'SN2018hmx_Vmax_s50V_against_valenti' + '.svg'))
 
 
-fig, ax = plt.subplots(figsize=(9, 7))
+fig, ax = plt.subplots(figsize=(10, 7))
 ax.errorbar(y=valenti_SN_param['MNi'], yerr=valenti_SN_param['e_MNi'],
             x=valenti_SN_param['vmag_50'], xerr=valenti_SN_param['e_vmag_50'],
             marker='.', fillstyle='none', Linestyle='None', color='k', label='Normal type II SNe', alpha=0.2)
 
 
-ax.errorbar(y=SN2018hmx_Ni['Ni_87A'], yerr=SN2018hmx_Ni['Ni_87A_sigma'],
-            x=SN2018hmx_param_Vband['vmag_50'], xerr=SN2018hmx_param_Vband['vmag_50_err'],
-            marker='o', fillstyle='full', markersize=7, Linestyle='None', color='#FF3333', capsize=2,
-            label='SN 2018hmx\n by ratio to 1987A')
+# ax.errorbar(y=SN2018hmx_Ni['Ni_87A'], yerr=SN2018hmx_Ni['Ni_87A_sigma'],
+#             x=SN2018hmx_param_Vband['vmag_50'], xerr=SN2018hmx_param_Vband['vmag_50_err'],
+#             marker='o', fillstyle='full', markersize=7, Linestyle='None', color='#FF3333', capsize=2,
+#             label='SN 2018hmx\n by ratio to 1987A')
 
 # ax.arrow(float(SN2018hmx_param_Vband['vmag_50']), float(SN2018hmx_Ni['Ni_mcmc']), 0, 0.05,
 #          shape='full', color='#FF3333', head_length=0.03, head_width=0.1)
-ax.errorbar(y=SN2018hmx_Ni['Ni_mcmc'], yerr=[SN2018hmx_Ni['Ni_mcmc_16perc'], SN2018hmx_Ni['Ni_mcmc_84perc']],
+# ax.errorbar(y=SN2018hmx_Ni['Ni_mcmc'], yerr=[SN2018hmx_Ni['Ni_mcmc_16perc'], SN2018hmx_Ni['Ni_mcmc_84perc']],
+#             x=SN2018hmx_param_Vband['vmag_50'], xerr=SN2018hmx_param_Vband['vmag_50_err'],
+#             marker='o', fillstyle='full', markersize=8, Linestyle='None', color='#911310', capsize=2,
+#             label='SN 2018hmx\n by MCMC')
+
+
+ax.errorbar(y=SN2018hmx_Ni_wo2outliers['Ni_87A'], yerr=SN2018hmx_Ni_wo2outliers['Ni_87A_sigma'],
+            x=SN2018hmx_param_Vband['vmag_50'], xerr=SN2018hmx_param_Vband['vmag_50_err'],
+            marker='o', fillstyle='full', markersize=7, Linestyle='None', color='#FF3333', capsize=2,
+            label='SN 2018hmx\n by ratio to 1987A')
+#
+ax.errorbar(y=SN2018hmx_Ni_wo2outliers['Ni_mcmc'], yerr=[SN2018hmx_Ni_wo2outliers['Ni_mcmc_16perc'], SN2018hmx_Ni_wo2outliers['Ni_mcmc_84perc']],
             x=SN2018hmx_param_Vband['vmag_50'], xerr=SN2018hmx_param_Vband['vmag_50_err'],
             marker='o', fillstyle='full', markersize=8, Linestyle='None', color='#911310', capsize=2,
             label='SN 2018hmx\n by MCMC')
+
+
+
 
 # ax.arrow(float(SN2018hmx_param_Vband['vmag_50']), 0.170639494, 0, 0.05,
 #          shape='full', color='#911310', head_length=0.03, head_width=0.1)
@@ -150,18 +167,20 @@ ax.errorbar(y=SN2018aad_Ni['Ni_mcmc'], yerr=[SN2018aad_Ni['Ni_mcmc_16perc'], SN2
 
 ax.invert_xaxis()
 ax.set_yscale('log')
-ax.set_title('Ni mass vs day 50 magnitude\n')
+ax.set_title('Ni mass vs day 50 magnitude\n (without outliers in bolometric tail)')
 ax.set_ylabel('Ni mass ($M_{\odot}$)')
 ax.set_xlabel('V band absolute mag at day 50')
 ax.set_xlim(left=-13, right=-19)
-ax.set_ylim(top=0.3)
+ax.set_ylim(top=0.35)
 ax.legend(loc='upper left')
-ax.tick_params(axis='y', which='major', labelsize=24)
-fig.savefig(r'figures\SN2018hmx_vmag50_Ni_against_valenti' + '.png')
-fig.savefig(r'figures\SN2018hmx_vmag50_Ni_against_valenti' + '.svg')
+ax.tick_params(axis='y', which='major', labelsize=22)
+fig.savefig(os.path.join('figures', 'SN2018hmx_vmag50_Ni_against_valenti_wo2outliers' + '.png'))
+fig.savefig(os.path.join('figures', 'SN2018hmx_vmag50_Ni_against_valenti_wo2outliers' + '.svg'))
 
+plt.show()
+exit()
 
-gutierrez_veloc = pd.read_csv(r'data\Gutierrez_2017_apjaa8f52t8_ascii.txt', sep='\t', header=2,
+gutierrez_veloc = pd.read_csv(os.path.join('data', 'Gutierrez_2017_apjaa8f52t8_ascii.txt'), sep='\t', header=2,
                            usecols=['Epoch', r'${{\rm{H}}}_{\alpha }$.1', r'${{\rm{H}}}_{\beta }$',
                                     'Fe II lambda5169'])
 gutierrez_veloc.rename(columns={r'${{\rm{H}}}_{\alpha }$.1': 'Halpha',
@@ -182,9 +201,9 @@ for column in gutierrez_veloc.keys():
 
 colors = {'Halpha': '#1b9e77', 'Hbeta': '#7570b3', 'FeII 5169': '#d95f02'}
 
-SN2018hmx_veloc = pd.read_csv(r'results\sN2018hmx_expansion_velocities.csv')
-iPTF14hls_veloc = pd.read_csv(r'results\SNiPTF14hls_expansion_velocities.csv')
-SN2018aad_veloc = pd.read_csv(r'results\SN2018aad_expansion_velocities.csv')
+SN2018hmx_veloc = pd.read_csv(os.path.join('results', 'sN2018hmx_expansion_velocities.csv'))
+iPTF14hls_veloc = pd.read_csv(os.path.join('results', 'SNiPTF14hls_expansion_velocities.csv'))
+SN2018aad_veloc = pd.read_csv(os.path.join('results', 'SN2018aad_expansion_velocities.csv'))
 # TODO correct 14hls time from discovery
 
 SN_veloc_dict = {'SN 2018hmx': SN2018hmx_veloc, 'iPTF14hls': iPTF14hls_veloc, 'SN 2018aad': SN2018aad_veloc}
@@ -280,8 +299,8 @@ def plot_velocities(SN_veloc_dict, gutierrez_veloc, line_list, formatting_dict):
     axes[1].set_ylabel('Expansion velocity (km/s)')
     plt.xlabel('Days from discovery')
     # plt.suptitle('Expansion velocity over time')
-    fig2.savefig(r'figures\SN2018hmx_SN2018aad_iPTF14hls_absorption_velocities_against_gutierrez' + '.png')
-    fig2.savefig(r'figures\SN2018hmx_SN2018aad_iPTF14hls_absorption_velocities_against_gutierrez' + '.svg')
+    fig2.savefig(os.path.join('figures', 'SN2018hmx_SN2018aad_iPTF14hls_absorption_velocities_against_gutierrez' + '.png'))
+    fig2.savefig(os.path.join('figures', 'SN2018hmx_SN2018aad_iPTF14hls_absorption_velocities_against_gutierrez' + '.svg'))
 
 
 plot_velocities(SN_veloc_dict, gutierrez_veloc, ['FeII 5169', 'Halpha'], formatting_dict)

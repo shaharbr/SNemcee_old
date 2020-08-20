@@ -104,7 +104,7 @@ def ztf_phot(path):
 
 def ztf_phot_new(path):
     # import re-analyzed ZTF photometry dataset (ASCII file)
-    ztf_phot_new = pd.read_csv(r'data\ztf_dr1_lightcurve.txt', sep=r'\s+', header=50,
+    ztf_phot_new = pd.read_csv(os.path.join('data', 'ztf_dr1_lightcurve.txt'), sep=r'\s+', header=50,
                                usecols=['mjd|', 'mag|', 'hjd|', 'catflags|'])
     ztf_phot_new.drop([0, 1, 2], inplace=True)
     # standardize column names and fill missing fields
@@ -212,7 +212,7 @@ def SN14hls_expans_v(path):
 
 
 def dict_to_csv(dict, filename):
-    pd.DataFrame(dict, index=[0]).to_csv(r'data/' +filename)
+    pd.DataFrame(dict, index=[0]).to_csv(os.path.join('data', filename))
 
 def correction_dict_to_csv(z_dict, discovery_date_dict, distance_modulus_dict, galactic_extinction_dict):
     for SN in z_dict.keys():
@@ -222,7 +222,8 @@ def correction_dict_to_csv(z_dict, discovery_date_dict, distance_modulus_dict, g
         dict['distance_modulus'] = distance_modulus_dict[SN]
         for filter in galactic_extinction_dict[SN].keys():
             dict[filter] = galactic_extinction_dict[SN][filter]
-        pd.DataFrame(dict, index=[0]).to_csv(r'data/' + SN + '_correction.csv')
+        pd.DataFrame(dict, index=[0]).to_csv(os.path.join('data', SN + '_correction.csv'))
+
 
 
 
@@ -243,6 +244,14 @@ def make_alllightcurve_df(SN_dict):
 def save_ascii(dataframe, filename):
     df = dataframe.copy(deep=True)
     df.rename(columns={'mjd': 'MJD', 'filter': 'filt'}, inplace=True)
+    df = df.loc[((df['source'] == 'Las Cumbres') |
+                 (df['source'] == 'P60') |
+                 (df['source'] == 'Arizona')) &
+                ((df['filt'] == 'B') |
+                 (df['filt'] == 'V') |
+                 (df['filt'] == 'g') |
+                 (df['filt'] == 'r') |
+                 (df['filt'] == 'i'))]
     df['nondet |'] = 'FALSE |'
     header_row = pd.DataFrame(np.array(df.keys()).reshape(1, 6), columns=list(df.keys()))
     df = pd.concat([header_row, df], ignore_index=True)
@@ -253,5 +262,6 @@ def save_ascii(dataframe, filename):
         return x
     for column in df.keys():
         df[column] = df[column].apply(equalspace)
-    df.to_csv(filename, sep=str(' '), index=False, header=False)
+    df['merged'] = df[df.columns[0:]].apply(lambda x: ''.join(x),axis=1)
+    df['merged'].to_csv(filename, index=False, header=False)
     return df

@@ -136,7 +136,7 @@ def fit_to_log_slope(SN_bolometric_df):
         weights = None
     line, cov = np.polyfit(x, y, deg=1, w=weights, cov=True)
 
-    x_fit = np.arange(132, 400, 10)
+    x_fit = np.array(x)
     y_fit_log = line[1] + x_fit * line[0]
 
     sigma_log = np.sqrt(np.diag(cov))

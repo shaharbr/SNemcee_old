@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
 import Ni_mass
-
+import os
 
 
 '''
@@ -10,7 +10,7 @@ Fitting the Planck function using an MCMC routine. This is slower, depending on 
 Integrating the Planck function between $U$ and $I$ band (observed) gives L_mcmc, dL_mcmc0, and dL_mcmc1.
 '''
 
-SN1987A_bolometric = pd.read_csv(r'data\bersten_1987a_bol.csv', names=['t_from_discovery', 'Lum'])
+SN1987A_bolometric = pd.read_csv(os.path.join('data', 'bersten_1987a_bol.csv'), names=['t_from_discovery', 'Lum'])
 SN1987A_bolometric['Lum'] = 10 ** SN1987A_bolometric['Lum']
 
 
@@ -33,13 +33,13 @@ SN1987A_bolometric['Lum'] = 10 ** SN1987A_bolometric['Lum']
 blackbody_data = {'SN2018hmx': [], 'SN2018aad': []}
 velocity_data = {'SN2018hmx': [], 'SN2018aad': []}
 # blackbody_data['SN2018hmx'] = blackbody_data['SN2018hmx'].loc[blackbody_data['SN2018hmx'] > ]
-blackbody_data['SN2018hmx'] = pd.read_csv(r'results\blackbody_results_18hmx_BVgi.csv')
+blackbody_data['SN2018hmx'] = pd.read_csv(os.path.join('results','blackbody_results_18hmx_BVgri.csv'))
 
-velocity_data['SN2018hmx'] = pd.read_csv(r'results\sN2018hmx_expansion_velocities.csv')
+velocity_data['SN2018hmx'] = pd.read_csv(os.path.join('results','sN2018hmx_expansion_velocities.csv'))
 print(blackbody_data['SN2018hmx'])
 # exit()
-blackbody_data['SN2018aad'] = pd.read_csv(r'results\blackbody_results_18aad_BVgri.csv')
-velocity_data['SN2018aad'] = pd.read_csv(r'results\SN2018aad_expansion_velocities.csv')
+blackbody_data['SN2018aad'] = pd.read_csv(os.path.join('results','blackbody_results_18aad_BVgri.csv'))
+velocity_data['SN2018aad'] = pd.read_csv(os.path.join('results','SN2018aad_expansion_velocities.csv'))
 
 # TODO something wrong here with the Ni mass calculation of 18hmx
 
@@ -52,11 +52,11 @@ def convert_to_erg_s(blackbody_data):
 
 
 
-for SN in ['SN2018hmx']:
+for SN in ['SN2018hmx', 'SN2018aad']:
     blackbody_data[SN] = convert_to_erg_s(blackbody_data[SN])
 
 
-for SN in ['SN2018hmx']:
+for SN in ['SN2018hmx', 'SN2018aad']:
     print(SN)
     velocity_data[SN] = velocity_data[SN].loc[velocity_data[SN]['line'] == 'FeII 5169'].reset_index()
     velocity_data[SN]['vt'] = velocity_data[SN]['t_from_discovery'] * velocity_data[SN]['absorption_mean_velocity'] * 86400 #vt and multiplied by seconds in a day (v in km/s)
@@ -141,14 +141,12 @@ for SN in ['SN2018hmx']:
     plt.errorbar(x=x_fit_87A, y=y_fit_87A, yerr=y_fit_87A_sigma)
 
 
-
-
     sampler = Ni_mass.SN_lightcurve_params(blackbody_data[SN])
     Ni_mass.chain_plots(sampler.chain)
     Ni_vec = Ni_mass.plot_v_lightcurve_with_fit(blackbody_data[SN], sampler)
 
     Ni_df = pd.DataFrame({'t_from_disovery': blackbody_data[SN]['t_from_discovery'], 'Ni_mass': Ni_vec})
-    Ni_df.to_csv(r'results\Ni_mass_'+SN+'_BVgri.csv')
+    Ni_df.to_csv(os.path.join('results', 'Ni_mass_'+SN+'_BVgri.csv'))
 
     Ni_results = Ni_mass.get_Ni_results_dict(sampler)
 
@@ -156,7 +154,7 @@ for SN in ['SN2018hmx']:
         Ni_mass.Ni_by_87A_slope(y_fit_SN, y_fit_SN_sigma, y_fit_87A, y_fit_87A_sigma)
     print(Ni_results)
     param_results = pd.DataFrame(Ni_results, index=[0])
-    param_results.to_csv(r'results\Ni_results_'+SN+'_BVgri.csv')
+    param_results.to_csv(os.path.join('results', 'Ni_results_'+SN+'_BVgri.csv'))
 
 
 

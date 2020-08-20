@@ -165,8 +165,8 @@ def calculate_bolometric(lc, z, outpath='.', res=1., nwalkers=10, burnin_steps=2
         filts = set(epoch1.where(nondet=False)['filter'].data)
         filtstr = ''.join([f.char for f in sorted(filts)])
         nfilt = len(filts)
-        # if (nfilt > 2) or (58791 > np.mean(epoch1['MJD'].data > 58790)):
-        if nfilt > 1:
+        if (nfilt > 2) or ((58791 > np.mean(epoch1['MJD'].data)) & (58790 < np.mean(epoch1['MJD'].data))):
+        # if nfilt > 2:
             # blackbody
             try:
                 p0, cov = curve_fit(models.planck_fast, epoch1['freq'] * (1. + z), epoch1['lum'], p0=[10., 10.],
