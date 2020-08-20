@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 import numpy as np
-
+import os
 plt.rc('font', size=20)          # controls default text sizes
 plt.rc('axes', titlesize=20)     # fontsize of the axes title
 plt.rc('axes', labelsize=20)    # fontsize of the x and y labels
@@ -94,8 +94,8 @@ def lightcurve_plot(SN_dict_list, main_SN, correction_params):
     ax.tick_params(axis='both', which='major')
     ax2.tick_params(axis='both', which='major')
 
-    fig.savefig(r'figures\light-curve over time ' + str(names) + '.png')
-    fig.savefig(r'figures\light-curve over time ' + str(names) + '.svg')
+    fig.savefig(os.path.join('figures', 'light-curve over time ' + str(names) + '.png'))
+    fig.savefig(os.path.join('figures', 'light-curve over time ' + str(names) + '.svg'))
 
 
 
@@ -152,8 +152,8 @@ def lightcurve_plot_shift(SN_dict, correction_params):
     ax.tick_params(axis='both', which='major')
     ax2.tick_params(axis='both', which='major')
 
-    fig.savefig(r'figures\light-curve over time stacked ' + str(SN_dict['Name']) + '.png')
-    fig.savefig(r'figures\light-curve over time stacked ' + str(SN_dict['Name']) + '.svg')
+    fig.savefig(os.path.join('figures', 'light-curve over time stacked ' + str(SN_dict['Name']) + '.png'))
+    fig.savefig(os.path.join('figures', 'light-curve over time stacked ' + str(SN_dict['Name']) + '.svg'))
 
 def remove_LCO_outlier(SN_dict):
     df = SN_dict['lightcurve']['Las Cumbres']['df']

@@ -2,6 +2,8 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import spectra_velocity
 import data_import
+import os
+
 
 #  TODO add the import from csv for all correction parameters like in the photometry analysis code
 
@@ -32,11 +34,20 @@ lines_dict = {'Halpha': {'peak': 6562.81, 'absorption_range': [6150, 6500], 'emi
               'FeII 5018': {'peak': 5018, 'absorption_range': [4870, 4970], 'emission_range': [4900, 5100], 'width': 60}}
 
 
-SN18hmx_spect_dict = data_import.LCO_spect(r'data\snexdata_target5025')
-SN18aad_spect_dict = data_import.LCO_spect(r'data\snexdata_target4771')
+SN18hmx_spect_dict = data_import.LCO_spect(os.path.join('data', 'snexdata_target5025'))
+SN18aad_spect_dict = data_import.LCO_spect(os.path.join('data', 'snexdata_target4771'))
+
+def save_spect_csv(dict, dir):
+    names = dict.keys()
+    os.mkdir(os.path.join('data', dir, 'csv'))
+    for name in names:
+        dict[name]['df'].to_csv(os.path.join('data', dir, 'csv', str(name)+'.csv'))
+
+save_spect_csv(SN18hmx_spect_dict, 'snexdata_target5025')
+exit()
 
 # import expansion velocity file for iPTF14hls
-SN14hls_expans_v_df = data_import.SN14hls_expans_v(r'results\iPTF14hls_expansion_velocity.csv')
+SN14hls_expans_v_df = data_import.SN14hls_expans_v(os.path.join('results', 'iPTF14hls_expansion_velocity.csv'))
 # TODO correct 14hls time from discovery
 
 spectra = {'SN2018hmx': SN18hmx_spect_dict,
@@ -95,9 +106,9 @@ for SN in [SN2018hmx, SN2018aad]:
 # spectra_velocity.plot_expansion_velocities([SN2018hmx['expansion_velocities'], SNiPTF14hls['expansion_velocities']], 'absorption')
 # spectra_velocity.plot_expansion_velocities([SN2018hmx['expansion_velocities'], SN2018aad['expansion_velocities']], 'absorption')
 
-# SN2018hmx['expansion_velocities'].to_csv(r'results\sN2018hmx_expansion_velocities.csv')
-# SNiPTF14hls['expansion_velocities'].to_csv(r'results\SNiPTF14hls_expansion_velocities.csv')
-# SN2018aad['expansion_velocities'].to_csv(r'results\SN2018aad_expansion_velocities.csv')
+# SN2018hmx['expansion_velocities'].to_csv(os.path.join('results', 'sN2018hmx_expansion_velocities.csv'))
+# SNiPTF14hls['expansion_velocities'].to_csv(os.path.join('results', 'SNiPTF14hls_expansion_velocities.csv'))
+# SN2018aad['expansion_velocities'].to_csv(os.path.join('results', 'SN2018aad_expansion_velocities.csv'))
 
 plt.show()
 
