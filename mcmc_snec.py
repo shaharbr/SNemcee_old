@@ -32,8 +32,8 @@ E_final_range = [1.5, 2.4]
 R_range = [600, 3000]
 K_range = [0.001, 90]
 
-n_walkers = 20
-n_steps = 300
+n_walkers = 10
+n_steps = 30
 n_params = 5
 
 time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -56,6 +56,10 @@ sn18hmx['Lum'] = sn18hmx['Lum'] * 10**7
 sn18hmx['dLum0'] = sn18hmx['dLum0'] * 10**7
 sn18hmx['dLum1'] = sn18hmx['dLum1'] * 10**7
 
+# replicate the last point 10 times to artificially increase weight of fitting to last point (10-folds)
+last_row = sn18hmx.loc[sn18hmx['t_from_discovery'] > 350]
+last_row_repeats = pd.concat([last_row]*9, ignore_index=True)
+sn18hmx = pd.concat([sn18hmx, last_row_repeats], ignore_index=True)
 
 # interp_days = np.arange(15, 382, 1)
 # interp_lum = np.interp(interp_days, sn18hmx['t_from_discovery'], sn18hmx['Lum'])
@@ -288,7 +292,7 @@ results_vec = plot_lightcurve_with_fit(sn18hmx, sampler)
 flat_sampler = sampler.get_chain(flat=True)
 np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler.csv'), flat_sampler, delimiter=",")
 
-flat_sampler_no_burnin = sampler.get_chain(discard=200, flat=True)
+flat_sampler_no_burnin = sampler.get_chain(discard=0, flat=True)
 np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler_without100burnin.csv'), flat_sampler_no_burnin, delimiter=",")
 
 
@@ -306,7 +310,7 @@ MCMC_results = get_param_results_dict(sampler)
 
 print(sampler.chain.shape)
 
-
+plt.show()
 
 # fig, ax = plt.subplots(figsize=(10, 8))
 
