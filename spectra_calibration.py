@@ -44,7 +44,7 @@ phot_data = pd.read_csv(os.path.join('results', 'SN2018hmx_Arizona_LCO_mag_df'))
 
 
 # load uncalibrated spectrum from ascii file, and turn into standard spectrum object
-def load_spectrum(path, BV_extinction, wavelength_cutoff=False, day=False):
+def load_spectrum(path, BV_extinction, z, wavelength_cutoff=False, day=False):
     tab = ascii.read(path, names=['wave', 'flux'])
     if wavelength_cutoff:
         wave = tab['wave'][tab['wave'] > wavelength_cutoff]
@@ -52,8 +52,16 @@ def load_spectrum(path, BV_extinction, wavelength_cutoff=False, day=False):
     else:
         wave = tab['wave']
         flux = tab['flux']
+    wave = correct_specta_redshift(wave, z)
+    print(flux)
+    flux = pd.Series(flux).rolling(20, center=True).mean()
+    print(flux)
+
+    wave = wave[flux > 0]
+    flux = flux[flux > 0]
+
     sp = S.ArraySpectrum(wave=wave, flux=flux, waveunits='angstrom', fluxunits='flam', keepneg=False)
-    sp_ext = sp * S.Extinction(BV_extinction, 'lmcavg')
+    sp_ext = sp * S.Extinction(BV_extinction, 'mwavg')
     if day:
         sp_ext.name = day
     plt.figure()
@@ -123,11 +131,17 @@ def fit_libration_line(phot_data, spectrum, bandpass_list):
     regresison_params = np.polyfit(df['wave'], df['ratio'], deg=1)
     return regresison_params
 
+def correct_specta_redshift(wavelength_array, z):
+    # correct wavelengths for redshift
+    wavelength_array = wavelength_array / (1 + z)
+    return wavelength_array
+
+
 d82_day = get_rest_day(spectra_d82_mjd, discovery_mjd, z)
 d357_day = get_rest_day(spectra_d357_mjd, discovery_mjd, z)
 
-spectra_d82 = load_spectrum(spectra_d82_path, BV_extinc, 3800, d82_day)
-spectra_d357 = load_spectrum(spectra_d357_path, BV_extinc, 4600, d357_day)
+spectra_d82 = load_spectrum(spectra_d82_path, BV_extinc, z, 3800, d82_day)
+spectra_d357 = load_spectrum(spectra_d357_path, BV_extinc, z, 4600, d357_day)
 
 plt.figure()
 g_bandpass = load_bandpass(gp_path, 'g')
@@ -143,8 +157,8 @@ plt.savefig(os.path.join('figures', 'spectra_calibration_filters'))
 df82 = get_ratio_table(phot_data, spectra_d82, [g_bandpass, r_bandpass, i_bandpass, B_bandpass, V_bandpass])
 line82 = fit_libration_line(phot_data, spectra_d82, [g_bandpass, r_bandpass, i_bandpass, B_bandpass, V_bandpass])
 
-df357 = get_ratio_table(phot_data, spectra_d357, [g_bandpass, r_bandpass, i_bandpass, B_bandpass, V_bandpass])
-line357 = fit_libration_line(phot_data, spectra_d357, [g_bandpass, r_bandpass, i_bandpass, B_bandpass, V_bandpass])
+df357 = get_ratio_table(phot_data, spectra_d357, [g_bandpass, r_bandpass])
+line357 = fit_libration_line(phot_data, spectra_d357, [g_bandpass, r_bandpass])
 
 
 
@@ -161,12 +175,17 @@ plt.xlabel('wavelength (A)')
 plt.ylabel('real phot / spectra phot')
 plt.legend()
 plt.ylim(0.8, 1.4)
+plt.xlim(4200, 7700)
 plt.tight_layout()
 plt.savefig(os.path.join('figures', 'spectra_calibration_ratio_d82'))
 
 
+list_filters = ['g', 'r']
+colors = ['#00bbff', '#ff6b00']
+
+
 plt.figure()
-for i in range(5):
+for i in range(2):
     plt.scatter(df357['wave'][i], df357['ratio'][i], label=list_filters[i], color=colors[i])
 plt.plot(df357['wave'], line357[1] + line357[0] * df357['wave'], label='linear fit', color='k', alpha=0.5)
 plt.title('ratio between the real photometry mag\nand the photometry calculated from the spectrum\n'+
@@ -175,6 +194,7 @@ plt.xlabel('wavelength (A)')
 plt.ylabel('real phot / spectra phot')
 plt.legend()
 plt.ylim(0.8, 1.4)
+plt.xlim(4200, 7700)
 plt.tight_layout()
 plt.savefig(os.path.join('figures', 'spectra_calibration_ratio_d357'))
 
@@ -199,32 +219,44 @@ plt.title('Day 357 spectrum before and after calibration')
 plt.legend()
 plt.savefig(os.path.join('figures', 'spectra_calibration_beforeafter_d357'))
 
+df_d357 = pd.DataFrame({'wave': spectra_d357.wave, 'flux': calibrated_d357})
+df_d357.reset_index(inplace=True)
+df_d357.to_csv(os.path.join('results','calibrated_d357_spectrum.csv'))
 
-smooth_d82 = pd.Series(spectra_d82.flux).rolling(10, center=True).mean()
-smooth_calib_d82 = pd.Series(calibrated_d82).rolling(10, center=True).mean()
-plt.figure(figsize=(10, 5))
-plt.plot(spectra_d82.wave, smooth_d82, label='before_calibration')
-plt.plot(spectra_d82.wave, smooth_calib_d82, label='after_calibration')
-plt.xlabel('wavelength (A)')
-plt.ylabel('flux (flam)')
-plt.title('Day 82 spectrum before and after calibration (smoothed)')
-plt.legend()
-plt.savefig(os.path.join('figures', 'spectra_calibration_beforeafter_d82_smooth'))
 
-smooth_d357 = pd.Series(spectra_d357.flux).rolling(40, center=True).mean()
-smooth_calib_d357 = pd.Series(calibrated_d357).rolling(40, center=True).mean()
-plt.figure(figsize=(10, 5))
-plt.plot(spectra_d357.wave, smooth_d357, label='before_calibration')
-plt.plot(spectra_d357.wave, smooth_calib_d357, label='after_calibration')
-plt.xlabel('wavelength (A)')
-plt.ylabel('flux (flam)')
-plt.title('Day 357 spectrum before and after calibration (smoothed)')
-plt.legend()
-plt.savefig(os.path.join('figures', 'spectra_calibration_beforeafter_d357_smooth'))
+# smooth_d82 = pd.Series(spectra_d82.flux).rolling(10, center=True).mean()
+# smooth_calib_d82 = pd.Series(calibrated_d82).rolling(10, center=True).mean()
+# plt.figure(figsize=(10, 5))
+# plt.plot(spectra_d82.wave, smooth_d82, label='before_calibration')
+# plt.plot(spectra_d82.wave, smooth_calib_d82, label='after_calibration')
+# plt.xlabel('wavelength (A)')
+# plt.ylabel('flux (flam)')
+# plt.title('Day 82 spectrum before and after calibration (smoothed)')
+# plt.legend()
+# plt.savefig(os.path.join('figures', 'spectra_calibration_beforeafter_d82_smooth'))
+
+# smooth_d357 = pd.Series(spectra_d357.flux).rolling(40, center=True).mean()
+# smooth_calib_d357 = pd.Series(calibrated_d357).rolling(40, center=True).mean()
+# plt.figure(figsize=(10, 5))
+# plt.plot(spectra_d357.wave, smooth_d357, label='before_calibration')
+# plt.plot(spectra_d357.wave, smooth_calib_d357, label='after_calibration')
+# plt.xlabel('wavelength (A)')
+# plt.ylabel('flux (flam)')
+# plt.title('Day 357 spectrum before and after calibration (smoothed)')
+# plt.legend()
+# plt.savefig(os.path.join('figures', 'spectra_calibration_beforeafter_d357_smooth'))
 
 
 
 # TODO filters do not have a defined binset in the wavecat table. The waveset of the spectrum will be used instead.
 
 # TODO send iair normalizaiton graphs, and calibrated spectra. ask about units, and about
+# print(smooth_calib_d357)
+
+# df_d357 = pd.DataFrame({'wave': spectra_d357.wave, 'flux': smooth_calib_d357})
+# df_d357.reset_index(inplace=True)
+# df_d357.to_csv(os.path.join('results','calibrated_d357_spectrum_smooth.csv'))
+
+print(df_d357)
 plt.show()
+
