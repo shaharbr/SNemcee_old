@@ -5,7 +5,7 @@ import os
 import re
 import matplotlib.pyplot as plt
 
-data_dir = os.path.join('..', 'all_lum_data')
+data_dir = os.path.join('..', 'all_veloc_data')
 
 
 
@@ -66,15 +66,17 @@ def snec_interpolator(requested_list, sampled_list, data_days):
                             # TODO if something isnt working here it might be because i need to replace the
                             # TODO instantaneous objects like snec_model, K_below etc with deepcopies
                             snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['name'] = name
-                            snec_model = pd.read_csv(os.path.join(data_dir, name, 'lum_observed.dat'),
-                                     names=['t_from_discovery', 'Lum'], sep=r'\s+')
+                            snec_model = pd.read_csv(os.path.join(data_dir, name, 'vel_photo.dat'),
+                                     names=['t_from_discovery', 'veloc'], sep=r'\s+')
                             # convert sec to days
                             snec_model['t_from_discovery'] = snec_model['t_from_discovery'] / 86400
-                            # remove day one to avoid artifacts in fiting from the very low and then very high lum in the first day
-                            snec_model = snec_model.loc[snec_model['t_from_discovery'] > 1.2]
+                            # convery cm/s to km/s
+                            snec_model['veloc'] = snec_model['veloc'] / 100000
+                            # snec_model = snec_model.loc[snec_model['t_from_discovery'] > 1.2]
                             time_col = snec_model['t_from_discovery']
-                            snec_model = snec_model['Lum']
+                            snec_model = snec_model['veloc']
                             snec_model = np.interp(data_days, time_col, snec_model)
+                            # plt.plot(data_days, snec_model, marker='o')
                             snec_dict[Mdir][Nidir][Edir][Rdir][Kdir][Mixdir]['snec'] = snec_model
                         Mix_below = snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['below']['snec']
                         Mix_above = snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['above']['snec']

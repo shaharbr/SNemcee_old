@@ -1,21 +1,23 @@
 import emcee
 import numpy as np
 from matplotlib import pyplot as plt
-import snec_result_interpolator_mag as interp
+import snec_result_interpolator_veloc as interp
 import pandas as pd
 import datetime
 from pathlib import Path
 import os
 import corner
-
-
-
+import csv
+# TODO add mixing, scale and time from explosion parameters
+# TODO make two codes, one with CSM and one without? (to compare to other mcmc paper)
 
 '''
 parts of this code are based on code by Griffin Hosseinzadeh
 '''
 # TODO run MCMC
 # TODO run mmc with more burn in + 350, wlaker 50. remove constant parameters
+# TODO document code
+# TODO do the same for the mag code
 #
 
 plt.rc('font', size=20)          # controls default text sizes
@@ -29,23 +31,25 @@ plt.rcParams['font.sans-serif'] = 'Arial'
 
 
 
-Mzams_range = [13.0, 16.0, 19.0, 21.0]
-Ni_range = [0.10, 0.13, 0.16, 0.19]
-E_final_range = [1.5, 1.8, 2.4]
+# important to note: values can't be negative!
+Mzams_range = [12.0, 15.0]
+Ni_range = [0.02, 0.07, 0.12, 0.17]
+E_final_range = [1.2, 1.7, 2.2, 2.7]
 Mix_range = [1.0, 3.0, 6.0]
-R_range = [600, 1800, 2400, 3000]
-K_range = [0.001, 30, 90]
-S_range = [0.8, 2.0]
+R_range = [600, 1400, 2200, 3000]
+K_range = [0.001, 50, 100, 150]
+S_range = [0.5, 2.0]
 T_range = [0, 30] # because can't have negative values, do 15 minus diff (so 0 is -15, and 30 is +15)
 
+
+
 n_walkers = 16
-n_steps = 20
+n_steps = 30
 n_params = 8
 burn_in = 0
 
-
 time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-Path(os.path.join('mcmc_results', str(time_now)+'_mag')).mkdir(parents=True, exist_ok=True)
+Path(os.path.join('mcmc_results', str(time_now)+'_veloc')).mkdir(parents=True, exist_ok=True)
 
 run_param_df = pd.DataFrame.from_dict({'Mzams_range': str(Mzams_range), 'Ni_range': str(Ni_range),
                              'E_final_range': str(E_final_range), 'R_range': str(R_range), 'K_range': str(K_range),
@@ -58,30 +62,33 @@ run_param_df.to_csv(os.path.join('mcmc_results', str(time_now), 'run_parameters.
 
 m_Solar = 1.989 * (10 ** 33)  # gram
 
+sn18hmx = pd.read_csv(os.path.join('results', 'sN2018hmx_expansion_velocities.csv'),
+                      usecols=['t_from_discovery', 'line', 'absorption_mean_velocity','absorption_std_velocity'])
+sn18hmx.rename({'absorption_mean_velocity':'veloc', 'absorption_std_velocity':'dveloc'}, axis='columns', inplace=True)
+sn18hmx = sn18hmx.loc[sn18hmx['line'] == 'FeII 5169']
+sn18hmx.sort_values(by=['t_from_discovery'], inplace=True)
+# remove first point which seems like an artifact
+sn18hmx = sn18hmx.loc[sn18hmx['t_from_discovery'] > 20]
+# TODO this is a patch until i calc the real dy on late velocities, remember to fix!
+sn18hmx['dveloc'][35] = 80
 
-data_filepath = os.path.join('results', 'SN2018hmx_lightcurves')
-SN = pd.read_csv(data_filepath, usecols=['dmag', 'filter', 'abs_mag', 't_from_discovery'])
-print(SN)
-SN['abs_mag'] = SN['abs_mag'].abs()
+# plt.figure()
+# plt.plot(sn18hmx['t_from_discovery'], sn18hmx['veloc'], marker='o')
 
-filters = list(SN['filter'].unique())
-filters = list(set(filters).intersection(['u', 'g', 'r', 'i', 'z', 'U', 'B', 'V', 'R', 'I']))
-print(filters)
-SN = SN.loc[SN['filter'].isin(filters)]
-SN = SN.sort_values('t_from_discovery')
-colors = {'u': 'purple', 'g': 'teal', 'r': 'red', 'i': 'maroon', 'z': 'black', 'U': 'purple',
-          'B': 'blue', 'V': 'green', 'R': 'red', 'I': 'maroon'}
+
+# remove first timepoint
+# sn18hmx = sn18hmx.loc[sn18hmx['t_from_discovery'] > 20]
 
 # replicate the last point x times to artificially increase weight of fitting to last point (10-folds)
 times_to_amplify = 1
 if times_to_amplify > 1:
-    last_row = SN.loc[SN['t_from_discovery'] > 350]
+    last_row = sn18hmx.loc[sn18hmx['t_from_discovery'] > 350]
     last_row_repeats = pd.concat([last_row]*(times_to_amplify-1), ignore_index=True)
-    sn18hmx = pd.concat([SN, last_row_repeats], ignore_index=True)
+    sn18hmx = pd.concat([sn18hmx, last_row_repeats], ignore_index=True)
 
 
 def log_prior(theta):
-    # theta is a vector containing a specific set of parameters theta = [M, Ni, E, R, K, Mix, S, T]
+    # theta is a vector containing a specific set of parameters theta = [M, Ni, E, R, K]
 
     # Mzams (M)
     if Mzams_range[0] <= theta[0] <= Mzams_range[-1]:
@@ -136,72 +143,49 @@ def log_prior(theta):
     return prob_total
 
 
-def log_likelihood(theta, data):
+def log_likelihood(theta, data_x, data_y, data_dy):
     sampled = [Mzams_range, Ni_range, E_final_range, R_range, K_range, Mix_range]
-    if (Mzams_range[0] <= theta[0] <= Mzams_range[-1]) & \
-            (Ni_range[0] <= theta[1] <= Ni_range[-1]) & \
-            (E_final_range[0] <= theta[2] <= E_final_range[-1]) & \
-            (R_range[0] <= theta[3] <= R_range[-1]) & \
+    if (Mzams_range[0] <= theta[0] <= Mzams_range[-1]) &\
+            (Ni_range[0] <= theta[1] <= Ni_range[-1]) &\
+            (E_final_range[0] <= theta[2] <= E_final_range[-1]) &\
+            (R_range[0] <= theta[3] <= R_range[-1]) &\
             (K_range[0] <= theta[4] <= K_range[-1]) & \
             (Mix_range[0] <= theta[5] <= Mix_range[-1]) & \
             (S_range[0] <= theta[6] <= S_range[-1]) & \
             (T_range[0] <= theta[7] <= T_range[-1]):
-        chisq_ln_like = 0
-        data_x_allfilt = data['t_from_discovery'] - 15 + theta[7]
-        y_fit = interp.snec_interpolator(theta[0:6], sampled, data_x_allfilt, filters)
-        y_fit['time'] = data_x_allfilt
-        # TODO yfilt needs to be a df with all filters and a column for time
-        # data_filt = data.keys() #  TODO use this but ommit time column
-        # TODO filters here is taken from outside function - should get it in inputs to the function (which should get it from upstream funcitons)
-        for filt in filters:
-            print(filt)
-            data_filt = data.loc[data['filter'] == filt]
-            data_x = data_filt['t_from_discovery'] - 15 + theta[7]
-            data_y = data_filt['abs_mag']
-            data_dy = data_filt['dmag']
-            # y_fit = y_fit.reset_index(drop=True)
-            # y_fit = y_fit.rename(columns={'time': 't_from_discovery'})
-            y_fit_filt = y_fit[filt].loc[y_fit['time'].isin(data_x)]
-            # y_fit_filt = y_fit.merge(data_x, on='t_from_discovery', how='right')
-            # print('merge', data.merge(data_x, on='t_from_discovery', how='right'))
-            # y_fit_filt = y_fit.loc[y_fit['time'].astype(str).contains('|'.join(data_x.astype(str)))]
-            if not len(data_x) == len(y_fit_filt):
-                print('stuck')
-                exit()
-            # TODO is the chisq here correct?
-            print('a0', data_y)
-            print('a1', data_y - y_fit_filt)
-            print('a2', (data_y - y_fit_filt) ** 2.)
-            print('a3', (2. * data_dy ** 2.))
-            print('a4', np.log(data_y))
-            chisq_ln_like += -np.sum((data_y - y_fit_filt) ** 2. / (2. * data_dy ** 2.) + np.log(data_y))
-            print('chi2', chisq_ln_like)
+        data_x_moved = data_x - 15 + theta[7]
+        y_fit = interp.snec_interpolator(theta[0:6], sampled, data_x_moved)
+        # multiply whole graph by scaling factor
+        y_fit = y_fit * theta[6]
+
+        chi2 = (data_y - y_fit) ** 2. / (2. * data_dy ** 2.) + np.log(data_y)
     else:
-        chisq_ln_like = 100000000000000
-
-    print('chi_ln', chisq_ln_like)
-    print('chi_exp', np.exp(chisq_ln_like))
-    return chisq_ln_like
-
+        chi2 = 10000000000
+    ln_like = -np.sum(chi2)
+    print('chi_ln', ln_like)
+    return ln_like
 
 
-def log_posterior(theta, data):
-    ln_post = log_prior(theta) + log_likelihood(theta, data)
+def log_posterior(theta, data_x, data_y, data_dy):
+    ln_post = log_prior(theta) + log_likelihood(theta, data_x, data_y, data_dy)
     return ln_post
 
 
 
-def emcee_fit_params(data):
-    # TODO only using dLum0, not dLum1?
-    sampler = emcee.EnsembleSampler(n_walkers, n_params, log_posterior, args=[data])
+def emcee_fit_params(data_time, data_veloc, data_dveloc):
+    args = [data_time, data_veloc, data_dveloc]
+    sampler = emcee.EnsembleSampler(n_walkers, n_params, log_posterior, args=args)
 
     Mzams_random = np.random.rand(n_walkers) * (Mzams_range[-1] - Mzams_range[0]) + Mzams_range[0]
     Ni_random = np.random.rand(n_walkers) * (Ni_range[-1] - Ni_range[0]) + Ni_range[0]
     E_random = np.random.rand(n_walkers) * (E_final_range[-1] - E_final_range[0]) + E_final_range[0]
     R_random = np.random.rand(n_walkers) * (R_range[-1] - R_range[0]) + R_range[0]
     K_random = np.random.rand(n_walkers) * (K_range[-1] - K_range[0]) + K_range[0]
+    Mix_random = np.random.rand(n_walkers) * (Mix_range[-1] - Mix_range[0]) + Mix_range[0]
+    S_random = np.random.rand(n_walkers) * (S_range[-1] - S_range[0]) + S_range[0]
+    T_random = np.random.rand(n_walkers) * (T_range[-1] - T_range[0]) + T_range[0]
 
-    initial_guesses = np.array([Mzams_random, Ni_random, E_random, R_random, K_random])
+    initial_guesses = np.array([Mzams_random, Ni_random, E_random, R_random, K_random, Mix_random, S_random, T_random])
     initial_guesses = initial_guesses.T
 
     sampler.run_mcmc(initial_guesses, n_steps)
@@ -216,11 +200,10 @@ def emcee_fit_params(data):
 
 
 def SN_lightcurve_params(SN_data):
-    # TODO remove, redundant
-    # data_time = SN_data['t_from_discovery']
-    # data_Lum = SN_data['Lum']
-    # data_dLum = SN_data['dLum0']
-    sampler = emcee_fit_params(SN_data)
+    data_time = SN_data['t_from_discovery']
+    data_veloc = SN_data['veloc']
+    data_dveloc = SN_data['dveloc']
+    sampler = emcee_fit_params(data_time, data_veloc, data_dveloc)
     return sampler
 
 
@@ -262,12 +245,31 @@ def chain_plots(sampler, **kwargs):
     plt.tight_layout()
     f_K.savefig(os.path.join('mcmc_results', str(time_now), 'K.png'))
 
-# [walkers, step, dim]
+    f_Mix = plt.figure()
+    plt.plot(chain[:, :, 5].T, **kwargs)
+    plt.xlabel('Step Number')
+    plt.ylabel('Mixing')
+    plt.tight_layout()
+    f_Mix.savefig(os.path.join('mcmc_results', str(time_now), 'Mix.png'))
 
-import csv
+    f_S = plt.figure()
+    plt.plot(chain[:, :, 6].T, **kwargs)
+    plt.xlabel('Step Number')
+    plt.ylabel('Scaling')
+    plt.tight_layout()
+    f_S.savefig(os.path.join('mcmc_results', str(time_now), 'S.png'))
+
+    f_T = plt.figure()
+    plt.plot(chain[:, :, 7].T, **kwargs)
+    plt.xlabel('Step Number')
+    plt.ylabel('T_exp')
+    plt.tight_layout()
+    f_T.savefig(os.path.join('mcmc_results', str(time_now), 'T.png'))
+
+
 
 def get_param_results_dict(sampler, step):
-    params = ['Mzams', 'Ni', 'E', 'R', 'K']
+    params = ['Mzams', 'Ni', 'E', 'R', 'K', 'Mix', 'S', 'T']
     dict = {}
     for i in range(len(params)):
         last_results = sampler.chain[:, step:, i]
@@ -284,19 +286,23 @@ def get_param_results_dict(sampler, step):
         w.writeheader()
         w.writerow(dict)
 
-
     # df = pd.DataFrame.from_dict(data=dict, orient='index', index=)
     # df.to_csv(os.path.join('mcmc_results', str(time_now), 'final_results.csv'))
     return dict
 
 
 
-def plot_chi2(SN_filt_data, y_fit, filter):
+def calc_chi_square_sampled(data, y_fit):
+    # TODO is the chisq formula here correct? should be np.sum(((data_y - y_fit_filt)**2 /data_y)) ?
+    chisq = np.sum(((data['veloc'] - y_fit) /
+                    data['dveloc']) ** 2)
+    chisq_reduced = chisq / (len(data['t_from_discovery']) - 1)
     f_chi = plt.figure()
-    plt.plot(SN_filt_data['t_from_discovery'], SN_filt_data['abs_mag'], marker='o')
-    plt.plot(SN_filt_data['t_from_discovery'], y_fit, marker='o')
+    plt.plot(data['t_from_discovery'], data['veloc'], marker='o')
+    plt.plot(data['t_from_discovery'], y_fit, marker='o')
     plt.tight_layout()
-    f_chi.savefig(os.path.join('mcmc_results', str(time_now), 'chi_square_sampling_'+filter+'.png'))
+    f_chi.savefig(os.path.join('mcmc_results', str(time_now), 'chi_square_sampling.png'))
+    return chisq_reduced
 
 
 def plot_lightcurve_with_fit(SN_data, sampler, step):
@@ -306,58 +312,72 @@ def plot_lightcurve_with_fit(SN_data, sampler, step):
     E = param_dict['E']
     R = param_dict['R']
     K = param_dict['K']
-    results_text = 'Mzams: '+str(round(Mzams, 1))+' Ni: '+str(round(Ni, 3))+' E: '+str(round(E, 1))+' R: '+str(int(R))+' K: '+str(int(K))
+    Mix = param_dict['Mix']
+    S = param_dict['S']
+    T = param_dict['T']
+    results_text = 'Mzams: '+str(round(Mzams, 1))+\
+                   ' Ni: '+str(round(Ni, 3))+\
+                   ' E: '+str(round(E, 1))+\
+                   ' R: '+str(int(R))+\
+                   ' K: '+str(int(K))+\
+                   ' Mix: '+str(round(Mix, 1))+\
+                   ' S: '+str(round(S, 2))+\
+                   ' T: '+str(round(T, 1))
     print(results_text)
+    data_x = SN_data['t_from_discovery']
+    data_x_moved =  data_x + T
+    data_y = SN_data['veloc']
+    dy = SN_data['dveloc']
 
-    requested = [Mzams, Ni, E, R, K]
-    sampled = [Mzams_range, Ni_range, E_final_range, R_range, K_range]
-    # TODO here too - filters sould be got from function inputs
-    data_x_allfilt = SN_data['t_from_discovery']
+    requested = [Mzams, Ni, E, R, K, Mix]
+    sampled = [Mzams_range, Ni_range, E_final_range, R_range, K_range, Mix_range]
+    y_fit = interp.snec_interpolator(requested, sampled, data_x_moved)
+    # multiply whole graph by scaling factor
+    y_fit = y_fit * S
+
     f_fit, ax = plt.subplots(figsize=(10, 8))
-    # TODO here too filters
-    chi2 = 0
-    for filt in filters:
-        data_filt = SN_data.loc[SN_data['filter'] == filt]
-        data_x = data_filt['t_from_discovery']
-        data_y = data_filt['abs_mag']
-        data_dy = data_filt['dmag']
-        y_fit_filt = interp.snec_interpolator(requested, sampled, data_x, [filt])[filt]
-        chi2 += np.sum(((data_y - y_fit_filt) /data_dy)**2)
-        ax.plot(data_x, y_fit_filt, label=filt+' best fit:\n' + results_text, color=colors[filt])
-        ax.errorbar(data_x, data_y, yerr=data_dy, marker='o', linestyle='None', label=filt + '_SN 2018hmx', color=colors[filt])
-        # plot_chi2(data_filt, y_fit_filt, filt)
-    chi2_reduced = chi2 / (len(SN_data['t_from_discovery']) - 1)
-    ax.set_title('step '+str(step)+'\nchi_sq_red = ' + str(int(chi2_reduced)), fontsize=14)
-    plt.tight_layout()
+    ax.errorbar(data_x_moved, data_y, yerr=dy, marker='o', linestyle='None', label='SN 2018hmx')
+    ax.plot(data_x_moved, y_fit, label='best fit:\n'+results_text)
     ax.legend()
+    chisq = calc_chi_square_sampled(SN_data, y_fit)
+    ax.set_title('step '+str(step)+'\nchi_sq_red = ' + str(int(chisq)), fontsize=14)
+    plt.tight_layout()
     f_fit.savefig(os.path.join('mcmc_results', str(time_now), 'lightcurve_fit.png'))
 
 
 
+'''
+# running code #
+'''
 
-
-sampler = SN_lightcurve_params(SN)
+sampler = SN_lightcurve_params(sn18hmx)
+# to correct for T (time after explostion) actually being T+15
+sampler.chain[:, :, 7] = sampler.chain[:, :, 7] - 15
 chain_plots(sampler)
-results_vec = plot_lightcurve_with_fit(SN, sampler, 0)
-results_vec = plot_lightcurve_with_fit(SN, sampler, 19)
+# results_vec = plot_lightcurve_with_fit(sn18hmx, sampler, 0)
+# results_vec = plot_lightcurve_with_fit(sn18hmx, sampler, 3)
+results_vec = plot_lightcurve_with_fit(sn18hmx, sampler, n_steps-1)
 
 
 flat_sampler = sampler.get_chain(flat=True)
 np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler.csv'), flat_sampler, delimiter=",")
 
-flat_sampler_no_burnin = sampler.get_chain(discard=0, flat=True)
-np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler_without100burnin.csv'), flat_sampler_no_burnin, delimiter=",")
+flat_sampler_no_burnin = sampler.get_chain(discard=burn_in, flat=True)
+np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler_excluding_burnin.csv'), flat_sampler_no_burnin, delimiter=",")
 
 
-labels = ['Mzams', 'Ni', 'E', 'R', 'K']
-corner_range = [1., 1., 1., 1., 1.,]
+labels = ['Mzams', 'Ni', 'E', 'R', 'K', 'Mix', 'S', 'T']
+corner_range = [1., 1., 1., 1., 1., 1., 1., 1.]
 f_corner = corner.corner(flat_sampler_no_burnin, labels=labels, range=corner_range)
 # plt.tight_layout()
 f_corner.savefig(os.path.join('mcmc_results', str(time_now), 'corner_plot.png'))
 
-# MCMC_results = get_param_results_dict(sampler)
+# MCMC_results = get_param_results_dict(sampler, 0)
+# Ni_results['Ni_87A'] = np.average([Ni_mass_by_slope(i, line, SN87A_line) for i in [150, 300]])
+# print(Ni_results)
+# param_results = pd.DataFrame(Ni_results, index=[0])
+# param_results.to_csv(r'results\Ni_results_' + SN + '_BVgri.csv')
 
 print(sampler.chain.shape)
 
 plt.show()
-
