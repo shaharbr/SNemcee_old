@@ -1,0 +1,10 @@
+Column : content (unit)      
+1  Wavelength (Angstrom)
+2  Flux  (erg s^-1 cm^-2 A^-1)  Distance 5.5 Mpc assumed
+
+Gamma-ray radial optical depths:
+
+12 Msun : tau_g = 1 at 502d. Trap(400d) = 0.70 (ttrap_eff = 440d)
+15 Msun : tau_g = 1 at 560d. Trap(400d) = 0.75 (ttrap_eff = 470d)
+19 Msun : tau_g = 1 at 660d. Trap(400d) = 0.83 (ttrap_eff = 530d)
+25 Msun : tau_g = 1 at 706d. Trap(400d) = 0.85 (ttrap_eff = 550d)
