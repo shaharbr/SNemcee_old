@@ -35,7 +35,6 @@ def sn18aad_phot(path):
     # import LCO photometry dataset (TSV file)
     phot = pd.read_csv(path, sep=r'\s+', names=['date', 'mjd', 'mag', 'dmag', 'telescope', 'filter'])
     #TODO sort the title here
-    print(phot)
     phot['mjd'] = convert_to_mjd(phot['mjd'])
     return phot
 
@@ -141,62 +140,14 @@ def t_to_restframe(t, z):
     return t
 
 
-def make_SN_dict(SN_name, lightcurves_dict=False, z_dict=False, discovery_date_dict=False,
-                 distance_modulus_dict=False, galactic_extinction_dict=False,
-                 spectra=False, expansion_velocities=False):
 
-    # organize in SN_dict
-    fields = [lightcurves_dict, z_dict, discovery_date_dict,
-                 distance_modulus_dict, galactic_extinction_dict,
-                 spectra, expansion_velocities]
-    keys = ['lightcurve', 'z','discovery_date', 'distance_modulus', 'galactic_extinction',
-               'spectra', 'expansion_velocities']
-
-    # convert date to MJD
-    discovery_date_dict[SN_name] = convert_to_mjd(discovery_date_dict[SN_name], from_datetime=True)
-    SN_dict = {}
-    SN_dict['Name'] = SN_name
-    for i in range(len(fields)):
-        if fields[i]:
-            SN_dict[keys[i]] = fields[i][SN_name]
-        else:
-            SN_dict[keys[i]] = ''
-    return SN_dict
 
 
 def remove_last_days(df, day_limit):
     df = df.loc[df['t_from_discovery'] < day_limit]
     return df
 
-def LCO_spect(dir_path):
-    # import all LCO spectra ascii files for 2018hmx and organize in a dictionary
-    folder_join = os.path.join
-    filenames = os.listdir(dir_path)
-    # reading and merging
-    LCO_spect_dict = {}
-    for file in filenames:
-        # extract date of spectrum measurment from filename
-        # TODO make this re condition more general for all SNe
-        date = re.sub('.*hmx|.*aad|_|-|P60.*|v1|[a-z]|[A-Z]|\..*', '', os.path.basename(file))
-        # transform to standard datetime format
-        date = pd.to_datetime(date)
-        # convert date to MJD
-        date = convert_to_mjd(date, from_datetime=True)
-        # add as element in dict
-        if 'ZTF' in os.path.basename(file):
-            LCO_spect_dict[date] = {
-                'df': pd.read_csv(folder_join(dir_path, file), sep=' ', names=["x", "y", 'dy'], header=180)}
-        else:
-            LCO_spect_dict[date] = {'df': pd.read_csv(folder_join(dir_path, file), sep=' ', names=["x", "y"])}
-        if 'redblu' in os.path.basename(file):
-            LCO_spect_dict[date]['telescope'] = 'Las Cumbres'
-        elif 'ZTF' in os.path.basename(file):
-            LCO_spect_dict[date]['telescope'] = 'P60'
-        elif 'HET' in os.path.basename(file):
-            LCO_spect_dict[date]['telescope'] = 'HET'
-        else:
-            LCO_spect_dict[date]['telescope'] = 'ND'
-    return LCO_spect_dict
+
 
 def SN14hls_expans_v(path):
     # import expansion velocity file for iPTF14hls
@@ -246,6 +197,7 @@ def save_ascii(dataframe, filename):
     df.rename(columns={'mjd': 'MJD', 'filter': 'filt'}, inplace=True)
     df = df.loc[((df['source'] == 'Las Cumbres') |
                  (df['source'] == 'P60') |
+                 (df['source'] == 'Keck') |
                  (df['source'] == 'Arizona')) &
                 ((df['filt'] == 'B') |
                  (df['filt'] == 'V') |
