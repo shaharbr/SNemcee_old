@@ -121,7 +121,7 @@ def calculate_expansion_velocity(wavelength_expected, wavelength_observed):
     return v
 
 def add_expansion_velocity(spectra_dict, lines_dict):
-    dates = spectra_dict.keys()
+    dates = sorted(list(spectra_dict.keys()))
     lines = lines_dict.keys()
     wavelength_observed = {}
     for date in dates:
@@ -131,17 +131,23 @@ def add_expansion_velocity(spectra_dict, lines_dict):
             for param in ['absorption', 'emission']:
                 spectra_dict[date]['line'][line_name]['velocity'][param] = {}
                 number_curves = len(spectra_dict[date]['line'][line_name]['line_extremes'][param])
-                if None not in spectra_dict[date]['line'][line_name]['line_extremes'][param]:
-                    wavelength_observed[param] = [spectra_dict[date]['line'][line_name]['line_extremes'][param][i]['x'] for i in range(number_curves)]
-                    velocity_list = calculate_expansion_velocity(wavelength_expected, wavelength_observed[param])
-                    spectra_dict[date]['line'][line_name]['velocity'][param]['mean'] = np.mean(velocity_list)
-                    # print(date)
-                    # print(line_name)
-                    # print(param)
-                    # print(velocity_list)
-                    # print(np.std(velocity_list))
-                    spectra_dict[date]['line'][line_name]['velocity'][param]['std'] = np.std(velocity_list)
-                else:
+                print(spectra_dict[date]['line'][line_name]['line_extremes'][param])
+                # if None not in spectra_dict[date]['line'][line_name]['line_extremes'][param]:
+                wavelength_observed[param] = []
+                for i in range(number_curves):
+                    if spectra_dict[date]['line'][line_name]['line_extremes'][param][i] != None:
+                        wavelength_observed[param].append(
+                            spectra_dict[date]['line'][line_name]['line_extremes'][param][i]['x'])
+                velocity_list = calculate_expansion_velocity(wavelength_expected, wavelength_observed[param])
+                spectra_dict[date]['line'][line_name]['velocity'][param]['mean'] = np.mean(velocity_list)
+                print(spectra_dict[date]['t_from_discovery'])
+                print(line_name)
+                print(param)
+                print(velocity_list)
+                print(np.std(velocity_list))
+                spectra_dict[date]['line'][line_name]['velocity'][param]['std'] = np.std(velocity_list)
+                if len(wavelength_observed[param]) < 1:
+                    print('none active')
                     spectra_dict[date]['line'][line_name]['velocity'][param]['mean'] = None
                     spectra_dict[date]['line'][line_name]['velocity'][param]['std'] = None
     return spectra_dict
@@ -179,7 +185,6 @@ def plot_expansion_velocities(df_list, absorptionORemission):
     markers_fill = {'SN2018hmx': 'full', 'SNiPTF14hls': 'none', 'SN2018aad': 'none'}
     names = []
     for df in df_list:
-        print(df['Name'])
         SN_name = pd.unique(df['Name'])[0]
         names.append(SN_name)
         lines = colors.keys()
