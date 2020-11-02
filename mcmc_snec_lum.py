@@ -32,23 +32,25 @@ plt.rcParams['font.sans-serif'] = 'Arial'
 
 
 # important to note: values can't be negative!
-Mzams_range = [12.0, 12.0]
-Ni_range = [0.02, 0.07, 0.12, 0.17]
-E_final_range = [1.2, 1.7, 2.2, 2.7]
-Mix_range = [1.0, 3.0, 6.0]
-R_range = [600, 1400, 2200, 3000]
-K_range = [0.001, 50, 100, 150]
-S_range = [0.8, 2.0]
-T_range = [0, 30] # because can't have negative values, do 15 minus diff (so 0 is -15, and 30 is +15)
+Mzams_range = [11.0, 15.0]
+Ni_range = [0.02, 0.12]
+E_final_range = [1.0, 1.9]
+Mix_range = [2.0, 3.0]
+R_range = [600, 3000]
+K_range = [0.001, 120]
+S_range = [0.99, 1.01]
+T_range = [0, 15] # because can't have negative values, do 15 minus diff (so 0 is -15, and 30 is +15)
 
-n_walkers = 16
-n_steps = 1
+
+
+n_walkers = 50
+n_steps = 3001
 n_params = 8
-burn_in = 0
-
+burn_in = 1500
 
 time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-Path(os.path.join('mcmc_results', str(time_now)+'_lum')).mkdir(parents=True, exist_ok=True)
+r_dir = str(time_now)+'_lum'
+Path(os.path.join('mcmc_results', r_dir)).mkdir(parents=True, exist_ok=True)
 
 run_param_df = pd.DataFrame.from_dict({'Mzams_range': str(Mzams_range), 'Ni_range': str(Ni_range),
                              'E_final_range': str(E_final_range), 'R_range': str(R_range), 'K_range': str(K_range),
@@ -56,7 +58,7 @@ run_param_df = pd.DataFrame.from_dict({'Mzams_range': str(Mzams_range), 'Ni_rang
                              'n_walkers': n_walkers, 'n_steps': n_steps, 'n_params': n_params,
                              'burn_in': burn_in,
                              'time': time_now}, orient='index')
-run_param_df.to_csv(os.path.join('mcmc_results', str(time_now), 'run_parameters.csv'))
+run_param_df.to_csv(os.path.join('mcmc_results', r_dir, 'run_parameters.csv'))
 
 
 m_Solar = 1.989 * (10 ** 33)  # gram
@@ -98,7 +100,7 @@ if times_to_amplify > 1:
 
 
 def log_prior(theta):
-    # theta is a vector containing a specific set of parameters theta = [M, Ni, E, R, K, Mix, S, T]
+    # theta is a vector containing a specific set of parameters theta = [M, Ni, E, R, K]
 
     # Mzams (M)
     if Mzams_range[0] <= theta[0] <= Mzams_range[-1]:
@@ -228,56 +230,56 @@ def chain_plots(sampler, **kwargs):
     plt.xlabel('Step Number')
     plt.ylabel('Mzams')
     plt.tight_layout()
-    f_Mzams.savefig(os.path.join('mcmc_results', str(time_now), 'Mzams.png'))
+    f_Mzams.savefig(os.path.join('mcmc_results', r_dir, 'Mzams.png'))
 
     f_Ni = plt.figure()
     plt.plot(chain[:, :, 1].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('Ni')
     plt.tight_layout()
-    f_Ni.savefig(os.path.join('mcmc_results', str(time_now), 'Ni.png'))
+    f_Ni.savefig(os.path.join('mcmc_results', r_dir, 'Ni.png'))
 
     f_E = plt.figure()
     plt.plot(chain[:, :, 2].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('E')
     plt.tight_layout()
-    f_E.savefig(os.path.join('mcmc_results', str(time_now), 'E.png'))
+    f_E.savefig(os.path.join('mcmc_results', r_dir, 'E.png'))
 
     f_R = plt.figure()
     plt.plot(chain[:, :, 3].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('R')
     plt.tight_layout()
-    f_R.savefig(os.path.join('mcmc_results', str(time_now), 'R.png'))
+    f_R.savefig(os.path.join('mcmc_results', r_dir, 'R.png'))
 
     f_K = plt.figure()
     plt.plot(chain[:, :, 4].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('K')
     plt.tight_layout()
-    f_K.savefig(os.path.join('mcmc_results', str(time_now), 'K.png'))
+    f_K.savefig(os.path.join('mcmc_results', r_dir, 'K.png'))
 
     f_Mix = plt.figure()
     plt.plot(chain[:, :, 5].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('Mixing')
     plt.tight_layout()
-    f_Mix.savefig(os.path.join('mcmc_results', str(time_now), 'Mix.png'))
+    f_Mix.savefig(os.path.join('mcmc_results', r_dir, 'Mix.png'))
 
     f_S = plt.figure()
     plt.plot(chain[:, :, 6].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('Scaling')
     plt.tight_layout()
-    f_S.savefig(os.path.join('mcmc_results', str(time_now), 'S.png'))
+    f_S.savefig(os.path.join('mcmc_results', r_dir, 'S.png'))
 
     f_T = plt.figure()
     plt.plot(chain[:, :, 7].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('T_exp')
     plt.tight_layout()
-    f_T.savefig(os.path.join('mcmc_results', str(time_now), 'T.png'))
+    f_T.savefig(os.path.join('mcmc_results', r_dir, 'T.png'))
 
 
 
@@ -294,13 +296,13 @@ def get_param_results_dict(sampler, step):
         dict[params[i] + '_upper'] = sigma_upper - avg
     print(dict)
 
-    with open(os.path.join('mcmc_results', str(time_now), 'final_results.csv'), 'w') as f:  # Just use 'w' mode in 3.x
+    with open(os.path.join('mcmc_results', r_dir, 'final_results.csv'), 'w') as f:  # Just use 'w' mode in 3.x
         w = csv.DictWriter(f, dict.keys())
         w.writeheader()
         w.writerow(dict)
 
     # df = pd.DataFrame.from_dict(data=dict, orient='index', index=)
-    # df.to_csv(os.path.join('mcmc_results', str(time_now), 'final_results.csv'))
+    # df.to_csv(os.path.join('mcmc_results', r_dir, 'final_results.csv'))
     return dict
 
 
@@ -318,7 +320,7 @@ def calc_chi_square_sampled(data, y_fit):
     plt.plot(data['t_from_discovery'], data['Lum'], marker='o')
     plt.plot(data['t_from_discovery'], y_fit, marker='o')
     plt.tight_layout()
-    f_chi.savefig(os.path.join('mcmc_results', str(time_now), 'chi_square_sampling.png'))
+    f_chi.savefig(os.path.join('mcmc_results', r_dir, 'chi_square_sampling.png'))
     return chisq_reduced
 
 
@@ -360,7 +362,7 @@ def plot_lightcurve_with_fit(SN_data, sampler, step):
     chisq = calc_chi_square_sampled(SN_data, y_fit)
     ax.set_title('step '+str(step)+'\nchi_sq_red = ' + str(int(chisq)), fontsize=14)
     plt.tight_layout()
-    f_fit.savefig(os.path.join('mcmc_results', str(time_now), 'lightcurve_fit.png'))
+    f_fit.savefig(os.path.join('mcmc_results', r_dir, 'lightcurve_fit.png'))
 
 
 
@@ -378,17 +380,17 @@ results_vec = plot_lightcurve_with_fit(sn18hmx, sampler, n_steps-1)
 
 
 flat_sampler = sampler.get_chain(flat=True)
-np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler.csv'), flat_sampler, delimiter=",")
+np.savetxt(os.path.join('mcmc_results', r_dir, 'flat_sampler.csv'), flat_sampler, delimiter=",")
 
 flat_sampler_no_burnin = sampler.get_chain(discard=burn_in, flat=True)
-np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler_excluding_burnin.csv'), flat_sampler_no_burnin, delimiter=",")
+np.savetxt(os.path.join('mcmc_results', r_dir, 'flat_sampler_excluding_burnin.csv'), flat_sampler_no_burnin, delimiter=",")
 
 
 labels = ['Mzams', 'Ni', 'E', 'R', 'K', 'Mix', 'S', 'T']
 corner_range = [1., 1., 1., 1., 1., 1., 1., 1.]
 f_corner = corner.corner(flat_sampler_no_burnin, labels=labels, range=corner_range)
 # plt.tight_layout()
-f_corner.savefig(os.path.join('mcmc_results', str(time_now), 'corner_plot.png'))
+f_corner.savefig(os.path.join('mcmc_results', r_dir, 'corner_plot.png'))
 
 # MCMC_results = get_param_results_dict(sampler, 0)
 # Ni_results['Ni_87A'] = np.average([Ni_mass_by_slope(i, line, SN87A_line) for i in [150, 300]])
@@ -441,3 +443,5 @@ plt.show()
 # ax.legend()
 # chisq = calc_chi_square_sampled(sn18hmx, x_fit, y_fit)
 # ax.set_title('chi_sq_red = ' + str(int(chisq)), fontsize=14)
+
+

@@ -68,12 +68,9 @@ def snec_interpolator(requested_list, sampled_list, data_days):
                             snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['name'] = name
                             snec_model = pd.read_csv(os.path.join(data_dir, name, 'lum_observed.dat'),
                                      names=['t_from_discovery', 'Lum'], sep=r'\s+')
-                            # convert sec to days
-                            snec_model['t_from_discovery'] = snec_model['t_from_discovery'] / 86400
-                            # remove day one to avoid artifacts in fiting from the very low and then very high lum in the first day
-                            snec_model = snec_model.loc[snec_model['t_from_discovery'] > 1.2]
-                            time_col = snec_model['t_from_discovery']
+                            time_col = snec_model['t_from_discovery'] / 86400
                             snec_model = snec_model['Lum']
+                            # interp_days = np.arange(15, 382, 1
                             snec_model = np.interp(data_days, time_col, snec_model)
                             snec_dict[Mdir][Nidir][Edir][Rdir][Kdir][Mixdir]['snec'] = snec_model
                         Mix_below = snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['below']['snec']
@@ -133,4 +130,5 @@ def snec_interpolator(requested_list, sampled_list, data_days):
 # print(interp_model)
 
 # plt.show()
+
 
