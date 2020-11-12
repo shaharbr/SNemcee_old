@@ -1,83 +1,46 @@
-from lightcurve_lightcurve_fitting import LC
-import bolometric
+from lightcurve_fitting import lightcurve, models, fitting, bolometric
+from pkg_resources import resource_filename
+from IPython.display import display, Math
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 
 
+
+
 # TODO compare (plot on top) with and without R band, radius, temp, bolometric lum
 
 # TODO update bolometric table according to new phot data, and also with atlas
 
-filename = os.path.join('data', 'ascii18hmx.ascii')
-
-SN = '18aad'
-
-if SN == '18hmx':
-    filename = os.path.join('data', 'ascii18hmx.ascii')
-    discovery_date = 58408.646
-    extinction = {
-        'U': 0.206,
-        'B': 0.173,
-        'V': 0.131,
-        'R': 0.103,
-        'I': 0.072,
-        'u': 0.202,
-        'g': 0.157,
-        'r': 0.109,
-        'i': 0.081,
-        'z': 0.060,
-        'J': 0.034,
-        'H': 0.021,
-        'K': 0.014,
-        'L': 0.007,
-        'G': 0,
-        'o': 0
-    }
-    z = 0.038
-    dm = 36.01
-
-if SN == '18aad':
-    filename = os.path.join('data', 'ascii18aad.ascii')
-    discovery_date = 58182.7996
-    extinction = {
-        'U': 0,
-        'B': 0,
-        'V': 0,
-        'R': 0,
-        'I': 0,
-        'u': 0,
-        'g': 0,
-        'r': 0,
-        'i': 0,
-        'z': 0,
-        'J': 0,
-        'H': 0,
-        'K': 0,
-        'L': 0,
-        'G': 0,
-        'o': 0
-    }
-    z = 0.024
-    dm = 35.178
+SN = '04et'
 
 
-lc = LC.read(filename)
-lc.calcAbsMag(dm=dm, extinction=extinction)
-lc.calcLum()
+filename = os.path.join('data', 'ascii'+SN+'.ascii')
+correction_data = pd.read_csv(os.path.join('data', 'SN20'+SN+'_correction.csv'))
+discovery_date = float(correction_data['discovery_date'])
 
+extinction = {}
+filters = ['U', 'B', 'V', 'R', 'I', 'u', 'g', 'r', 'i', 'z', 'J', 'H', 'K', 'L', 'G', 'o']
+for filter in filters:
+    if filter == 'z':
+        extinction[filter] = correction_data['z_sdss'][0]
+    else:
+        extinction[filter] = correction_data[filter][0]
+
+
+lc = lightcurve.LC.read(filename)
+lc.meta['dm'] = float(correction_data['dm'])
+lc.meta['extinction'] = extinction
+z = float(correction_data['z'])
 print(lc)
-
-
 outpath = SN+'_BVgri_bolometric_allsources'
-table_path = os.path.join(outpath, 'bolometric_tabe_'+SN+'BVgri')
-fig_path = os.path.join(outpath, 'results_fig_allsources.png')
 
-# note: when astropy is version >=4, there is a problem with trying to convert a dimentionless value here
-# (works with 3.2.3)
-t = bolometric.calculate_bolometric(lc, z, outpath, save_table_as='bolometric_tabe_'+SN+'_BVgri')
-fig = bolometric.plot_bolometric_results(t, save_plot_as='results_fig_allsources.png')
+
+t = bolometric.calculate_bolometric(lc, z, outpath, colors=['B-V', 'g-r', 'r-i'], save_table_as='bolometric_table_'+SN+'_BVgri')
+print(t)
+fig1 = bolometric.plot_bolometric_results(t, save_plot_as=SN+'_bolometric.png')
+fig2 = bolometric.plot_color_curves(t)
 
 blackbody_data = {'t_from_discovery': np.array(t['MJD']) - discovery_date, # subtract discovery date
                   'temp': np.array(t['temp_mcmc']),
@@ -93,7 +56,7 @@ blackbody_data = {'t_from_discovery': np.array(t['MJD']) - discovery_date, # sub
 
 blackbody_data = pd.DataFrame.from_dict(blackbody_data)
 
-blackbody_data.to_csv(os.path.join('results', 'blackbody_results_'+SN+'_BVgri.csv'))
+blackbody_data.to_csv(os.path.join('results', 'blackbody_results_SN20'+SN+'_BVgri.csv'))
 
 
 plt.show()
