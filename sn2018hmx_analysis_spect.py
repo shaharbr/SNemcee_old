@@ -68,10 +68,6 @@ def correct_spectra_redshift(SN_dict):
 def normalize_spectra(SN_dict):
     dates = sorted(list(SN_dict['spectra'].keys()))
     for date in dates:
-        print(SN_dict['spectra'][date]['t_from_discovery'])
-        print(SN_dict['spectra'][date]['telescope'])
-        print(np.mean(SN_dict['spectra'][date]['df']['y']))
-        print(np.max(SN_dict['spectra'][date]['df']['y']) - np.min(SN_dict['spectra'][date]['df']['y']))
         avg = np.mean(SN_dict['spectra'][date]['df']['y'])
         SN_dict['spectra'][date]['df']['y'] = SN_dict['spectra'][date]['df']['y'] / avg
         if avg > (10 ** -15):
@@ -104,7 +100,7 @@ def plot_stacked_spectra(SN_dict, lines_dict, plot_curve_fits=False, line_veloci
     y_shift = 0.0
     # lines_list = lines_dict.keys()
     lines_list = ['Halpha', 'Hbeta', 'FeII 5169']
-    colors = {'Halpha': '#1b9e77', 'Hbeta': '#7570b3', 'FeII 5169': '#d95f02', 'FeII 5018': '#1D78EF'}
+    colors = {'Halpha': '#1b9e77', 'Hbeta': '#7570b3', 'FeII 5169': '#d95f02'}
     # draw the expected line wavelengths as vertical lines in background
     # if its a "lines velocity" type graph, draw the line at the x=0 (velocity=0) point
     if line_velocity:
@@ -114,14 +110,17 @@ def plot_stacked_spectra(SN_dict, lines_dict, plot_curve_fits=False, line_veloci
         for line_name in lines_list:
             wavelength_expected = lines_dict[line_name]['peak']
             ax.axvline(x=wavelength_expected, color=colors[line_name], alpha=0.5)
-
     # draw the spectrum for each date, stacked with incremental shifts as defined by y_shift
     for date in dates:
+        skip_date = False
         date_dict = SN_dict['spectra'][date]
         df = date_dict['df']
-
         # if its a "line velocity" type graph, draw only th e
         if line_velocity:
+            # because of the blue-ness of the early spectra, any Pcygni other than Halpha
+            # are very hard to identify (and therefore innacurate)
+            if line_velocity != 'Halpha' and date_dict['t_from_discovery'] < 20:
+                skip_date = True
             # smooth the spectrum for display, because its a line velocity graph it will be smoothed less
             smooth_y = smooth_spectrum(df['y'], line_velocity)
             # draw from 150 before to 200 after the expected Pcygni feature
@@ -129,24 +128,28 @@ def plot_stacked_spectra(SN_dict, lines_dict, plot_curve_fits=False, line_veloci
             max_x = lines_dict[line_velocity]['absorption_range'][1] + 250
             bool_x = (df['x'] > min_x) & (df['x'] < max_x)
             x = df['x'].loc[bool_x]
-            smooth_y = smooth_y[bool_x]
-            # add the necessary shift for the stacking
-            smooth_y = smooth_y + y_shift
-            # replace the x values with the velocities, calculated based on the distance of the absorption trough
-            # from the expected peak location of this line.
-            wavelength_expected = lines_dict[line_velocity]['peak']
-            x = spectra_velocity.calculate_expansion_velocity(wavelength_expected, x)
-            # invert the x axis so the positive expansion velocities are to the left (like the shorter wavelegnths)
-            ax.invert_xaxis()
-            # plot title and labels
-            ax.set_title(line_velocity)
-            ax.set_xlabel('Velocity (km/s)')
-            # make xlim tight around the min and max velocities
-            ax.set_xlim(np.max(x), np.min(x))
-            # define the location of the label for the telescope and rest-frame day of the observation
-            label_x = np.min (x) - 150
-            # define the shift for the next spectrum stacked on top of this one, based on the height of the present spectrum
-            y_shift_delta = (np.max(smooth_y) - y_shift) / 10
+            # if the x is empty, its because the relevant segment of the spectra for this line doesn't exist
+            if len(x) < 1:
+                skip_date = True
+            else:
+                smooth_y = smooth_y[bool_x]
+                # add the necessary shift for the stacking
+                smooth_y = smooth_y + y_shift
+                # replace the x values with the velocities, calculated based on the distance of the absorption trough
+                # from the expected peak location of this line.
+                wavelength_expected = lines_dict[line_velocity]['peak']
+                x = spectra_velocity.calculate_expansion_velocity(wavelength_expected, x)
+                # invert the x axis so the positive expansion velocities are to the left (like the shorter wavelegnths)
+                ax.invert_xaxis()
+                # plot title and labels
+                ax.set_title(line_velocity)
+                ax.set_xlabel('Velocity (km/s)')
+                # make xlim tight around the min and max velocities
+                ax.set_xlim(np.max(x), np.min(x))
+                # define the location of the label for the telescope and rest-frame day of the observation
+                label_x = np.min (x) - 150
+                # define the shift for the next spectrum stacked on top of this one, based on the height of the present spectrum
+                y_shift_delta = (np.max(smooth_y) - y_shift) / 10
 
         else:  # if its a normal stacked spectra plot
             smooth_y = smooth_spectrum(df['y'])
@@ -161,22 +164,23 @@ def plot_stacked_spectra(SN_dict, lines_dict, plot_curve_fits=False, line_veloci
             # define the shift for the next spectrum stacked on top of this one, based on the height of the present spectrum
             y_shift_delta = (np.max(smooth_y) - y_shift) / 2.5
 
-        # plot
-        ax.plot(x, smooth_y, color='k', linewidth=1)
-        # spectrum labeled with day from explosion
-        spectrum_date_label = str(int(date_dict['t_from_discovery'])) + 'd (' + date_dict['telescope'] + ')'
-        label_ypos = np.mean(smooth_y) - 0.7
-        ax.text(label_x, label_ypos, spectrum_date_label, color='k', fontsize=10)
-        # adding the polyfit curves if asked
-        if plot_curve_fits:
-            spectra_velocity.add_fitted_curves_to_plot(date_dict, lines_dict, ax, y_shift, line_velocity, number_curves_to_draw=60)
-        y_shift += np.max([y_shift_delta, 0.3])
-        if date_dict['t_from_discovery'] < 30:
-            y_shift -= 0.5
-        # if (date_dict['t_from_discovery'] > 80) & (date_dict['t_from_discovery'] < 83) :
-        #     y_shift += 0.3
-        # if date_dict['t_from_discovery'] >150:
-        #     y_shift += 0.3
+        if not skip_date:
+            # plot
+            ax.plot(x, smooth_y, color='k', linewidth=1)
+            # spectrum labeled with day from explosion
+            spectrum_date_label = str(int(date_dict['t_from_discovery'])) + 'd (' + date_dict['telescope'] + ')'
+            label_ypos = np.mean(smooth_y) - 0.7
+            ax.text(label_x, label_ypos, spectrum_date_label, color='k', fontsize=10)
+            # adding the polyfit curves if asked
+            if plot_curve_fits:
+                spectra_velocity.add_fitted_curves_to_plot(date_dict, lines_dict, ax, y_shift, line_velocity, number_curves_to_draw=100)
+            y_shift += np.max([y_shift_delta, 0.3])
+            if date_dict['t_from_discovery'] < 30:
+                y_shift -= 0.5
+            # if (date_dict['t_from_discovery'] > 80) & (date_dict['t_from_discovery'] < 83) :
+            #     y_shift += 0.3
+            # if date_dict['t_from_discovery'] >150:
+            #     y_shift += 0.3
     ax.set_ylabel('Normalized fλ + shift')
     ax.set_yticks([])
     # ax.get_legend().remove()
@@ -235,10 +239,16 @@ discovery_date_dict = {'SN2018hmx': 58408.64599537,
 # the range where the emission should be found, the range where the blueshifted absotbtion troughs are expected to
 # be found, and the expected width of the curves that should be fitted to the peaks and throughs of the
 # P Cygni features. Determined uniformly for all spectra and SNe, based on visual inspection of the spectra.
-lines_dict = {'Halpha': {'peak': 6562.81, 'absorption_range': [6200, 6562], 'emission_range': [6500, 6700], 'width': 200},
+lines_dict = {'Halpha': {'peak': 6562.81, 'absorption_range': [6300, 6562], 'emission_range': [6500, 6700], 'width': 200},
               'Hbeta': {'peak': 4861, 'absorption_range': [4700, 4861], 'emission_range': [4800, 5000], 'width': 200},
-              'FeII 5169': {'peak': 5169, 'absorption_range': [5080, 5169], 'emission_range': [5200, 5600], 'width': 150},
-              'FeII 5018': {'peak': 5018, 'absorption_range': [4930, 5010], 'emission_range': [5000, 5200], 'width': 70}}
+              'FeII 5169': {'peak': 5169, 'absorption_range': [5080, 5169], 'emission_range': [5200, 5600], 'width': 150}}
+
+# lines_dict = {'Halpha': {'peak': 6562.81, 'absorption_range': [6300, 6562], 'emission_range': [6500, 6700], 'width': 200},
+#               'Hbeta': {'peak': 4861, 'absorption_range': [4700, 4861], 'emission_range': [4800, 5000], 'width': 200},
+#               'FeII 5169': {'peak': 5169, 'absorption_range': [5080, 5169], 'emission_range': [5200, 5600], 'width': 150},
+#               'FeII 5018': {'peak': 5018, 'absorption_range': [4930, 5010], 'emission_range': [5000, 5200], 'width': 70}}
+
+
 
 # initialize sn18hmx dictionary
 SN2018hmx = {'Name': 'SN2018hmx',
@@ -307,8 +317,7 @@ SNiPTF14hls['expansion_velocities'] = SN14hls_veloc_df
 # TODO fix bugs in pEW
 
 # for each SNe: add restframe time, redshift corrections, normalization and plotting
-for SN in [SN2018hmx]:
-    print(SN)
+for SN in [SN2018hmx, SN2018aad]:
     # add rest frame days from discovery in 't_from_disovery'
     SN = add_rest_frame_days_from_discovery(SN)
     # correct spectra for redshift
@@ -318,30 +327,44 @@ for SN in [SN2018hmx]:
     # plot stacked spectra
     plot_stacked_spectra(SN, lines_dict)
     # produce Pcygni curve fits and add them to the SN dict
-    SN['spectra'] = spectra_velocity.fit_Pcygni_curves(SN['spectra'], lines_dict, fixed_curve_range=False, number_curves=60)
+    SN['spectra'] = spectra_velocity.fit_Pcygni_curves(SN['spectra'], lines_dict, fixed_curve_range=False, number_curves=100)
     # plot stacked spectra with the Pcygni curves found
     plot_stacked_spectra(SN, lines_dict, plot_curve_fits=True)
+    # make a reduced dictionary with only the first 170 days (a bit more than when we can expect real Pcygni features)
+
+    print(len(SN))
+    print(SN['spectra'].keys())
+    SN_170d = {'Name': SN['Name'], 'spectra': {}, 'expansion_velocities': []}
+    dates = sorted(list(SN['spectra'].keys()))
+    for date in dates:
+        if int(SN['spectra'][date]['t_from_discovery']) < 170:
+            print(SN['spectra'][date]['t_from_discovery'])
+            SN_170d['spectra'][date] = SN['spectra'][date]
+    print(len(SN_170d))
+    print(SN_170d['spectra'].keys())
     # produce plots showing in zoom-in the Pcygni for each line, demonstrating the velocities
-    plot_stacked_spectra(SN, lines_dict, plot_curve_fits=True, line_velocity='Halpha')
-    # plot_stacked_spectra(SN, lines_dict, plot_curve_fits=True, line_velocity='Hbeta')
-    plot_stacked_spectra(SN, lines_dict, plot_curve_fits=True, line_velocity='FeII 5169')
-    # plot_stacked_spectra(SN, lines_dict, plot_curve_fits=True, line_velocity='FeII 5018')
+    plot_stacked_spectra(SN_170d, lines_dict, plot_curve_fits=True, line_velocity='Halpha')
+    plot_stacked_spectra(SN_170d, lines_dict, plot_curve_fits=True, line_velocity='Hbeta')
+    plot_stacked_spectra(SN_170d, lines_dict, plot_curve_fits=True, line_velocity='FeII 5169')
     # calculate expansion velocities from the Pcygni fits found
-    SN['spectra'] = spectra_velocity.add_expansion_velocity(SN['spectra'], lines_dict)
+    SN_170d['spectra'] = spectra_velocity.add_expansion_velocity(SN_170d['spectra'], lines_dict)
     # make a dataframe summerizing the velocities
-    SN['expansion_velocities'] = spectra_velocity.make_velocity_df(SN, lines_dict)
+    SN_170d['expansion_velocities'] = spectra_velocity.make_velocity_df(SN_170d, lines_dict)
     # plot_pEW(SN)
+    spectra_velocity.plot_expansion_velocities([SN_170d['expansion_velocities']], 'absorption')
+    SN_170d['expansion_velocities'].to_csv(os.path.join('results', SN_170d['Name']+'_expansion_velocities.csv'))
 
 # plot expansion velocities of SNe against each other
-print(SN2018hmx['expansion_velocities'])
-print(SNiPTF14hls['expansion_velocities'])
-spectra_velocity.plot_expansion_velocities([SN2018hmx['expansion_velocities']], 'absorption')
+# print(SN2018hmx['expansion_velocities'])
+# print(SNiPTF14hls['expansion_velocities'])
+# spectra_velocity.plot_expansion_velocities([SN2018hmx['expansion_velocities']], 'absorption')
 # TODO fix the way 14hls velocities are imported, something isn't working there
 # spectra_velocity.plot_expansion_velocities([SN2018hmx['expansion_velocities'], SNiPTF14hls['expansion_velocities']], 'absorption')
 # spectra_velocity.plot_expansion_velocities([SN2018hmx['expansion_velocities'], SN2018aad['expansion_velocities']], 'absorption')
+# spectra_velocity.plot_expansion_velocities([SN2018aad['expansion_velocities']], 'absorption')
 
 # save expansion velocities to csv
-SN2018hmx['expansion_velocities'].to_csv(os.path.join('results', 'sN2018hmx_expansion_velocities.csv'))
+# SN2018hmx['expansion_velocities'].to_csv(os.path.join('results', 'sN2018hmx_expansion_velocities.csv'))
 # SNiPTF14hls['expansion_velocities'].to_csv(os.path.join('results', 'SNiPTF14hls_expansion_velocities.csv'))
 # SN2018aad['expansion_velocities'].to_csv(os.path.join('results', 'SN2018aad_expansion_velocities.csv'))
 
