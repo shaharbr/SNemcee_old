@@ -48,45 +48,44 @@ def remove_glactic_extinction(SN_dict, correction_df):
 
 
 def add_absolute_magnitude(SN_dict, correction_df):
-    distance_modulus = correction_df['distance_modulus']
+    dm = correction_df['dm']
+    dm_err = correction_df['dm_err']
     for source in SN_dict['lightcurve'].keys():
-        SN_dict['lightcurve'][source]['df']['abs_mag'] = SN_dict['lightcurve'][source]['df']['mag'] - distance_modulus
+        SN_dict['lightcurve'][source]['df']['abs_mag'] = SN_dict['lightcurve'][source]['df']['mag'] - dm
+        SN_dict['lightcurve'][source]['df']['dmag'] = np.sqrt(SN_dict['lightcurve'][source]['df']['dmag']**2 + dm_err**2)
     return SN_dict
 
 # TODO fix colormap
-def lightcurve_plot(SN_dict_list, main_SN, correction_params):
-    distance_modulus = correction_params.loc[main_SN]['distance_modulus']
+def lightcurve_plot(lightcurve, SN_name, correction_params):
+    dm = correction_params.loc[SN_name]['dm']
     fig, ax = plt.subplots(1, figsize=(9, 6))
     ax2 = ax.twinx()
-    names= []
-    for SN in SN_dict_list:
-        name = SN['Name']
-        names.append(name)
-        lightcurve = SN['lightcurve']
-        for source in lightcurve.keys():
-            df = lightcurve[source]['df']
-            marker = lightcurve[source]['marker']
-            linestyle = lightcurve[source]['Linestyle']
-            for filter in df['filter'].unique():
-                df.loc[df['filter'] == filter].plot(x='t_from_discovery', y='abs_mag', ax=ax2,
-                                                    marker=marker, linestyle=linestyle,
-                                                    color=colormap[filter],
-                                                    markeredgecolor='k', markeredgewidth =0.3,
-                                                    label=source + ' (' + filter + ')',)
-                if SN['Name'] == main_SN:
-                    df.loc[df['filter'] == filter].plot(x='t_from_discovery', y='mag', yerr='dmag', ax=ax,
-                                                        marker=marker, linestyle=linestyle,
-                                                        color=colormap[filter],
-                                                        markeredgecolor='k', markeredgewidth=0.3)
+    print(lightcurve['source'])
+    sources = lightcurve['source'].unique()
+    filters = lightcurve['filter'].unique()
+    for source in sources:
+        df = lightcurve.loc[lightcurve['source'] == source]
+        marker = 'o'
+        linestyle = None
+        for filter in filters:
+            df.loc[df['filter'] == filter].plot(x='t_from_discovery', y='abs_mag', yerr='dmag', ax=ax2,
+                                                marker=marker, linestyle=linestyle,
+                                                color=colormap[filter],
+                                                markeredgecolor='k', markeredgewidth =0.3,
+                                                label=source + ' (' + filter + ')',)
+            df.loc[df['filter'] == filter].plot(x='t_from_discovery', y='mag', ax=ax,
+                                                marker=marker, linestyle=linestyle,
+                                                color=colormap[filter],
+                                                markeredgecolor='k', markeredgewidth=0.3)
 
-    ax.set_title('Light-curve over time - '+str([SN['Name'] for SN in SN_dict_list]))
+    ax.set_title('Light-curve over time - '+SN_name)
     ax.set_xlabel('Rest-frame days from discovery')
     ax.set_ylabel('Apparent Magnitude')
-    ax.set_ylim(15, 23)
+    ymin = np.min(lightcurve['mag']) - 0.5
+    ymax = np.max(lightcurve['mag']) + 0.5
+    ax.set_ylim(ymin, ymax)
     ax2.set_ylabel('Absolute Magnitude')
-    # TODO remember that the distance module difference between the y axes is hardcoded here -
-    # TODO need to find way to me this automatic
-    ax2.set_ylim(15 - distance_modulus, 23 - distance_modulus)
+    ax2.set_ylim(ymin - dm, ymax - dm)
     ax2.legend(ncol=2)
     ax.invert_yaxis()
     ax.get_legend().remove()
@@ -94,8 +93,8 @@ def lightcurve_plot(SN_dict_list, main_SN, correction_params):
     ax.tick_params(axis='both', which='major')
     ax2.tick_params(axis='both', which='major')
 
-    fig.savefig(os.path.join('figures', 'light-curve over time ' + str(names) + '.png'))
-    fig.savefig(os.path.join('figures', 'light-curve over time ' + str(names) + '.svg'))
+    fig.savefig(os.path.join('figures', 'light-curve over time ' + SN_name + '.png'))
+    fig.savefig(os.path.join('figures', 'light-curve over time ' + SN_name + '.svg'))
 
 
 
@@ -104,7 +103,10 @@ def lightcurve_plot(SN_dict_list, main_SN, correction_params):
 
 
 def lightcurve_plot_shift(SN_dict, correction_params):
-    distance_modulus = correction_params.loc[SN_dict['Name']]['distance_modulus']
+    # TODO change this so it takes the lightcurve istead of dict
+    print(correction_params)
+    print(correction_params.loc[SN_dict['Name']])
+    dm = correction_params.loc[SN_dict['Name']]['dm']
     fig, ax = plt.subplots(1, figsize=(12, 8))
     ax2 = ax.twinx()
     lightcurve = SN_dict['lightcurve']
@@ -140,12 +142,11 @@ def lightcurve_plot_shift(SN_dict, correction_params):
     ax.set_title('Light-curve over time - '+str(SN_dict['Name']) + '\n')
     ax.set_xlabel('Rest-frame days from discovery')
     ax.set_ylabel('Apparent Magnitude')
-    ax.set_ylim(12, 21)
+    ymin = np.min(df['mag']) - 0.5
+    ymax = np.max(df['mag']) + 0.5
     ax2.set_ylabel('Absolute Magnitude')
-    # TODO remember that the distance module difference between the y axes is hardcoded here -
-    # TODO need to find way to me this automatic
-    ax2.set_yticks(np.arange(int(12 - distance_modulus),  int(21 - distance_modulus + 1), 1))
-    ax2.set_ylim(12 - distance_modulus, 21 - distance_modulus)
+    ax2.set_yticks(np.arange(int(ymin - dm),  int(ymax - dm + 1), 1))
+    ax2.set_ylim(ymin - dm, ymax - dm)
     ax2.legend(ncol=2, loc='upper right')
     ax.invert_yaxis()
     ax2.invert_yaxis()
