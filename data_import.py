@@ -170,7 +170,7 @@ def correction_dict_to_csv(z_dict, discovery_date_dict, distance_modulus_dict, g
         dict = {'Name': SN}
         dict['z'] = z_dict[SN]
         dict['discovery_date'] = convert_to_mjd(discovery_date_dict[SN], from_datetime=True)
-        dict['distance_modulus'] = distance_modulus_dict[SN]
+        dict['dm'] = distance_modulus_dict[SN]
         for filter in galactic_extinction_dict[SN].keys():
             dict[filter] = galactic_extinction_dict[SN][filter]
         pd.DataFrame(dict, index=[0]).to_csv(os.path.join('data', SN + '_correction.csv'))
@@ -198,9 +198,11 @@ def save_ascii(dataframe, filename):
     df = df.loc[((df['source'] == 'Las Cumbres') |
                  (df['source'] == 'P60') |
                  (df['source'] == 'Keck') |
-                 (df['source'] == 'Arizona')) &
+                 (df['source'] == 'Arizona')|
+                 (df['source'] == 'SNe catalog')) &
                 ((df['filt'] == 'B') |
                  (df['filt'] == 'V') |
+                 (df['filt'] == 'R') |
                  (df['filt'] == 'g') |
                  (df['filt'] == 'r') |
                  (df['filt'] == 'i'))]
