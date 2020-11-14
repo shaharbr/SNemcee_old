@@ -126,30 +126,33 @@ def add_expansion_velocity(spectra_dict, lines_dict):
     wavelength_observed = {}
     for date in dates:
         for line_name in lines:
-            spectra_dict[date]['line'][line_name]['velocity'] = {}
-            wavelength_expected = lines_dict[line_name]['peak']
-            for param in ['absorption', 'emission']:
-                spectra_dict[date]['line'][line_name]['velocity'][param] = {}
-                number_curves = len(spectra_dict[date]['line'][line_name]['line_extremes'][param])
-                print(spectra_dict[date]['line'][line_name]['line_extremes'][param])
-                # if None not in spectra_dict[date]['line'][line_name]['line_extremes'][param]:
-                wavelength_observed[param] = []
-                for i in range(number_curves):
-                    if spectra_dict[date]['line'][line_name]['line_extremes'][param][i] != None:
-                        wavelength_observed[param].append(
-                            spectra_dict[date]['line'][line_name]['line_extremes'][param][i]['x'])
-                velocity_list = calculate_expansion_velocity(wavelength_expected, wavelength_observed[param])
-                spectra_dict[date]['line'][line_name]['velocity'][param]['mean'] = np.mean(velocity_list)
-                print(spectra_dict[date]['t_from_discovery'])
-                print(line_name)
-                print(param)
-                print(velocity_list)
-                print(np.std(velocity_list))
-                spectra_dict[date]['line'][line_name]['velocity'][param]['std'] = np.std(velocity_list)
-                if len(wavelength_observed[param]) < 1:
-                    print('none active')
-                    spectra_dict[date]['line'][line_name]['velocity'][param]['mean'] = None
-                    spectra_dict[date]['line'][line_name]['velocity'][param]['std'] = None
+            # because of the blue-ness of the early spectra, any Pcygni other than Halpha
+            # are very hard to identify (and therefore innacurate)
+            if line_name == 'Halpha' or spectra_dict[date]['t_from_discovery'] > 20:
+                spectra_dict[date]['line'][line_name]['velocity'] = {}
+                wavelength_expected = lines_dict[line_name]['peak']
+                for param in ['absorption', 'emission']:
+                    spectra_dict[date]['line'][line_name]['velocity'][param] = {}
+                    number_curves = len(spectra_dict[date]['line'][line_name]['line_extremes'][param])
+                    print(spectra_dict[date]['line'][line_name]['line_extremes'][param])
+                    # if None not in spectra_dict[date]['line'][line_name]['line_extremes'][param]:
+                    wavelength_observed[param] = []
+                    for i in range(number_curves):
+                        if spectra_dict[date]['line'][line_name]['line_extremes'][param][i] != None:
+                            wavelength_observed[param].append(
+                                spectra_dict[date]['line'][line_name]['line_extremes'][param][i]['x'])
+                    velocity_list = calculate_expansion_velocity(wavelength_expected, wavelength_observed[param])
+                    spectra_dict[date]['line'][line_name]['velocity'][param]['mean'] = np.mean(velocity_list)
+                    print(spectra_dict[date]['t_from_discovery'])
+                    print(line_name)
+                    print(param)
+                    print(velocity_list)
+                    print(np.std(velocity_list))
+                    spectra_dict[date]['line'][line_name]['velocity'][param]['std'] = np.std(velocity_list)
+                    if len(wavelength_observed[param]) < 1:
+                        print('none active')
+                        spectra_dict[date]['line'][line_name]['velocity'][param]['mean'] = None
+                        spectra_dict[date]['line'][line_name]['velocity'][param]['std'] = None
     return spectra_dict
 
 def add_name_t_from_discovery_to_df(df, name, discovery_date):
@@ -165,13 +168,16 @@ def make_velocity_df(SN_dict, lines_dict):
     velocity_df = []
     for date in dates:
         for line in lines:
-            velocity_df.append(pd.DataFrame({'line': line,
-                                             'absorption_mean_velocity': SN_dict['spectra'][date]['line'][line]['velocity']['absorption']['mean'],
-                                             'absorption_std_velocity': SN_dict['spectra'][date]['line'][line]['velocity']['absorption']['std'],
-                                             'emission_mean_velocity': SN_dict['spectra'][date]['line'][line]['velocity']['emission']['mean'],
-                                             'emission_std_velocity':SN_dict['spectra'][date]['line'][line]['velocity']['emission']['std'],
-                                             't_from_discovery': SN_dict['spectra'][date]['t_from_discovery']},
-                                              index=[0]))
+            # because of the blue-ness of the early spectra, any Pcygni other than Halpha
+            # are very hard to identify (and therefore innacurate)
+            if line == 'Halpha' or SN_dict['spectra'][date]['t_from_discovery'] > 20:
+                velocity_df.append(pd.DataFrame({'line': line,
+                                                 'absorption_mean_velocity': SN_dict['spectra'][date]['line'][line]['velocity']['absorption']['mean'],
+                                                 'absorption_std_velocity': SN_dict['spectra'][date]['line'][line]['velocity']['absorption']['std'],
+                                                 'emission_mean_velocity': SN_dict['spectra'][date]['line'][line]['velocity']['emission']['mean'],
+                                                 'emission_std_velocity':SN_dict['spectra'][date]['line'][line]['velocity']['emission']['std'],
+                                                 't_from_discovery': SN_dict['spectra'][date]['t_from_discovery']},
+                                                  index=[0]))
     velocity_df = pd.concat(velocity_df)
     velocity_df['Name'] = SN_dict['Name']
     return velocity_df
