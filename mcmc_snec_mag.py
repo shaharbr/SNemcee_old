@@ -10,14 +10,10 @@ import corner
 import csv
 
 
-
-
 '''
 parts of this code are based on code by Griffin Hosseinzadeh
 '''
-# TODO run MCMC
-# TODO run mmc with more burn in + 350, wlaker 50. remove constant parameters
-#
+
 
 plt.rc('font', size=20)          # controls default text sizes
 plt.rc('axes', titlesize=20)     # fontsize of the axes title
@@ -30,14 +26,16 @@ plt.rcParams['font.sans-serif'] = 'Arial'
 
 
 # important to note: values can't be negative!
-Mzams_range = [12.0, 12.0]
-Ni_range = [0.02, 0.07, 0.12, 0.17]
-E_final_range = [1.2, 1.7, 2.2, 2.7]
-Mix_range = [1.0, 3.0, 6.0]
+Mzams_range = [9.0, 9.0]
+Ni_range = [0.02, 0.02]
+E_final_range = [1.2, 1.2]
+Mix_range = [1.0, 1.0]
 R_range = [600, 1400, 2200, 3000]
 K_range = [0.001, 50, 100, 150]
-S_range = [0.8, 2.0]
-T_range = [0, 30] # because can't have negative values, do 15 minus diff (so 0 is -15, and 30 is +15)
+S_range = [0.5, 1.5]
+T_range = [0, 15] # because can't have negative values, do 15 minus diff (so 0 is -15, and 30 is +15)
+pysynphot_models = True
+
 
 n_walkers = 16
 n_steps = 1
@@ -54,21 +52,23 @@ run_param_df = pd.DataFrame.from_dict({'Mzams_range': str(Mzams_range), 'Ni_rang
                              'Mix_range': str(Mix_range), 'Scaling_range': str(S_range), 'T_exp_min15_range': str(T_range),
                              'n_walkers': n_walkers, 'n_steps': n_steps, 'n_params': n_params,
                              'burn_in': burn_in,
-                             'time': time_now}, orient='index')
+                             'time': time_now,
+                             'pysynphot_model': str(pysynphot_models)}, orient='index')
 run_param_df.to_csv(os.path.join('mcmc_results', str(time_now)+'_mag', 'run_parameters.csv'))
 
 
 m_Solar = 1.989 * (10 ** 33)  # gram
 
-
+# import mag data
 data_filepath = os.path.join('results', 'SN2018hmx_lightcurves')
 SN = pd.read_csv(data_filepath, usecols=['dmag', 'filter', 'abs_mag', 't_from_discovery'])
-# print(SN)
+if pysynphot_models:
+    SN = SN.loc[SN['t_from_discovery'] < 140]
 SN['abs_mag'] = SN['abs_mag'].abs()
-
 filters = list(SN['filter'].unique())
-filters = list(set(filters).intersection(['u', 'g', 'r', 'i', 'z', 'U', 'B', 'V', 'R', 'I']))
-print(filters)
+# filters = list(set(filters).intersection(['u', 'g', 'r', 'i', 'z', 'U', 'B', 'V', 'R', 'I']))
+filters = list(set(filters).intersection(['g', 'r', 'i']))
+
 SN = SN.loc[SN['filter'].isin(filters)]
 SN = SN.sort_values('t_from_discovery')
 colors = {'u': 'purple', 'g': 'teal', 'r': 'red', 'i': 'maroon', 'z': 'black', 'U': 'purple',
@@ -148,9 +148,9 @@ def log_likelihood(theta, data):
             (Mix_range[0] <= theta[5] <= Mix_range[-1]) & \
             (S_range[0] <= theta[6] <= S_range[-1]) & \
             (T_range[0] <= theta[7] <= T_range[-1]):
-        chisq_ln_like = 0
+        log_likeli = 0
         data_x_allfilt = data['t_from_discovery'] - 15 + theta[7]
-        y_fit = interp.snec_interpolator(theta[0:6], sampled, data_x_allfilt, filters)
+        y_fit = interp.snec_interpolator(theta[0:6], sampled, data_x_allfilt, filters, pysynphot_models)
         # multiply whole graph by scaling factor
         y_fit = y_fit * theta[6]
         y_fit['time'] = data_x_allfilt
@@ -158,33 +158,21 @@ def log_likelihood(theta, data):
         # data_filt = data.keys() #  TODO use this but ommit time column
         # TODO filters here is taken from outside function - should get it in inputs to the function (which should get it from upstream funcitons)
         for filt in filters:
-            # print(filt)
             data_filt = data.loc[data['filter'] == filt]
             data_x = data_filt['t_from_discovery'] - 15 + theta[7]
             data_y = data_filt['abs_mag']
             data_dy = data_filt['dmag']
-            # y_fit = y_fit.reset_index(drop=True)
-            # y_fit = y_fit.rename(columns={'time': 't_from_discovery'})
             y_fit_filt = y_fit[filt].loc[y_fit['time'].isin(data_x)]
-            # y_fit_filt = y_fit.merge(data_x, on='t_from_discovery', how='right')
-            # print('merge', data.merge(data_x, on='t_from_discovery', how='right'))
-            # y_fit_filt = y_fit.loc[y_fit['time'].astype(str).contains('|'.join(data_x.astype(str)))]
             if not len(data_x) == len(y_fit_filt):
                 print('stuck')
-            # TODO is the chisq here correct?
-            # print('a0', data_y)
-            # print('a1', data_y - y_fit_filt)
-            # print('a2', (data_y - y_fit_filt) ** 2.)
-            # print('a3', (2. * data_dy ** 2.))
-            # print('a4', np.log(data_y))
-            chisq_ln_like += -np.sum((data_y - y_fit_filt) ** 2. / (2. * data_dy ** 2.) + np.log(data_y))
-            print('chi2', chisq_ln_like)
+            log_likeli += -np.sum((data_y - y_fit_filt) ** 2. / (2. * data_dy ** 2.) + np.log(data_y))
+            print('log likelihood', log_likeli)
     else:
-        chisq_ln_like = 100000000000000
+        log_likeli = 100000000000000
         print('not valid')
-    print('chi_ln', chisq_ln_like)
-    print('chi_exp', np.exp(chisq_ln_like))
-    return chisq_ln_like
+    print('likelihood_log', log_likeli)
+    print('likelihood', np.exp(log_likeli))
+    return log_likeli
 
 
 
@@ -196,7 +184,6 @@ def log_posterior(theta, data):
 
 def emcee_fit_params(data):
     sampler = emcee.EnsembleSampler(n_walkers, n_params, log_posterior, args=[data])
-
     Mzams_random = np.random.rand(n_walkers) * (Mzams_range[-1] - Mzams_range[0]) + Mzams_range[0]
     Ni_random = np.random.rand(n_walkers) * (Ni_range[-1] - Ni_range[0]) + Ni_range[0]
     E_random = np.random.rand(n_walkers) * (E_final_range[-1] - E_final_range[0]) + E_final_range[0]
@@ -210,18 +197,6 @@ def emcee_fit_params(data):
     initial_guesses = initial_guesses.T
     sampler.run_mcmc(initial_guesses, n_steps)
 
-    return sampler
-
-
-# def get_LCO_V_df(SN_dict):
-#     LCO_lighcurve = SN_dict['lightcurve']['Las Cumbres']['df']
-#     V_LCO_lightcurve = LCO_lighcurve.loc[LCO_lighcurve['filter'] == 'V']
-#     return V_LCO_lightcurve
-
-
-def SN_lightcurve_params(SN_data):
-    # TODO remove, redundant
-    sampler = emcee_fit_params(SN_data)
     return sampler
 
 
@@ -306,14 +281,12 @@ def get_param_results_dict(sampler, step):
 
     return dict
 
-
-
-def plot_chi2(SN_filt_data, y_fit, filter):
-    f_chi = plt.figure()
+def plot_with_markers(SN_filt_data, y_fit, filter):
+    f_mark = plt.figure()
     plt.plot(SN_filt_data['t_from_discovery'], SN_filt_data['abs_mag'], marker='o')
     plt.plot(SN_filt_data['t_from_discovery'], y_fit, marker='o')
     plt.tight_layout()
-    f_chi.savefig(os.path.join('mcmc_results', str(time_now)+'_mag', 'chi_square_sampling_'+filter+'.png'))
+    f_mark.savefig(os.path.join('mcmc_results', str(time_now)+'_mag', 'markers_'+filter+'.png'))
 
 
 def plot_lightcurve_with_fit(SN_data, sampler, step):
@@ -342,30 +315,28 @@ def plot_lightcurve_with_fit(SN_data, sampler, step):
     data_x_allfilt = SN_data['t_from_discovery']
     f_fit, ax = plt.subplots(figsize=(10, 8))
     # TODO here too filters
-    chi2 = 0
+    log_likeli = 0
     for filt in filters:
         data_filt = SN_data.loc[SN_data['filter'] == filt]
         data_x = data_filt['t_from_discovery']
         data_x_moved = data_x + T
         data_y = data_filt['abs_mag']
         data_dy = data_filt['dmag']
-        y_fit_filt = interp.snec_interpolator(requested, sampled, data_x_moved, [filt])[filt]
+        y_fit_filt = interp.snec_interpolator(requested, sampled, data_x_moved, [filt], pysynphot_models)[filt]
         y_fit_filt = y_fit_filt * S
-        chi2 += np.sum(((data_y - y_fit_filt) /data_dy)**2)
-        ax.plot(data_x_moved, y_fit_filt, label=filt+' best fit:\n' + results_text, color=colors[filt])
+        log_likeli += -np.sum((data_y - y_fit_filt) ** 2. / (2. * data_dy ** 2.) + np.log(data_y))
+        print('log likelihood', log_likeli)
+        ax.plot(data_x_moved, y_fit_filt, color=colors[filt])
         ax.errorbar(data_x_moved, data_y, yerr=data_dy, marker='o', linestyle='None', label=filt + '_SN 2018hmx', color=colors[filt])
-        # plot_chi2(data_filt, y_fit_filt, filt)
-    chi2_reduced = chi2 / (len(SN_data['t_from_discovery']) - 1)
-    ax.set_title('step '+str(step)+'\nchi_sq_red = ' + str(int(chi2_reduced)), fontsize=14)
+    ax.set_title('step '+str(step)+'\nlog likelihood = ' + str(int(log_likeli)) +
+                 '\n snec model: ' + results_text, fontsize=14)
     plt.tight_layout()
     ax.legend()
     f_fit.savefig(os.path.join('mcmc_results', str(time_now)+'_mag', 'lightcurve_fit.png'))
 
 
 
-
-
-sampler = SN_lightcurve_params(SN)
+sampler = emcee_fit_params(SN)
 # to correct for T (time after explostion) actually being T+15
 sampler.chain[:, :, 7] = sampler.chain[:, :, 7] - 15
 chain_plots(sampler)
