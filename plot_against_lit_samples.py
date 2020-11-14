@@ -3,12 +3,14 @@ from matplotlib import pyplot as plt
 import numpy as np
 import os
 
-plt.rc('font', size=20)          # controls default text sizes
-plt.rc('axes', titlesize=24)     # fontsize of the axes title
-plt.rc('xtick', labelsize=18)    # fontsize of the tick labels
-plt.rc('ytick', labelsize=18)    # fontsize of the tick labels
-plt.rc('legend', fontsize=18)    # legend fontsize
-plt.rc('figure', titlesize=26)  # fontsize of the figure title
+# plotting parameters
+plt.rc('font', size=9)          # controls default text sizes
+plt.rc('axes', titlesize=9)     # fontsize of the axes title
+plt.rc('axes', labelsize=9)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=9)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=9)    # fontsize of the tick labels
+plt.rc('legend', fontsize=9)    # legend fontsize
+plt.rc('figure', titlesize=12)  # fontsize of the figure title
 plt.rcParams['font.sans-serif'] = 'Arial'
 
 
@@ -177,9 +179,6 @@ ax.tick_params(axis='y', which='major', labelsize=22)
 fig.savefig(os.path.join('figures', 'SN2018hmx_vmag50_Ni_against_valenti_wo2outliers' + '.png'))
 fig.savefig(os.path.join('figures', 'SN2018hmx_vmag50_Ni_against_valenti_wo2outliers' + '.svg'))
 
-plt.show()
-exit()
-
 gutierrez_veloc = pd.read_csv(os.path.join('data', 'Gutierrez_2017_apjaa8f52t8_ascii.txt'), sep='\t', header=2,
                            usecols=['Epoch', r'${{\rm{H}}}_{\alpha }$.1', r'${{\rm{H}}}_{\beta }$',
                                     'Fe II lambda5169'])
@@ -203,6 +202,7 @@ colors = {'Halpha': '#1b9e77', 'Hbeta': '#7570b3', 'FeII 5169': '#d95f02'}
 
 SN2018hmx_veloc = pd.read_csv(os.path.join('results', 'sN2018hmx_expansion_velocities.csv'))
 iPTF14hls_veloc = pd.read_csv(os.path.join('results', 'SNiPTF14hls_expansion_velocities.csv'))
+iPTF14hls_veloc = iPTF14hls_veloc.loc[iPTF14hls_veloc['t_from_discovery'] < 170]
 SN2018aad_veloc = pd.read_csv(os.path.join('results', 'SN2018aad_expansion_velocities.csv'))
 # TODO correct 14hls time from discovery
 
@@ -217,7 +217,7 @@ formatting_dict = {'SN 2018hmx': ['o', 'full', 'None'],
 def plot_velocities(SN_veloc_dict, gutierrez_veloc, line_list, formatting_dict):
     line_names_formatted = {'Halpha': r'H$\alpha$', 'Hbeta': r'H$\beta$', 'FeII 5169': r'FeII 5169$\AA$'}
     line_num = len(line_list)
-    fig2, axes = plt.subplots(line_num, 1, sharex='col', figsize=(10, 10))
+    fig2, axes = plt.subplots(line_num, 1, sharex='col', figsize=(5, 5))
     for i in range(len(line_list)):
         line_name = line_list[i]
         # gutierrez sample range
@@ -246,6 +246,7 @@ def plot_velocities(SN_veloc_dict, gutierrez_veloc, line_list, formatting_dict):
                         yerr=linedf['absorption_std_velocity'],
                         label=SN_name,
                         marker=formatting_dict[SN_name][0],
+                        markersize=3,
                         fillstyle=formatting_dict[SN_name][1],
                         linestyle=formatting_dict[SN_name][2],
                         color=color)
@@ -254,7 +255,7 @@ def plot_velocities(SN_veloc_dict, gutierrez_veloc, line_list, formatting_dict):
         ticks = np.arange(0, max_y + 3000, 2500)
         axes[i].set_yticks(ticks)
         axes[i].set_ylim(top=np.max(ticks)*1.15)
-        axes[i].text(160, np.max(ticks)*0.95, line_names_formatted[line_name], horizontalalignment='center')
+        axes[i].text(85, np.max(ticks)*1.2, line_names_formatted[line_name], horizontalalignment='center', fontsize=12)
         # gutierrez sample mean
         axes[i].plot(gutierrez_veloc['Epoch'], gutierrez_veloc[line_name],
                      # label='Gutierrez at al. mean $\pm$std',
@@ -294,9 +295,9 @@ def plot_velocities(SN_veloc_dict, gutierrez_veloc, line_list, formatting_dict):
     for ax in axes:
         ax.legend(loc='upper right')
         ax.set_ylim(bottom=0)
-        ax.set_xlim(-5, 350)
+        ax.set_xlim(-1, 170)
         ax.tick_params(axis='both', which='major')
-    axes[1].set_ylabel('Expansion velocity (km/s)')
+        ax.set_ylabel('Expansion velocity (km/s)')
     plt.xlabel('Days from discovery')
     # plt.suptitle('Expansion velocity over time')
     fig2.savefig(os.path.join('figures', 'SN2018hmx_SN2018aad_iPTF14hls_absorption_velocities_against_gutierrez' + '.png'))
