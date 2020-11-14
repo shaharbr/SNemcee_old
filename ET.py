@@ -1,7 +1,17 @@
 import pandas as pd
-import bolometric
-
 from matplotlib import pyplot as plt
+import numpy as np
+from sklearn.metrics import auc
+
+
+def calculate_ET(time_vec, Lum_vec, Ni_vec):
+    # integ_Lum = auc(time_vec, time_vec * Lum_vec)
+    # integ_Ni = auc(time_vec, time_vec * Ni_vec)
+    # ET = auc(time_vec, time_vec * (Lum_vec - Ni_vec))
+    function = [time_vec[i] * (Lum_vec[i] - Ni_vec[i]) for i in range(len(Lum_vec))]
+    ET = [auc(time_vec[:i], function[:i]) for i in np.arange(2, len(Lum_vec)+1)]
+    return ET
+
 
 blackbody_data = pd.read_csv(r'results\blackbody_results_18hmx.csv')
 
@@ -23,7 +33,7 @@ Ni_vec = [x * 86400 * 10**43 for x in Ni_vec] #  erg/s
 # print(Ni_vec)
 
 
-ET_vec = bolometric.calculate_ET(time_vec, Lum_vec, Ni_vec)
+ET_vec = calculate_ET(time_vec, Lum_vec, Ni_vec)
 # print(ET_vec)
 
 plt.figure()
