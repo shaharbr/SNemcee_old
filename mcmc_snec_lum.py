@@ -1,7 +1,7 @@
 import emcee
 import numpy as np
 from matplotlib import pyplot as plt
-import snec_result_interpolator as interp
+import snec_result_interpolator_lum as interp
 import pandas as pd
 import datetime
 from pathlib import Path
@@ -165,18 +165,16 @@ def log_likelihood(theta, data_x, data_y, data_dy):
             (Mix_range[0] <= theta[5] <= Mix_range[-1]) & \
             (S_range[0] <= theta[6] <= S_range[-1]) & \
             (T_range[0] <= theta[7] <= T_range[-1]):
-        data_x_moved = data_x - 15 + theta[7]
+        data_x_moved = data_x + theta[7] - 15
         y_fit = interp.snec_interpolator(theta[0:6], sampled, data_x_moved)
         # multiply whole graph by scaling factor
         y_fit = y_fit * theta[6]
-
-        chi2 = (data_y - y_fit) ** 2. / (2. * data_dy ** 2.) + np.log(data_y)
+        log_likeli = -np.sum((data_y - y_fit) ** 2. / (2. * data_dy ** 2.) + np.log(data_dy))
     else:
         chi2 = 10000000000
         print('not valid')
-    ln_like = -np.sum(chi2)
-    print('chi_ln', ln_like)
-    return ln_like
+    print('chi_ln', log_likeli)
+    return log_likeli
 
 
 def log_posterior(theta, data_x, data_y, data_dy):
@@ -203,7 +201,7 @@ def emcee_fit_params(data_time, data_lum, data_dlum):
     initial_guesses = initial_guesses.T
     print('init', initial_guesses)
 
-    sampler.run_mcmc(initial_guesses, n_steps)
+    sampler.run_mcmc(initial_guesses, n_steps, progress=True)
 
     return sampler
 
@@ -392,56 +390,9 @@ f_corner = corner.corner(flat_sampler_no_burnin, labels=labels, range=corner_ran
 # plt.tight_layout()
 f_corner.savefig(os.path.join('mcmc_results', r_dir, 'corner_plot.png'))
 
-# MCMC_results = get_param_results_dict(sampler, 0)
-# Ni_results['Ni_87A'] = np.average([Ni_mass_by_slope(i, line, SN87A_line) for i in [150, 300]])
-# print(Ni_results)
-# param_results = pd.DataFrame(Ni_results, index=[0])
-# param_results.to_csv(r'results\Ni_results_' + SN + '_BVgri.csv')
 
 print(sampler.chain.shape)
 
 plt.show()
-
-# fig, ax = plt.subplots(figsize=(10, 8))
-
-
-# Mzams = 10
-# Ni = 0.1
-# E = 1.1
-# Mix = 3
-# R = 500
-# K = 20
-# results_text = 'Mzams: '+str(round(Mzams, 1))+' Ni: '+str(round(Ni, 3))+' E: '+str(round(E, 1))+' Mix: '+str(Mix)+' R: '+str(int(R))+' K: '+str(int(K))
-# print(results_text)
-# x_fit = interp_days
-# data_x = sn18hmx['t_from_discovery']
-# data_y = sn18hmx['Lum']
-# dy0 = sn18hmx['dLum0']
-# dy1 = sn18hmx['dLum1']
-
-# requested = [Mzams, Ni, E, Mix, R, K]
-# sampled = [Mzams_range, Ni_range, E_final_range, Mix_range, R_range, K_range]
-# y_fit = interp.snec_interpolator(requested, sampled)
-
-# ax.errorbar(data_x, data_y, yerr=[dy0, dy1], marker='o', linestyle='None', label='SN 2018hmx')
-# ax.plot(x_fit, y_fit, label='best fit:\n'+results_text)
-# ax.legend()
-# chisq = calc_chi_square_sampled(sn18hmx, x_fit, y_fit)
-# ax.set_title('chi_sq_red = ' + str(int(chisq)), fontsize=14)
-
-
-# E = 2.0
-# results_text = 'Mzams: '+str(round(Mzams, 1))+' Ni: '+str(round(Ni, 3))+' E: '+str(round(E, 1))+' Mix: '+str(Mix)+' R: '+str(int(R))+' K: '+str(int(K))
-# print(results_text)
-
-# requested = [Mzams, Ni, E, Mix, R, K]
-# sampled = [Mzams_range, Ni_range, E_final_range, Mix_range, R_range, K_range]
-# y_fit = interp.snec_interpolator(requested, sampled)
-#
-# ax.errorbar(data_x, data_y, yerr=[dy0, dy1], marker='o', linestyle='None', label='SN 2018hmx')
-# ax.plot(x_fit, y_fit, label='best fit:\n'+results_text)
-# ax.legend()
-# chisq = calc_chi_square_sampled(sn18hmx, x_fit, y_fit)
-# ax.set_title('chi_sq_red = ' + str(int(chisq)), fontsize=14)
 
 
