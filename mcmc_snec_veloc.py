@@ -32,23 +32,24 @@ plt.rcParams['font.sans-serif'] = 'Arial'
 
 
 # important to note: values can't be negative!
-Mzams_range = [12.0, 15.0]
-Ni_range = [0.02, 0.07, 0.12, 0.17]
-E_final_range = [1.2, 1.7, 2.2, 2.7]
-Mix_range = [1.0, 3.0, 6.0]
-R_range = [600, 1400, 2200, 3000]
-K_range = [0.001, 50, 100, 150]
-S_range = [0.5, 2.0]
-T_range = [0, 30] # because can't have negative values, do 15 minus diff (so 0 is -15, and 30 is +15)
+Mzams_range = [11.0, 15.0]
+Ni_range = [0.02, 0.12]
+E_final_range = [1.0, 1.9]
+Mix_range = [2.0, 3.0]
+R_range = [600, 3000]
+K_range = [0.001, 120]
+S_range = [1.0, 1.0]
+T_range = [0, 15] # because can't have negative values, do 15 minus diff (so 0 is -15, and 30 is +15)
 
 
 
-n_walkers = 16
-n_steps = 30
+n_walkers = 50
+n_steps = 1001
 n_params = 8
-burn_in = 0
+burn_in = 500
 
 time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+r_dir = str(time_now)+'_veloc'
 Path(os.path.join('mcmc_results', str(time_now)+'_veloc')).mkdir(parents=True, exist_ok=True)
 
 run_param_df = pd.DataFrame.from_dict({'Mzams_range': str(Mzams_range), 'Ni_range': str(Ni_range),
@@ -57,7 +58,7 @@ run_param_df = pd.DataFrame.from_dict({'Mzams_range': str(Mzams_range), 'Ni_rang
                              'n_walkers': n_walkers, 'n_steps': n_steps, 'n_params': n_params,
                              'burn_in': burn_in,
                              'time': time_now}, orient='index')
-run_param_df.to_csv(os.path.join('mcmc_results', str(time_now), 'run_parameters.csv'))
+run_param_df.to_csv(os.path.join('mcmc_results', r_dir, 'run_parameters.csv'))
 
 
 m_Solar = 1.989 * (10 ** 33)  # gram
@@ -69,22 +70,7 @@ sn18hmx = sn18hmx.loc[sn18hmx['line'] == 'FeII 5169']
 sn18hmx.sort_values(by=['t_from_discovery'], inplace=True)
 # remove first point which seems like an artifact
 sn18hmx = sn18hmx.loc[sn18hmx['t_from_discovery'] > 20]
-# TODO this is a patch until i calc the real dy on late velocities, remember to fix!
-sn18hmx['dveloc'][35] = 80
 
-# plt.figure()
-# plt.plot(sn18hmx['t_from_discovery'], sn18hmx['veloc'], marker='o')
-
-
-# remove first timepoint
-# sn18hmx = sn18hmx.loc[sn18hmx['t_from_discovery'] > 20]
-
-# replicate the last point x times to artificially increase weight of fitting to last point (10-folds)
-times_to_amplify = 1
-if times_to_amplify > 1:
-    last_row = sn18hmx.loc[sn18hmx['t_from_discovery'] > 350]
-    last_row_repeats = pd.concat([last_row]*(times_to_amplify-1), ignore_index=True)
-    sn18hmx = pd.concat([sn18hmx, last_row_repeats], ignore_index=True)
 
 
 def log_prior(theta):
@@ -183,7 +169,7 @@ def emcee_fit_params(data_time, data_veloc, data_dveloc):
     K_random = np.random.rand(n_walkers) * (K_range[-1] - K_range[0]) + K_range[0]
     Mix_random = np.random.rand(n_walkers) * (Mix_range[-1] - Mix_range[0]) + Mix_range[0]
     S_random = np.random.rand(n_walkers) * (S_range[-1] - S_range[0]) + S_range[0]
-    T_random = np.random.rand(n_walkers) * (T_range[-1] - T_range[0]) + T_range[0]
+    T_random = np.random.rand(n_walkers) * (15 - 0) + 0
 
     initial_guesses = np.array([Mzams_random, Ni_random, E_random, R_random, K_random, Mix_random, S_random, T_random])
     initial_guesses = initial_guesses.T
@@ -215,56 +201,56 @@ def chain_plots(sampler, **kwargs):
     plt.xlabel('Step Number')
     plt.ylabel('Mzams')
     plt.tight_layout()
-    f_Mzams.savefig(os.path.join('mcmc_results', str(time_now), 'Mzams.png'))
+    f_Mzams.savefig(os.path.join('mcmc_results', r_dir, 'Mzams.png'))
 
     f_Ni = plt.figure()
     plt.plot(chain[:, :, 1].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('Ni')
     plt.tight_layout()
-    f_Ni.savefig(os.path.join('mcmc_results', str(time_now), 'Ni.png'))
+    f_Ni.savefig(os.path.join('mcmc_results', r_dir, 'Ni.png'))
 
     f_E = plt.figure()
     plt.plot(chain[:, :, 2].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('E')
     plt.tight_layout()
-    f_E.savefig(os.path.join('mcmc_results', str(time_now), 'E.png'))
+    f_E.savefig(os.path.join('mcmc_results', r_dir, 'E.png'))
 
     f_R = plt.figure()
     plt.plot(chain[:, :, 3].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('R')
     plt.tight_layout()
-    f_R.savefig(os.path.join('mcmc_results', str(time_now), 'R.png'))
+    f_R.savefig(os.path.join('mcmc_results', r_dir, 'R.png'))
 
     f_K = plt.figure()
     plt.plot(chain[:, :, 4].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('K')
     plt.tight_layout()
-    f_K.savefig(os.path.join('mcmc_results', str(time_now), 'K.png'))
+    f_K.savefig(os.path.join('mcmc_results', r_dir, 'K.png'))
 
     f_Mix = plt.figure()
     plt.plot(chain[:, :, 5].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('Mixing')
     plt.tight_layout()
-    f_Mix.savefig(os.path.join('mcmc_results', str(time_now), 'Mix.png'))
+    f_Mix.savefig(os.path.join('mcmc_results', r_dir, 'Mix.png'))
 
     f_S = plt.figure()
     plt.plot(chain[:, :, 6].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('Scaling')
     plt.tight_layout()
-    f_S.savefig(os.path.join('mcmc_results', str(time_now), 'S.png'))
+    f_S.savefig(os.path.join('mcmc_results', r_dir, 'S.png'))
 
     f_T = plt.figure()
     plt.plot(chain[:, :, 7].T, **kwargs)
     plt.xlabel('Step Number')
     plt.ylabel('T_exp')
     plt.tight_layout()
-    f_T.savefig(os.path.join('mcmc_results', str(time_now), 'T.png'))
+    f_T.savefig(os.path.join('mcmc_results', r_dir, 'T.png'))
 
 
 
@@ -281,13 +267,13 @@ def get_param_results_dict(sampler, step):
         dict[params[i] + '_upper'] = sigma_upper - avg
     print(dict)
 
-    with open(os.path.join('mcmc_results', str(time_now), 'final_results.csv'), 'w') as f:  # Just use 'w' mode in 3.x
+    with open(os.path.join('mcmc_results', r_dir, 'final_results.csv'), 'w') as f:  # Just use 'w' mode in 3.x
         w = csv.DictWriter(f, dict.keys())
         w.writeheader()
         w.writerow(dict)
 
     # df = pd.DataFrame.from_dict(data=dict, orient='index', index=)
-    # df.to_csv(os.path.join('mcmc_results', str(time_now), 'final_results.csv'))
+    # df.to_csv(os.path.join('mcmc_results', r_dir, 'final_results.csv'))
     return dict
 
 
@@ -301,7 +287,7 @@ def calc_chi_square_sampled(data, y_fit):
     plt.plot(data['t_from_discovery'], data['veloc'], marker='o')
     plt.plot(data['t_from_discovery'], y_fit, marker='o')
     plt.tight_layout()
-    f_chi.savefig(os.path.join('mcmc_results', str(time_now), 'chi_square_sampling.png'))
+    f_chi.savefig(os.path.join('mcmc_results', r_dir, 'chi_square_sampling.png'))
     return chisq_reduced
 
 
@@ -342,7 +328,7 @@ def plot_lightcurve_with_fit(SN_data, sampler, step):
     chisq = calc_chi_square_sampled(SN_data, y_fit)
     ax.set_title('step '+str(step)+'\nchi_sq_red = ' + str(int(chisq)), fontsize=14)
     plt.tight_layout()
-    f_fit.savefig(os.path.join('mcmc_results', str(time_now), 'lightcurve_fit.png'))
+    f_fit.savefig(os.path.join('mcmc_results', r_dir, 'lightcurve_fit.png'))
 
 
 
@@ -360,17 +346,17 @@ results_vec = plot_lightcurve_with_fit(sn18hmx, sampler, n_steps-1)
 
 
 flat_sampler = sampler.get_chain(flat=True)
-np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler.csv'), flat_sampler, delimiter=",")
+np.savetxt(os.path.join('mcmc_results', r_dir, 'flat_sampler.csv'), flat_sampler, delimiter=",")
 
 flat_sampler_no_burnin = sampler.get_chain(discard=burn_in, flat=True)
-np.savetxt(os.path.join('mcmc_results', str(time_now), 'flat_sampler_excluding_burnin.csv'), flat_sampler_no_burnin, delimiter=",")
+np.savetxt(os.path.join('mcmc_results', r_dir, 'flat_sampler_excluding_burnin.csv'), flat_sampler_no_burnin, delimiter=",")
 
 
 labels = ['Mzams', 'Ni', 'E', 'R', 'K', 'Mix', 'S', 'T']
 corner_range = [1., 1., 1., 1., 1., 1., 1., 1.]
 f_corner = corner.corner(flat_sampler_no_burnin, labels=labels, range=corner_range)
 # plt.tight_layout()
-f_corner.savefig(os.path.join('mcmc_results', str(time_now), 'corner_plot.png'))
+f_corner.savefig(os.path.join('mcmc_results', r_dir, 'corner_plot.png'))
 
 # MCMC_results = get_param_results_dict(sampler, 0)
 # Ni_results['Ni_87A'] = np.average([Ni_mass_by_slope(i, line, SN87A_line) for i in [150, 300]])
