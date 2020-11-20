@@ -22,10 +22,10 @@ K_range = [0.001, 120]
 S_range = [0.9, 1.1]
 T_range = [15, 30] # because can't have negative values, do 15 minus diff (so 0 is -15, and 30 is +15)
 
-n_walkers = 20
-n_steps = 200
+n_walkers = 30
+n_steps = 10
 n_params = 8
-burn_in = 150
+burn_in = 5
 
 
 time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -138,11 +138,15 @@ def log_likelihood(theta, data):
         data_y = data['Lum']
         data_dy = data['dLum0']
         y_fit = interp.snec_interpolator(theta[0:6], sampled, data_x_moved)
-        # multiply whole graph by scaling factor
-        y_fit = y_fit * theta[6]
-        # chi2 is a vector containing the difference from fit for each point
-        chi2 = (data_y - y_fit) ** 2. / (2. * data_dy ** 2.) + np.log(data_dy)
-        log_likeli = -np.sum(chi2)
+        if not isinstance(y_fit, str):
+            # multiply whole graph by scaling factor
+            y_fit = y_fit * theta[6]
+            # chi2 is a vector containing the difference from fit for each point
+            chi2 = (data_y - y_fit) ** 2. / (2. * data_dy ** 2.) + np.log(data_dy)
+            log_likeli = -np.sum(chi2)
+        else:
+            log_likeli = - 10 ** 30  # just a very big number so it won't go past the edge values
+            print('impossible SN')
     else:
         log_likeli = - 10**30  # just a very big number so it won't go past the edge values
         print('not valid')
@@ -276,7 +280,7 @@ def plot_lightcurve_with_fit(SN_data, sampler, step):
                    ' K: '+str(int(K))+\
                    ' Mix: '+str(round(Mix, 1))+\
                    ' S: '+str(round(S, 2))+\
-                   ' T: '+str(round(T - 15, 1))
+                   ' T: '+str(- round(T - 15, 1))
     print(results_text)
     data_x = SN_data['t_from_discovery']
     data_x_moved = data_x - 15 + T
@@ -287,6 +291,8 @@ def plot_lightcurve_with_fit(SN_data, sampler, step):
     requested = [Mzams, Ni, E, R, K, Mix, S, T]
     sampled = [Mzams_range, Ni_range, E_final_range, R_range, K_range, Mix_range]
     y_fit = interp.snec_interpolator(requested[0:6], sampled, data_x_moved)
+    # TODO problem here - because were using the average of the last walkers, the average of the found
+    #  solutions could actually be an impossible SN, especially if there were a few divergent soltions
     # multiply whole graph by scaling factor
     y_fit = y_fit * S
     log_likeli = log_likelihood(requested, SN_data)
@@ -294,6 +300,7 @@ def plot_lightcurve_with_fit(SN_data, sampler, step):
     ax.errorbar(data_x_moved, data_y, yerr=[dy0, dy1], marker='o', linestyle='None', label=SN_name)
     ax.plot(data_x_moved, y_fit, label='best fit:\n'+results_text)
     ax.legend()
+    ax.set_xlim(-2, 417)
     ax.set_ylim(float(-0.5*10**42), float(10**43))
     ax.set_title('step '+str(step)+'\nlog likelihood = ' + str(int(log_likeli)), fontsize=14)
     plt.tight_layout()
@@ -311,7 +318,7 @@ results_vec = plot_lightcurve_with_fit(SN_w_early, sampler, n_steps-1)
 results_vec = plot_lightcurve_with_fit(SN_w_early, sampler, 1)
 
 # to correct for T (time after explostion) actually being T+15
-sampler.chain[:, :, 7] = sampler.chain[:, :, 7] - 15
+sampler.chain[:, :, 7] = - (sampler.chain[:, :, 7] - 15)
 chain_plots(sampler)
 
 

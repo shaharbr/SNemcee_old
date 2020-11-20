@@ -50,7 +50,7 @@ m_Solar = 1.989 * (10 ** 33)  # gram
 data_filepath = os.path.join('results', SN_name+'_lightcurves')
 SN = pd.read_csv(data_filepath, usecols=['dmag', 'filter', 'abs_mag', 't_from_discovery'])
 if pysynphot_models:
-    SN = SN.loc[SN['t_from_discovery'] < 140]
+    SN = SN.loc[SN['t_from_discovery'] < 120]
 SN['abs_mag'] = SN['abs_mag'].abs()
 filters = list(SN['filter'].unique())
 filters = list(set(filters).intersection(['g', 'r', 'i', 'V', 'R', 'I']))
@@ -146,20 +146,24 @@ def log_likelihood(theta, data):
         data_x_allfilt = data['t_from_discovery'] - 15 + theta[7]
         filters = list(data['filter'].unique())
         y_fit = interp.snec_interpolator(theta[0:6], sampled, data_x_allfilt, filters, pysynphot_models)
-        # multiply whole graph by scaling factor
-        y_fit = y_fit * theta[6]
-        y_fit['time'] = data_x_allfilt
-        for filt in filters:
-            data_filt = data.loc[data['filter'] == filt]
-            data_x_filt = data_filt['t_from_discovery'] - 15 + theta[7]
-            data_y_filt = data_filt['abs_mag']
-            data_dy_filt = data_filt['dmag']
-            y_fit_filt = y_fit[filt].loc[y_fit['time'].isin(data_x_filt)]
-            if not len(data_x_filt) == len(y_fit_filt):
-                print('stuck')
-            log_likeli += -np.sum((data_y_filt - y_fit_filt) ** 2. / (2. * data_dy_filt ** 2.)
-                                  + np.log(data_dy_filt))
-            print('log likelihood', log_likeli)
+        if not isinstance(y_fit, str):
+            # multiply whole graph by scaling factor
+            y_fit = y_fit * theta[6]
+            y_fit['time'] = data_x_allfilt
+            for filt in filters:
+                data_filt = data.loc[data['filter'] == filt]
+                data_x_filt = data_filt['t_from_discovery'] - 15 + theta[7]
+                data_y_filt = data_filt['abs_mag']
+                data_dy_filt = data_filt['dmag']
+                y_fit_filt = y_fit[filt].loc[y_fit['time'].isin(data_x_filt)]
+                if not len(data_x_filt) == len(y_fit_filt):
+                    print('stuck')
+                log_likeli += -np.sum((data_y_filt - y_fit_filt) ** 2. / (2. * data_dy_filt ** 2.)
+                                      + np.log(data_dy_filt))
+                print('log likelihood', log_likeli)
+        else:
+            log_likeli = - 10 ** 30  # just a very big number so it won't go past the edge values
+            print('impossible SN')
     else:
         log_likeli = - 10 ** 30  # just a very big number so it won't go past the edge values
         print('not valid')
@@ -299,7 +303,7 @@ def plot_lightcurve_with_fit(SN_data, sampler, step):
                    ' K: ' + str(int(K)) + \
                    ' Mix: ' + str(round(Mix, 1)) + \
                    ' S: ' + str(round(S, 2)) + \
-                   ' T: '+str(round(T - 15, 1))
+                   ' T: '+str(- round(T - 15, 1))
     print(results_text)
 
     requested = [Mzams, Ni, E, R, K, Mix, S, T]
@@ -313,6 +317,8 @@ def plot_lightcurve_with_fit(SN_data, sampler, step):
         data_y = data_filt['abs_mag']
         data_dy = data_filt['dmag']
         y_fit_filt = interp.snec_interpolator(requested[0:6], sampled, data_x_moved, [filt], pysynphot_models)[filt]
+        # TODO problem here - because were using the average of the last walkers, the average of the found
+        #  solutions could actually be an impossible SN, especially if there were a few divergent soltions
         y_fit_filt = y_fit_filt * S
         ax.plot(data_x_moved, y_fit_filt, color=colors[filt])
         ax.errorbar(data_x_moved, data_y, yerr=data_dy, marker='o', linestyle='None',
@@ -323,6 +329,8 @@ def plot_lightcurve_with_fit(SN_data, sampler, step):
                  '\n snec model: ' + results_text, fontsize=14)
     plt.tight_layout()
     ax.legend()
+    ax.set_xlim(-2, 137)
+    ax.set_ylim(14, 20)
     f_fit.savefig(os.path.join(res_dir, 'lightcurve_fit' +str(step) +'.png'))
 
 
@@ -335,7 +343,7 @@ results_vec = plot_lightcurve_with_fit(SN, sampler, n_steps-1)
 results_vec = plot_lightcurve_with_fit(SN, sampler, 1)
 
 # to correct for T (time after explostion) actually being T+15
-sampler.chain[:, :, 7] = sampler.chain[:, :, 7] - 15
+sampler.chain[:, :, 7] = - (sampler.chain[:, :, 7] - 15)
 chain_plots(sampler)
 
 

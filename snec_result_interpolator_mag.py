@@ -66,17 +66,22 @@ def snec_interpolator(requested_list, sampled_list, data_days, data_filters, pys
                             # TODO if something isnt working here it might be because i need to replace the
                             # TODO instantaneous objects like snec_model, K_below etc with deepcopies
                             snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['name'] = name
-                            mag_file = pd.read_csv(os.path.join(data_dir, name, 'magnitudes.dat'),
-                                     names=['time', 'Teff', 'PTF_R_AB', 'u', 'g', 'r', 'i', 'z', 'U', 'B', 'V', 'R', 'I'], sep=r'\s+')
-                            mag_file = mag_file.abs()
-                            time_col = mag_file['time'] / 86400
-                            snec_model_dict = {}
-                            for filter in data_filters:
-                                snec_model_dict[filter] = np.interp(data_days, time_col, mag_file[filter])
-                            snec_model_dict['time'] = data_days
-                            snec_model = pd.DataFrame(snec_model_dict)
-                            snec_model = snec_model.sort_values('time')
-                            snec_dict[Mdir][Nidir][Edir][Rdir][Kdir][Mixdir]['snec'] = snec_model
+
+                            modelpath = os.path.join(data_dir, name, 'magnitudes.dat')
+                            if os.stat(modelpath).st_size < 10 ** 5:
+                                return 'failed SN'
+                            else:
+                                mag_file = pd.read_csv(modelpath,
+                                         names=['time', 'Teff', 'PTF_R_AB', 'u', 'g', 'r', 'i', 'z', 'U', 'B', 'V', 'R', 'I'], sep=r'\s+')
+                                mag_file = mag_file.abs()
+                                time_col = mag_file['time'] / 86400
+                                snec_model_dict = {}
+                                for filter in data_filters:
+                                    snec_model_dict[filter] = np.interp(data_days, time_col, mag_file[filter])
+                                snec_model_dict['time'] = data_days
+                                snec_model = pd.DataFrame(snec_model_dict)
+                                snec_model = snec_model.sort_values('time')
+                                snec_dict[Mdir][Nidir][Edir][Rdir][Kdir][Mixdir]['snec'] = snec_model
                         Mix_below = snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['below']['snec']
                         Mix_above = snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['above']['snec']
                         Mix_requested = Mix_below * param_dict['Mix']['weight_below'] + Mix_above * \

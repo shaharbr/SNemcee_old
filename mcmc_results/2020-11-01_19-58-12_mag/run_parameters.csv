@@ -1,0 +1,15 @@
+,0
+Mzams_range,"[9.0, 9.0]"
+Ni_range,"[0.02, 0.02]"
+E_final_range,"[1.2, 1.2]"
+R_range,"[600, 1400, 2200, 3000]"
+K_range,"[0.001, 50, 100, 150]"
+Mix_range,"[1.0, 1.0]"
+Scaling_range,"[0.5, 1.5]"
+T_exp_min15_range,"[0, 15]"
+n_walkers,16
+n_steps,1
+n_params,8
+burn_in,0
+time,2020-11-01_19-58-12
+pysynphot_model,True

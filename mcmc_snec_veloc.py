@@ -124,9 +124,13 @@ def log_likelihood(theta, data):
         data_y = data['veloc']
         data_dy = data['dveloc']
         y_fit = interp.snec_interpolator(theta[0:6], sampled, data_x_moved)
-        # chi2 is a vector containing the difference from fit for each point
-        chi2 = (data_y - y_fit) ** 2. / (2. * data_dy ** 2.) + np.log(data_dy)
-        log_likeli = -np.sum(chi2)
+        if not isinstance(y_fit, str):
+            # chi2 is a vector containing the difference from fit for each point
+            chi2 = (data_y - y_fit) ** 2. / (2. * data_dy ** 2.) + np.log(data_dy)
+            log_likeli = -np.sum(chi2)
+        else:
+            log_likeli = - 10 ** 30  # just a very big number so it won't go past the edge values
+            print('impossible SN')
     else:
         log_likeli = - 10 ** 30  # just a very big number so it won't go past the edge values
         print('not valid')
@@ -248,7 +252,7 @@ def plot_lightcurve_with_fit(SN_data, sampler, step):
                    ' R: ' + str(int(R)) + \
                    ' K: ' + str(int(K)) + \
                    ' Mix: ' + str(round(Mix, 1)) + \
-                   ' T: ' + str(round(T - 15, 1))
+                   ' T: ' + str(- round(T - 15, 1))
     print(results_text)
     data_x = SN_data['t_from_discovery']
     data_x_moved = data_x - 15 + T
@@ -258,11 +262,14 @@ def plot_lightcurve_with_fit(SN_data, sampler, step):
     requested = [Mzams, Ni, E, R, K, Mix, T]
     sampled = [Mzams_range, Ni_range, E_final_range, R_range, K_range, Mix_range]
     y_fit = interp.snec_interpolator(requested[0:6], sampled, data_x_moved)
+    # TODO problem here - because were using the average of the last walkers, the average of the found
+    #  solutions could actually be an impossible SN, especially if there were a few divergent soltions
     log_likeli = log_likelihood(requested, SN_data)
     f_fit, ax = plt.subplots(figsize=(10, 8))
     ax.errorbar(data_x_moved, data_y, yerr=dy, marker='o', linestyle='None', label=SN_name)
     ax.plot(data_x_moved, y_fit, label='best fit:\n' + results_text)
     ax.legend()
+    ax.set_xlim(-2, 175)
     ax.set_title('step ' + str(step) + '\nlog likelihood = ' + str(int(log_likeli)), fontsize=14)
     plt.tight_layout()
     f_fit.savefig(os.path.join(res_dir, 'velocities_fit' +str(step) +'.png'))
@@ -280,7 +287,7 @@ results_vec = plot_lightcurve_with_fit(SN, sampler, n_steps-1)
 results_vec = plot_lightcurve_with_fit(SN, sampler, 1)
 
 # to correct for T (time after explostion) actually being T+15
-sampler.chain[:, :, 6] = sampler.chain[:, :, 6] - 15
+sampler.chain[:, :, 6] = - (sampler.chain[:, :, 6] - 15)
 chain_plots(sampler)
 
 

@@ -16,15 +16,15 @@ def snec_interpolator(requested_list, sampled_list, data_days):
     for param in param_dict.keys():
         sampled = param_dict[param]['sampled']
         requested = param_dict[param]['requested']
-        print(sampled, requested)
+        # print(sampled, requested)
         if requested > sampled[-1]:
             above = sampled[-1]
-            print(sampled)
+            # print(sampled)
         else:
             above = min([sampled[i] for i in range(len(sampled)) if sampled[i] >= requested])
         if requested < sampled[0]:
             below = sampled[0]
-            print(sampled)
+            # print(sampled)
         else:
             below = max([sampled[i] for i in range(len(sampled)) if sampled[i] <= requested])
         if (above - below) > 0:
@@ -35,7 +35,7 @@ def snec_interpolator(requested_list, sampled_list, data_days):
         # print(above, below, requested)
         # print(weight_below)
         # print(weight_above)
-        print(below, above)
+        # print(below, above)
         param_dict[param]['below'] = below
         param_dict[param]['above'] = above
         param_dict[param]['weight_below'] = weight_below
@@ -66,13 +66,17 @@ def snec_interpolator(requested_list, sampled_list, data_days):
                             # TODO if something isnt working here it might be because i need to replace the
                             # TODO instantaneous objects like snec_model, K_below etc with deepcopies
                             snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['name'] = name
-                            snec_model = pd.read_csv(os.path.join(data_dir, name, 'lum_observed.dat'),
-                                     names=['t_from_discovery', 'Lum'], sep=r'\s+')
-                            time_col = snec_model['t_from_discovery'] / 86400
-                            snec_model = snec_model['Lum']
-                            # interp_days = np.arange(15, 382, 1
-                            snec_model = np.interp(data_days, time_col, snec_model)
-                            snec_dict[Mdir][Nidir][Edir][Rdir][Kdir][Mixdir]['snec'] = snec_model
+                            modelpath = os.path.join(data_dir, name, 'lum_observed.dat')
+                            if os.stat(modelpath).st_size < 10 ** 5:
+                                return 'failed SN'
+                            else:
+                                snec_model = pd.read_csv(modelpath,
+                                         names=['t_from_discovery', 'Lum'], sep=r'\s+')
+                                time_col = snec_model['t_from_discovery'] / 86400
+                                snec_model = snec_model['Lum']
+                                # interp_days = np.arange(15, 382, 1
+                                snec_model = np.interp(data_days, time_col, snec_model)
+                                snec_dict[Mdir][Nidir][Edir][Rdir][Kdir][Mixdir]['snec'] = snec_model
                         Mix_below = snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['below']['snec']
                         Mix_above = snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['above']['snec']
                         Mix_requested = Mix_below * param_dict['Mix']['weight_below'] + Mix_above * param_dict['Mix'][
@@ -121,13 +125,6 @@ def snec_interpolator(requested_list, sampled_list, data_days):
     return snec_dict['requested']['requested']['requested']['requested']['requested']['requested']['snec']
 
 
-# requested = [13.5, 0.15, 1.8, 3, 1000, 50]
-# sampled = [Mzams_range, Ni_range, E_final_range, Mix_range, R_range, K_range]
-
-# interp_model = snec_interpolator(requested, sampled)
-
-
-# print(interp_model)
 
 # plt.show()
 

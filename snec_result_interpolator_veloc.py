@@ -66,18 +66,23 @@ def snec_interpolator(requested_list, sampled_list, data_days):
                             # TODO if something isnt working here it might be because i need to replace the
                             # TODO instantaneous objects like snec_model, K_below etc with deepcopies
                             snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['name'] = name
-                            snec_model = pd.read_csv(os.path.join(data_dir, name, 'vel_photo.dat'),
-                                     names=['t_from_discovery', 'veloc'], sep=r'\s+')
-                            # convert sec to days
-                            snec_model['t_from_discovery'] = snec_model['t_from_discovery'] / 86400
-                            # convery cm/s to km/s
-                            snec_model['veloc'] = snec_model['veloc'] / 100000
-                            # snec_model = snec_model.loc[snec_model['t_from_discovery'] > 1.2]
-                            time_col = snec_model['t_from_discovery']
-                            snec_model = snec_model['veloc']
-                            snec_model = np.interp(data_days, time_col, snec_model)
-                            # plt.plot(data_days, snec_model, marker='o')
-                            snec_dict[Mdir][Nidir][Edir][Rdir][Kdir][Mixdir]['snec'] = snec_model
+
+                            modelpath = os.path.join(data_dir, name, 'vel_photo.dat')
+                            if os.stat(modelpath).st_size < 10 ** 5:
+                                return 'failed SN'
+                            else:
+                                snec_model = pd.read_csv(modelpath,
+                                         names=['t_from_discovery', 'veloc'], sep=r'\s+')
+                                # convert sec to days
+                                snec_model['t_from_discovery'] = snec_model['t_from_discovery'] / 86400
+                                # convery cm/s to km/s
+                                snec_model['veloc'] = snec_model['veloc'] / 100000
+                                # snec_model = snec_model.loc[snec_model['t_from_discovery'] > 1.2]
+                                time_col = snec_model['t_from_discovery']
+                                snec_model = snec_model['veloc']
+                                snec_model = np.interp(data_days, time_col, snec_model)
+                                # plt.plot(data_days, snec_model, marker='o')
+                                snec_dict[Mdir][Nidir][Edir][Rdir][Kdir][Mixdir]['snec'] = snec_model
                         Mix_below = snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['below']['snec']
                         Mix_above = snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['above']['snec']
                         Mix_requested = Mix_below * param_dict['Mix']['weight_below'] + Mix_above * param_dict['Mix'][

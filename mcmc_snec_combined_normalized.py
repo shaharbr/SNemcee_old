@@ -49,7 +49,7 @@ m_Solar = 1.989 * (10 ** 33)  # gram
 data_filepath = os.path.join('results', SN_name+'_lightcurves')
 data_mag = pd.read_csv(data_filepath, usecols=['dmag', 'filter', 'abs_mag', 't_from_discovery'])
 if pysynphot_models:
-    data_mag = data_mag.loc[data_mag['t_from_discovery'] < 140]
+    data_mag = data_mag.loc[data_mag['t_from_discovery'] < 120]
 data_mag['abs_mag'] = data_mag['abs_mag'].abs()
 filters = list(data_mag['filter'].unique())
 filters = list(set(filters).intersection(['g', 'r', 'i']))
@@ -172,53 +172,56 @@ def log_likelihood(theta, data):
         y_fit_mag = interp_mag.snec_interpolator(theta[0:6], sampled, x_moved_mag, filt, pysynphot_models)
         y_fit_lum = interp_lum.snec_interpolator(theta[0:6], sampled, x_moved_lum)
         y_fit_veloc = interp_veloc.snec_interpolator(theta[0:6], sampled, x_moved_veloc)
-        # multiply whole graph by scaling factor, for luminosities only (influenced by distance uncertainties)
-        y_fit_lum = y_fit_lum * theta[6]
-        y_fit_mag = y_fit_mag * theta[6]
+        if isinstance(y_fit_mag, str) or isinstance(y_fit_lum, str) or isinstance(y_fit_veloc, str):
+            return - 10 ** 30  # just a very big number so it won't go past the edge values
+        else:
+            # multiply whole graph by scaling factor, for luminosities only (influenced by distance uncertainties)
+            y_fit_lum = y_fit_lum * theta[6]
+            y_fit_mag = y_fit_mag * theta[6]
 
-        # add log likelihood for luminosity
-        lum_y = data['lum']['Lum']
-        lum_dy = data['lum']['dLum0']
-        chi2 = (lum_y - y_fit_lum) ** 2. / (2. * lum_dy ** 2.) + np.log(lum_dy)
-        log_likeli_lum = -np.sum(chi2) / len(x_moved_lum)  # normalized to number of lum observations
-                                                            # for equal weight of each observation type
-        log_likeli += log_likeli_lum
-        print('log likelihood lum', log_likeli_lum)
-
-        # add log likelihood for velocity
-        veloc_y = data['veloc']['veloc']
-        veloc_dy = data['veloc']['dveloc']
-        chi2 = (veloc_y - y_fit_veloc) ** 2. / (2. * veloc_dy ** 2.) + np.log(veloc_dy)
-        log_likeli_veloc = -np.sum(chi2) / len(x_moved_veloc)  # normalized to number of veloc observations
+            # add log likelihood for luminosity
+            lum_y = data['lum']['Lum']
+            lum_dy = data['lum']['dLum0']
+            chi2 = (lum_y - y_fit_lum) ** 2. / (2. * lum_dy ** 2.) + np.log(lum_dy)
+            log_likeli_lum = -np.sum(chi2) / len(x_moved_lum)  # normalized to number of lum observations
                                                                 # for equal weight of each observation type
-        log_likeli += log_likeli_veloc
-        print('log likelihood veloc', log_likeli_veloc)
+            log_likeli += log_likeli_lum
+            print('log likelihood lum', log_likeli_lum)
 
-        # add log likelihood for magnitudes
-        # for the mag only, add the a time column so it can be filtered appropriately for each filter
-        y_fit_mag['time'] = x_moved_mag
-        log_likelihood_mag = 0
-        filters = list(data['mag']['filter'].unique())
-        for filt in filters:
-            data_filt = data['mag'].loc[data['mag']['filter'] == filt]
-            data_filt_x = data_filt['t_from_discovery'] - 15 + theta[7]
-            data_filt_y = data_filt['abs_mag']
-            data_filt_dy = data_filt['dmag']
-            y_fit_mag_filt = y_fit_mag[filt].loc[y_fit_mag['time'].isin(data_filt_x)]
-            if not len(data_filt_x) == len(y_fit_mag_filt):
-                print('stuck')
-            chi2 = (data_filt_y - y_fit_mag_filt) ** 2. / (2. * data_filt_dy ** 2.) + np.log(data_filt_dy)
-            log_likelihood_mag_filt = -np.sum(chi2)
-            log_likelihood_mag += log_likelihood_mag_filt / len(x_moved_mag)  # normalized to number of mag observations
-                                                        # for equal weight of each observation type
-            print('log likelihood mag' + str(filt), log_likelihood_mag_filt)
-        print('log likelihood mag total', log_likelihood_mag)
-        log_likeli += log_likelihood_mag
+            # add log likelihood for velocity
+            veloc_y = data['veloc']['veloc']
+            veloc_dy = data['veloc']['dveloc']
+            chi2 = (veloc_y - y_fit_veloc) ** 2. / (2. * veloc_dy ** 2.) + np.log(veloc_dy)
+            log_likeli_veloc = -np.sum(chi2) / len(x_moved_veloc)  # normalized to number of veloc observations
+                                                                    # for equal weight of each observation type
+            log_likeli += log_likeli_veloc
+            print('log likelihood veloc', log_likeli_veloc)
+
+            # add log likelihood for magnitudes
+            # for the mag only, add the a time column so it can be filtered appropriately for each filter
+            y_fit_mag['time'] = x_moved_mag
+            log_likelihood_mag = 0
+            filters = list(data['mag']['filter'].unique())
+            for filt in filters:
+                data_filt = data['mag'].loc[data['mag']['filter'] == filt]
+                data_filt_x = data_filt['t_from_discovery'] - 15 + theta[7]
+                data_filt_y = data_filt['abs_mag']
+                data_filt_dy = data_filt['dmag']
+                y_fit_mag_filt = y_fit_mag[filt].loc[y_fit_mag['time'].isin(data_filt_x)]
+                if not len(data_filt_x) == len(y_fit_mag_filt):
+                    print('stuck')
+                chi2 = (data_filt_y - y_fit_mag_filt) ** 2. / (2. * data_filt_dy ** 2.) + np.log(data_filt_dy)
+                log_likelihood_mag_filt = -np.sum(chi2)
+                log_likelihood_mag += log_likelihood_mag_filt / len(x_moved_mag)  # normalized to number of mag observations
+                                                            # for equal weight of each observation type
+                print('log likelihood mag' + str(filt), log_likelihood_mag_filt)
+            print('log likelihood mag total', log_likelihood_mag)
+            log_likeli += log_likelihood_mag
+        print('likelihood_log total', log_likeli)
+        return log_likeli
     else:
-        log_likeli = - 10 ** 30
         print('not valid')
-    print('likelihood_log total', log_likeli)
-    return log_likeli
+        return - 10 ** 30
 
 
 def log_posterior(theta, data):
@@ -345,7 +348,7 @@ def plot_lightcurve_with_fit(data, sampler, step):
                    ' K: ' + str(int(K)) + \
                    ' Mix: ' + str(round(Mix, 1)) + \
                    ' S: ' + str(round(S, 2)) + \
-                   ' T: ' + str(round(T - 15, 1))
+                   ' T: ' + str(- round(T - 15, 1))
     print(results_text)
 
     requested = [Mzams, Ni, E, R, K, Mix, S, T]
@@ -360,6 +363,8 @@ def plot_lightcurve_with_fit(data, sampler, step):
     y_fit_mag = interp_mag.snec_interpolator(requested[0:6], sampled, x_moved_mag, filt, pysynphot_models)
     y_fit_lum = interp_lum.snec_interpolator(requested[0:6], sampled, x_moved_lum)
     y_fit_veloc = interp_veloc.snec_interpolator(requested[0:6], sampled, x_moved_veloc)
+    # TODO problem here - because were using the average of the last walkers, the average of the found
+    #  solutions could actually be an impossible SN, especially if there were a few divergent soltions
     # multiply whole graph by scaling factor, for luminosities only (influenced by distance uncertainties)
     y_fit_lum = y_fit_lum * S
     y_fit_mag = y_fit_mag * S
@@ -379,10 +384,12 @@ def plot_lightcurve_with_fit(data, sampler, step):
                     marker='o', linestyle='None', label=SN_name)
     ax_lum.plot(x_moved_lum, y_fit_lum, label='best fit:\n' + results_text)
     ax_lum.legend()
+    ax_lum.set_xlim(-2, 417)
+    ax_lum.set_ylim(float(-0.5 * 10 ** 42), float(10 ** 43))
     ax_lum.set_title('step ' + str(step) +
                      '\nlog likelihood = ' + str(int(log_likeli_lum)), fontsize=14)
     plt.tight_layout()
-    f_lum.savefig(os.path.join(res_dir, 'lightcurve_fit_lum.png'))
+    f_lum.savefig(os.path.join(res_dir, 'lum_fit' +str(step) +'.png'))
     # bolometric lum log plot
     f_lumlog, ax_lumlog = plt.subplots(figsize=(10, 8))
     ax_lumlog.errorbar(x_moved_lum, data['lum']['Lum'],
@@ -390,11 +397,13 @@ def plot_lightcurve_with_fit(data, sampler, step):
                        marker='o', linestyle='None', label=SN_name)
     ax_lumlog.plot(x_moved_lum, y_fit_lum, label='best fit:\n' + results_text)
     ax_lumlog.legend()
+    ax_lumlog.set_xlim(-2, 417)
+    ax_lumlog.set_ylim(float(-0.5 * 10 ** 42), float(10 ** 43))
     ax_lumlog.set_title('step ' + str(step) +
                         '\nlog likelihood = ' + str(int(log_likeli_lum)), fontsize=14)
     plt.tight_layout()
     ax_lumlog.set_yscale('log')
-    f_lumlog.savefig(os.path.join(res_dir, 'lightcurve_fit_lum_log.png'))
+    f_lumlog.savefig(os.path.join(res_dir, 'lum_log_fit' +str(step) +'.png'))
 
     # add log likelihood for velocity
     veloc_y = data['veloc']['veloc']
@@ -410,10 +419,11 @@ def plot_lightcurve_with_fit(data, sampler, step):
                       marker='o', linestyle='None', label=SN_name)
     ax_veloc.plot(x_moved_veloc, y_fit_veloc, label='best fit:\n' + results_text)
     ax_veloc.legend()
+    ax_veloc.set_xlim(-2, 175)
     ax_veloc.set_title('step ' + str(step) +
                        '\nlog likelihood = ' + str(int(log_likeli_veloc)), fontsize=14)
     plt.tight_layout()
-    f_veloc.savefig(os.path.join(res_dir, 'lightcurve_fit_veloc.png'))
+    f_veloc.savefig(os.path.join(res_dir, 'veloc_fit' +str(step) +'.png'))
 
     # add log likelihood for magnitudes
     # for the mag only, add the a time column so it can be filtered appropriately for each filter
@@ -448,7 +458,9 @@ def plot_lightcurve_with_fit(data, sampler, step):
                      '\nsnec model: ' + results_text, fontsize=14)
     plt.tight_layout()
     ax_mag.legend()
-    f_mag.savefig(os.path.join(res_dir, 'lightcurve_fit_mag' +str(step) +'.png'))
+    ax_mag.set_xlim(-2, 137)
+    ax_mag.set_ylim(14, 20)
+    f_mag.savefig(os.path.join(res_dir, 'mag_fit' +str(step) +'.png'))
 
 
 '''
@@ -465,7 +477,7 @@ results_vec = plot_lightcurve_with_fit(SN_data_all_w_early, sampler, n_steps-1)
 results_vec = plot_lightcurve_with_fit(SN_data_all_w_early, sampler, 1)
 
 # to correct for T (time after explostion) actually being T+15
-sampler.chain[:, :, 7] = sampler.chain[:, :, 7] - 15
+sampler.chain[:, :, 7] = - (sampler.chain[:, :, 7] - 15)
 chain_plots(sampler)
 
 flat_sampler = sampler.get_chain(flat=True)

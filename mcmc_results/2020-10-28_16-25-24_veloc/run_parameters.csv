@@ -1,0 +1,14 @@
+,0
+Mzams_range,"[11.0, 15.0]"
+Ni_range,"[0.02, 0.12]"
+E_final_range,"[1.0, 1.9]"
+R_range,"[600, 3000]"
+K_range,"[0.001, 120]"
+Mix_range,"[2.0, 3.0]"
+Scaling_range,"[0.5, 2.0]"
+T_exp_min15_range,"[0, 30]"
+n_walkers,16
+n_steps,1
+n_params,8
+burn_in,0
+time,2020-10-28_16-25-24
