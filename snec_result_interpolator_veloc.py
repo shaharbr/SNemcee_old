@@ -16,15 +16,15 @@ def snec_interpolator(requested_list, sampled_list, data_days):
     for param in param_dict.keys():
         sampled = param_dict[param]['sampled']
         requested = param_dict[param]['requested']
-        print(sampled, requested)
+        # print(sampled, requested)
         if requested > sampled[-1]:
             above = sampled[-1]
-            print(sampled)
+            # print(sampled)
         else:
             above = min([sampled[i] for i in range(len(sampled)) if sampled[i] >= requested])
         if requested < sampled[0]:
             below = sampled[0]
-            print(sampled)
+            # print(sampled)
         else:
             below = max([sampled[i] for i in range(len(sampled)) if sampled[i] <= requested])
         if (above - below) > 0:
@@ -35,7 +35,7 @@ def snec_interpolator(requested_list, sampled_list, data_days):
         # print(above, below, requested)
         # print(weight_below)
         # print(weight_above)
-        print(below, above)
+        # print(below, above)
         param_dict[param]['below'] = below
         param_dict[param]['above'] = above
         param_dict[param]['weight_below'] = weight_below

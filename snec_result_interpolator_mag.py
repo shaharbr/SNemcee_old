@@ -5,7 +5,6 @@ import os
 import matplotlib.pyplot as plt
 
 
-
 def snec_interpolator(requested_list, sampled_list, data_days, data_filters, pysynphot_models=False):
     if pysynphot_models:
         data_dir = os.path.join('..', 'all_pys_mag_data')
@@ -17,15 +16,15 @@ def snec_interpolator(requested_list, sampled_list, data_days, data_filters, pys
     for param in param_dict.keys():
         sampled = param_dict[param]['sampled']
         requested = param_dict[param]['requested']
-        print(sampled, requested)
+        # print(sampled, requested)
         if requested > sampled[-1]:
             above = sampled[-1]
-            print(sampled)
+            # print(sampled)
         else:
             above = min([sampled[i] for i in range(len(sampled)) if sampled[i] >= requested])
         if requested < sampled[0]:
             below = sampled[0]
-            print(sampled)
+            # print(sampled)
         else:
             below = max([sampled[i] for i in range(len(sampled)) if sampled[i] <= requested])
         if (above - below) > 0:
@@ -36,7 +35,7 @@ def snec_interpolator(requested_list, sampled_list, data_days, data_filters, pys
         # print(above, below, requested)
         # print(weight_below)
         # print(weight_above)
-        print(below, above)
+        # print(below, above)
         param_dict[param]['below'] = below
         param_dict[param]['above'] = above
         param_dict[param]['weight_below'] = weight_below
@@ -68,11 +67,13 @@ def snec_interpolator(requested_list, sampled_list, data_days, data_filters, pys
                             snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['name'] = name
 
                             modelpath = os.path.join(data_dir, name, 'magnitudes.dat')
-                            if os.stat(modelpath).st_size < 10 ** 5:
+                            lumpath = os.path.join('..', 'all_lum_data', name, 'lum_observed.dat')
+                            if os.stat(lumpath).st_size < 10 ** 5:
                                 return 'failed SN'
                             else:
                                 mag_file = pd.read_csv(modelpath,
                                          names=['time', 'Teff', 'PTF_R_AB', 'u', 'g', 'r', 'i', 'z', 'U', 'B', 'V', 'R', 'I'], sep=r'\s+')
+                                # print(mag_file)
                                 mag_file = mag_file.abs()
                                 time_col = mag_file['time'] / 86400
                                 snec_model_dict = {}
