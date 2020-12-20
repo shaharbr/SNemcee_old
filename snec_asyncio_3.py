@@ -27,10 +27,10 @@ async def snec(Mzams, Ni_mass, E_final, Ni_boundary, semaphore):
 
         dir_name = '/home/sbracha/' + name + '/'
 
-        snec_src = '/home/sbracha/SNEC_template_2/'
+        snec_src = '/home/sbracha/SNEC_template/'
         copyanything(snec_src, dir_name)
 
-        profile_src = '/home/sbracha/sukhbold_profiles/s'+str(int(Mzams))+'/profiles/'
+        profile_src = '/home/sbracha/sukhbold_profiles/s'+str(Mzams)+'/profiles/'
         copyanything(profile_src, dir_name+'/profiles/')
         time.sleep(2)
 
@@ -53,8 +53,8 @@ async def snec(Mzams, Ni_mass, E_final, Ni_boundary, semaphore):
         proc = await asyncio.create_subprocess_shell(cmd, stdout=None, stderr=None)
 
         await proc.communicate()
-        data_src = dir_name+'Data/'
-        shutil.copyfile(dir_name+name+'.txt', data_src+name+'.txt') 
+
+        data_src = dir_name+'/Data/'
         purge(data_src, '.*.xg')
         data_dst = '/home/sbracha/all_data/' + name
         copyanything(data_src, data_dst)
