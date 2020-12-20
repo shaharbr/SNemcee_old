@@ -12,20 +12,20 @@ import csv
 parts of this code are based on code by Griffin Hosseinzadeh
 '''
 
-SN_name = 'SN2017eaw'
-Mzams_range = [9.0, 11.0, 13.0, 15.0, 17.0]
+SN_name = 'SN2004et'
+Mzams_range = [13.0, 14.0, 15.0, 16.0]
 Ni_range = [0.02, 0.07, 0.12, 0.17]
-E_final_range = [0.7, 1.0, 1.3, 1.9]
-Mix_range = [2.0, 3.0]
-R_range = [600, 1500, 3000]
-K_range = [0.001, 120]
-S_range = [0.9, 1.1]
-T_range = [15, 30] # because can't have negative values, do 15 minus diff (so 0 is -15, and 30 is +15)
+E_final_range = [0.7, 0.9, 1.1, 1.3, 1.5]
+Mix_range = [5.0, 8.0]
+R_range = [0.1, 0.1]
+K_range = [0.1, 0.1]
+S_range = [0.8, 1.2]
+T_range = [0, 30] # because can't have negative values, do 15 minus diff (so 0 is -15, and 30 is +15)
 
-n_walkers = 30
+n_walkers = 20
 n_steps = 10
 n_params = 8
-burn_in = 5
+burn_in = 0
 
 
 time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -43,21 +43,24 @@ run_param_df.to_csv(os.path.join(res_dir, 'run_parameters.csv'))
 m_Solar = 1.989 * (10 ** 33)  # gram
 
 # import SN bolometric lum data
-SN_w_early= pd.read_csv(os.path.join('results', 'blackbody_results_'+SN_name+'_BVgri.csv'))
+SN_w_early= pd.read_csv(os.path.join('results', SN_name+'_martinez.csv'))
 # convert watt to erg/s
-SN_w_early['Lum'] = SN_w_early['Lum'] * 10**7
-SN_w_early['dLum0'] = SN_w_early['dLum0'] * 10**7
-SN_w_early['dLum1'] = SN_w_early['dLum1'] * 10**7
-# take only days between 30 (like the Martinez paper) and 400 (like the SNECs ran) of the SN
-SN_w_early = SN_w_early.loc[SN_w_early['t_from_discovery'] < 400]
-SN = SN_w_early.loc[SN_w_early['t_from_discovery'] > 30]
+# SN_w_early['Lum'] = SN_w_early['Lum'] * 10**7
+# SN_w_early['dLum0'] = SN_w_early['dLum0'] * 10**7
+# SN_w_early['dLum1'] = SN_w_early['dLum1'] * 10**7
+# take only days between 30 and 200 (like the Martinez paper)
+SN_w_early = SN_w_early.loc[SN_w_early['t_from_discovery'] < 200]
 
 # replicate the last point x times to artificially increase weight of fitting to last point (10-folds)
 times_to_amplify = 1
 if times_to_amplify > 1:
-    last_row = SN.loc[SN['t_from_discovery'] > 350]
+    last_row = SN_w_early.loc[SN_w_early['t_from_discovery'] > 350]
     last_row_repeats = pd.concat([last_row]*(times_to_amplify-1), ignore_index=True)
-    SN= pd.concat([SN, last_row_repeats], ignore_index=True)
+    SN_w_early= pd.concat([SN_w_early, last_row_repeats], ignore_index=True)
+
+SN = SN_w_early.loc[SN_w_early['t_from_discovery'] > 30]
+
+
 
 plt.rc('font', size=20)          # controls default text sizes
 plt.rc('axes', titlesize=20)     # fontsize of the axes title
@@ -150,7 +153,7 @@ def log_likelihood(theta, data):
     else:
         log_likeli = - 10**30  # just a very big number so it won't go past the edge values
         print('not valid')
-    print('log likelihood', log_likeli)
+    # print('log likelihood', log_likeli)
     return log_likeli
 
 
@@ -240,6 +243,19 @@ def chain_plots(sampler, **kwargs):
     f_T.savefig(os.path.join(res_dir, 'T.png'))
 
 
+def get_each_walker_result(sampler, step):
+    params = ['Mzams', 'Ni', 'E', 'R', 'K', 'Mix', 'S', 'T']
+    dict = {}
+    for i in range(len(params)):
+        last_results = sampler.chain[:, step:, i]
+        avg = np.average(last_results)
+        sigma_lower, sigma_upper = np.percentile(last_results, [16, 84])
+        dict[params[i]] = avg
+        # dict[params[i]+'_all_walkers'] = last_results
+        dict[params[i]+'_lower'] = avg - sigma_lower
+        dict[params[i] + '_upper'] = sigma_upper - avg
+    print(dict)
+
 
 def get_param_results_dict(sampler, step):
     params = ['Mzams', 'Ni', 'E', 'R', 'K', 'Mix', 'S', 'T']
@@ -247,6 +263,8 @@ def get_param_results_dict(sampler, step):
     for i in range(len(params)):
         last_results = sampler.chain[:, step:, i]
         avg = np.average(last_results)
+        if params[i] == 'T':
+            avg -= 15
         sigma_lower, sigma_upper = np.percentile(last_results, [16, 84])
         dict[params[i]] = avg
         # dict[params[i]+'_all_walkers'] = last_results
@@ -261,50 +279,63 @@ def get_param_results_dict(sampler, step):
 
     return dict
 
+def rounded_str(x):
+    if not np.isinf(x) and np.abs(x) > 0.0000001:
+        rounded = round(x, 2-int(np.floor(np.log10(abs(x)))))
+        if rounded > 100:
+            rounded = int(rounded)
+    else:
+        rounded = 0
+    return str(rounded)
+
+def result_text_from_dict(sampler, step):
+    param_dict = get_param_results_dict(sampler, step)
+    res_text = SN_name + '\n'
+    for param in ['Mzams', 'Ni', 'E', 'R', 'K', 'Mix', 'S', 'T']:
+        res_text += param + ': ' + rounded_str(param_dict[param]) + r'$\pm$ [' +\
+                        rounded_str(param_dict[param+'_lower']) + ',' +\
+                        rounded_str(param_dict[param+'_upper']) + ']\n'
+    return res_text
 
 
 def plot_lightcurve_with_fit(SN_data, sampler, step):
-    param_dict = get_param_results_dict(sampler, step)
-    Mzams = param_dict['Mzams']
-    Ni = param_dict['Ni']
-    E = param_dict['E']
-    R = param_dict['R']
-    K = param_dict['K']
-    Mix = param_dict['Mix']
-    S = param_dict['S']
-    T = param_dict['T']
-    results_text = 'Mzams: '+str(round(Mzams, 1))+\
-                   ' Ni: '+str(round(Ni, 3))+\
-                   ' E: '+str(round(E, 1))+\
-                   ' R: '+str(int(R))+\
-                   ' K: '+str(int(K))+\
-                   ' Mix: '+str(round(Mix, 1))+\
-                   ' S: '+str(round(S, 2))+\
-                   ' T: '+str(- round(T - 15, 1))
-    print(results_text)
     data_x = SN_data['t_from_discovery']
-    data_x_moved = data_x - 15 + T
+    data_x_moved = SN_data['t_from_discovery']
     data_y = SN_data['Lum']
     dy0 = SN_data['dLum0']
     dy1 = SN_data['dLum1']
-
-    requested = [Mzams, Ni, E, R, K, Mix, S, T]
-    sampled = [Mzams_range, Ni_range, E_final_range, R_range, K_range, Mix_range]
-    y_fit = interp.snec_interpolator(requested[0:6], sampled, data_x_moved)
-    # TODO problem here - because were using the average of the last walkers, the average of the found
-    #  solutions could actually be an impossible SN, especially if there were a few divergent soltions
-    # multiply whole graph by scaling factor
-    y_fit = y_fit * S
-    log_likeli = log_likelihood(requested, SN_data)
     f_fit, ax = plt.subplots(figsize=(10, 8))
-    ax.errorbar(data_x_moved, data_y, yerr=[dy0, dy1], marker='o', linestyle='None', label=SN_name)
-    ax.plot(data_x_moved, y_fit, label='best fit:\n'+results_text)
-    ax.legend()
-    ax.set_xlim(-2, 417)
-    ax.set_ylim(float(-0.5*10**42), float(10**43))
-    ax.set_title('step '+str(step)+'\nlog likelihood = ' + str(int(log_likeli)), fontsize=14)
+    ax.axvspan(-2, 30, alpha=0.1, color='grey')
+    log_likeli = []
+    for i in range(n_walkers):
+        [Mzams, Ni, E, R, K, Mix, S, T] = sampler.chain[i, step, :]
+        requested = [Mzams, Ni, E, R, K, Mix, S, T]
+        data_x_moved = data_x - 15 + T
+        sampled = [Mzams_range, Ni_range, E_final_range, R_range, K_range, Mix_range]
+        y_fit = interp.snec_interpolator(requested[0:6], sampled, data_x_moved)
+        if not isinstance(y_fit, str):
+            # multiply whole graph by scaling factor
+            y_fit = y_fit * S
+            ax.plot(data_x_moved, y_fit, alpha=0.4)
+            log_likeli.append(log_likelihood(requested, SN_data))
+    log_likeli = np.average(log_likeli)
+    ax.errorbar(data_x_moved, data_y, yerr=[dy0, dy1], marker='o', linestyle='None', color='k')
+    results_text = result_text_from_dict(sampler, step)
+    ax.text(0.6, 0.8, results_text, transform=ax.transAxes, fontsize=14,
+            verticalalignment='center', bbox=dict(facecolor='white', alpha=0.5))
+    ax.set_xlim(-2, 200)
+    ax.set_title('step '+str(step)
+                 +'\nlog likelihood = ' + str(int(log_likeli)), fontsize=14)
     plt.tight_layout()
-    f_fit.savefig(os.path.join(res_dir, 'lightcurve_fit' +str(step) +'.png'))
+    ax.set_ylim(float(1.2 * 10 ** 41), float(1.6 * 10 ** 43))
+    ax.set_yscale('log')
+    f_fit.savefig(os.path.join(res_dir, 'lum_lightcurve_fit' + str(step) + 'log.png'))
+    ax.set_yscale('linear')
+    f_fit.savefig(os.path.join(res_dir, 'lum_lightcurve_fit' +str(step) +'.png'))
+    return log_likeli
+
+
+
 
 
 '''
@@ -312,21 +343,23 @@ def plot_lightcurve_with_fit(SN_data, sampler, step):
 '''
 
 sampler = emcee_fit_params(SN)
-results_vec = plot_lightcurve_with_fit(SN_w_early, sampler, n_steps-1)
-# results_vec = plot_lightcurve_with_fit(SN_w_early, sampler, 50)
-# results_vec = plot_lightcurve_with_fit(SN_w_early, sampler, 20)
-results_vec = plot_lightcurve_with_fit(SN_w_early, sampler, 1)
-
-# to correct for T (time after explostion) actually being T+15
-sampler.chain[:, :, 7] = - (sampler.chain[:, :, 7] - 15)
-chain_plots(sampler)
-
 
 flat_sampler = sampler.get_chain(flat=True)
 np.savetxt(os.path.join(res_dir, 'flat_sampler.csv'), flat_sampler, delimiter=",")
 
 flat_sampler_no_burnin = sampler.get_chain(discard=burn_in, flat=True)
 np.savetxt(os.path.join(res_dir, 'flat_sampler_excluding_burnin.csv'), flat_sampler_no_burnin, delimiter=",")
+
+
+log_liklihood_lum = plot_lightcurve_with_fit(SN_w_early, sampler, n_steps-1)
+# log_liklihood_lum = plot_lightcurve_with_fit(SN_w_early, sampler, 50)
+# log_liklihood_lum = plot_lightcurve_with_fit(SN_w_early, sampler, 20)
+log_liklihood_lum = plot_lightcurve_with_fit(SN_w_early, sampler, 0)
+
+# to correct for T (time after explostion) actually being T+15
+sampler.chain[:, :, 7] = - (sampler.chain[:, :, 7] - 15)
+chain_plots(sampler)
+
 
 
 labels = ['Mzams', 'Ni', 'E', 'R', 'K', 'Mix', 'S', 'T']
