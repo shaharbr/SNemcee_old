@@ -22,15 +22,15 @@ async def snec(Mzams, Ni_mass, E_final, Ni_boundary, semaphore):
     # only enter if semaphore can be acquired
     async with semaphore:
         name = 'M' + str(Mzams) + '_Ni' + str(Ni_mass) + '_E' + str(E_final)\
-                   + '_Mix' + str(Ni_boundary) + '_noCSM'
+                   + '_Mix' + str(Ni_boundary) + '_R0_K0'
         # print('start ' + name)
 
-        dir_name = '/home/sbracha/' + name + '/'
+        dir_name = '/home/sbracha/SNEC/' + name + '/'
 
-        snec_src = '/home/sbracha/SNEC_template_2/'
+        snec_src = '/home/sbracha/SNEC/SNEC_3/'
         copyanything(snec_src, dir_name)
 
-        profile_src = '/home/sbracha/sukhbold_profiles/s'+str(int(Mzams))+'/profiles/'
+        profile_src = '/home/sbracha/SNEC/sukhbold_profiles/s'+str(int(Mzams))+'/profiles/'
         copyanything(profile_src, dir_name+'/profiles/')
         time.sleep(2)
 
@@ -56,17 +56,17 @@ async def snec(Mzams, Ni_mass, E_final, Ni_boundary, semaphore):
         data_src = dir_name+'Data/'
         shutil.copyfile(dir_name+name+'.txt', data_src+name+'.txt') 
         purge(data_src, '.*.xg')
-        data_dst = '/home/sbracha/all_data/' + name
+        data_dst = '/home/sbracha/SNEC/all_data/' + name
         copyanything(data_src, data_dst)
         shutil.rmtree(dir_name)
 
 async def main():
-    semaphore = asyncio.BoundedSemaphore(1)
+    semaphore = asyncio.BoundedSemaphore(16)
     await asyncio.gather(*[snec(Mzams, Ni_mass, E_final, Ni_boundary, semaphore)
-                           for Mzams in [13.0, 15.0]
-                           for Ni_mass in [0.02, 0.12]
-                           for E_final in [0.9, 1.3]
-                           for Ni_boundary in [5.0, 8.0]
+                           for E_final in [0.1]
+                           for Mzams in [9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]
+                           for Ni_mass in [0.02, 0.07, 0.12, 0.17]
+                           for Ni_boundary in [2.0, 5.0, 8.0]
                          ])
 
 
