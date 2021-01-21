@@ -29,7 +29,9 @@ plt.rcParams['font.sans-serif'] = 'Arial'
 colors = {'u': 'purple', 'g': 'teal', 'r': 'red', 'i': 'maroon', 'z': 'black', 'U': 'purple',
           'B': 'blue', 'V': 'green', 'R': 'red', 'I': 'maroon'}
 
-
+# multiplicative factor for SNEC's predicted photospheric velocities to Fe II velocities,
+# found to be equal about 1.4, by fitting to all the SNe in our sample
+Sv = 1.4
 
 def theta_in_range(theta, ranges_dict):
     ranges_list = dict_to_list(ranges_dict)
@@ -106,6 +108,8 @@ def calc_veloc_likelihood(theta, data, ranges_list):
     data_dy = data['dveloc']
     y_fit = interp_veloc.snec_interpolator(theta[0:6], ranges_list, data_x_moved)
     if not isinstance(y_fit, str):
+        # multiply whole graph by scaling factor
+        y_fit = y_fit * Sv
         # calculate the log likelihood
         log_likeli = - 0.5 * np.sum(np.log(2 * np.pi * data_dy ** 2) + ((data_y - y_fit) / data_dy) ** 2)
     else:
@@ -155,7 +159,7 @@ def log_likelihood(theta, data, ranges_dict, fitting_type):
     print(theta)
     ranges_list = dict_to_list(ranges_dict)
     print(ranges_list)
-    if theta_in_range(theta, ranges_dict):
+    if theta_in_range(theta, ranges_dict) or theta[3] == 0:
         print('ok SN')
         if fitting_type == 'lum':
             log_likeli = calc_lum_likelihood(theta, data['lum'], ranges_list)
@@ -334,10 +338,13 @@ def plot_lum_with_fit(data, sampler_chain, ranges_dict, step, output_dir, n_walk
     ax.axvspan(-2, 30, alpha=0.1, color='grey')
     log_likeli = []
     x_plotting = np.arange(0, 200, 0.5)
+    print('start of walker loop')
     for i in range(n_walkers):
         [Mzams, Ni, E, R, K, Mix, S, T] = sampler_chain[i, step, :]
         requested = [Mzams, Ni, E, R, K, Mix, S, T]
-        if theta_in_range(requested, ranges_dict):
+        print(requested)
+        print(ranges_list)
+        if theta_in_range(requested, ranges_dict) or R == 0:
             data_x_moved = x_plotting - T
             y_fit = interp_lum.snec_interpolator(requested[0:6], ranges_list, data_x_moved)
             if not isinstance(y_fit, str):
@@ -345,6 +352,7 @@ def plot_lum_with_fit(data, sampler_chain, ranges_dict, step, output_dir, n_walk
                 y_fit = y_fit * S
                 ax.plot(x_plotting, y_fit, alpha=0.4)
                 log_likeli.append(log_likelihood(requested, data, ranges_dict, 'lum'))
+                print(log_likelihood(requested, data, ranges_dict, 'lum'))
     log_likeli = np.average(log_likeli)
     ax.errorbar(data_x, data_y, yerr=[dy0, dy1], marker='o', linestyle='None', color='k')
     results_text = result_text_from_dict(sampler_chain, ranges_dict, SN_name, step, output_dir)
@@ -374,7 +382,7 @@ def plot_mag_with_fit(data, sampler_chain, ranges_dict, step, output_dir, n_walk
     for i in range(n_walkers):
         [Mzams, Ni, E, R, K, Mix, S, T] = sampler_chain[i, step, :]
         requested = [Mzams, Ni, E, R, K, Mix, S, T]
-        if theta_in_range(requested, ranges_dict):
+        if theta_in_range(requested, ranges_dict) or R == 0:
             data_x_moved_all = x_plotting - T
             y_fit = interp_mag.snec_interpolator(requested[0:6], ranges_list, data_x_moved_all, filters)
             if not isinstance(y_fit, str):
@@ -416,10 +424,12 @@ def plot_veloc_with_fit(data, sampler_chain, ranges_dict, step, output_dir, n_wa
     for i in range(n_walkers):
         [Mzams, Ni, E, R, K, Mix, S, T] = sampler_chain[i, step, :]
         requested = [Mzams, Ni, E, R, K, Mix, S, T]
-        if theta_in_range(requested, ranges_dict):
+        if theta_in_range(requested, ranges_dict) or R == 0:
             data_x_moved = x_plotting - T
             y_fit = interp_veloc.snec_interpolator(requested[0:6], ranges_list, data_x_moved)
             if not isinstance(y_fit, str):
+                # multiply whole graph by scaling factor
+                y_fit = y_fit * Sv
                 ax.plot(x_plotting, y_fit, alpha=0.4)
                 log_likeli.append(log_likelihood(requested, data, ranges_dict, 'veloc'))
     log_likeli = np.average(log_likeli)

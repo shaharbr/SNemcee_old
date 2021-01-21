@@ -55,10 +55,10 @@ T_range = [-10, 2]
 
 nonuniform_priors = {'S': {'gaussian': {'mu': 1.0, 'sigma': sigma_S}}}
 
-n_walkers = 16
-n_steps = 5
+n_walkers = 70
+n_steps = 400
 n_params = 8
-burn_in = 2
+burn_in = 150
 
 
 run_param_df = pd.DataFrame.from_dict({'SN_name': SN_name,
@@ -124,8 +124,8 @@ parameter_ranges['Mzams'] = [9.0, 11.0, 13.0, 15.0, 17.0]
 parameter_ranges['Ni'] = [0.02, 0.12]
 parameter_ranges['E'] = [0.5, 0.9, 1.3, 1.7]
 parameter_ranges['Mix'] = [2.0, 8.0]
-parameter_ranges['R'] = [0, 2000]
-parameter_ranges['K'] = [0, 100]
+parameter_ranges['R'] = [1000, 2000]
+parameter_ranges['K'] = [0, 20, 50, 100]
 
 last_walkers_step_one = sampler_first_step.get_chain(flat=True)[-(n_walkers+1):-1, :]
 
@@ -140,7 +140,7 @@ last_walkers_step_one[:, 4] = np.random.rand(n_walkers) * \
 sampler_second_step = mcmc_snec.emcee_fit_params(SN_data_all_w_early, n_walkers, n_steps, parameter_ranges, 'lum',
                                                  nonuniform_priors, init_guesses=last_walkers_step_one)
 sampler_chain = np.concatenate((sampler_first_step.chain, sampler_second_step.chain), axis=1)
-param_dict = mcmc_snec.get_param_results_dict(sampler_chain, parameter_ranges, n_steps-1, res_dir)
+param_dict = mcmc_snec.get_param_results_dict(sampler_chain, parameter_ranges, n_steps*2-1, res_dir)
 
 sampler_chain_flat = np.concatenate((
     sampler_first_step.get_chain(flat=True),
@@ -150,7 +150,7 @@ sampler_chain_flat = np.concatenate((
 pd.DataFrame(sampler_chain_flat).to_csv(os.path.join(res_dir, 'flat_sampler.csv'))
 
 mcmc_snec.plot_lightcurve_with_fit(sampler_chain, SN_data_all_w_early, parameter_ranges,
-                                        'lum', res_dir, n_walkers, SN_name, n_steps-1)
+                                        'lum', res_dir, n_walkers, SN_name, n_steps*2-1)
 mcmc_snec.plot_lightcurve_with_fit(sampler_chain, SN_data_all_w_early, parameter_ranges,
                                         'lum', res_dir, n_walkers, SN_name, 0)
 

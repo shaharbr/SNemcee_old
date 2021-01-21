@@ -9,7 +9,7 @@ import mcmc_snec
 parts of this code are based on code by Griffin Hosseinzadeh
 '''
 
-SN_name = 'SN2012ec'
+SN_name = 'SN2017eaw'
 
 distances = pd.read_csv(os.path.join('results', 'distances.csv'))
 distance = float(distances.loc[distances['SN_name'] == SN_name]['distance'])
@@ -20,21 +20,28 @@ sigma_S = 2 * distance_err / (distance)
 Mzams_range = [9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]
 Ni_range = [0.02, 0.07, 0.12, 0.17]
 E_final_range = [0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7]
-Mix_range = [5.0, 8.0]
-R_range = [0.1, 0.1]
-K_range = [0.1, 0.1]
+Mix_range = [2.0, 5.0, 8.0]
+R_range = [0, 0]
+K_range = [0, 0]
+
+# Mzams_range = [9.0, 11.0, 13.0, 15.0, 17.0]
+# Ni_range = [0.02, 0.12]
+# E_final_range = [0.5, 0.9, 1.3, 1.7]
+# Mix_range = [2.0, 8.0]
+# R_range = [1000, 2000]
+# K_range = [0, 50, 100]
 S_range = [1.0-sigma_S, 1.0+sigma_S]
 T_range = [-10, 2]
 
-gaussian_priors = {'S': {'mu': 1.0, 'sigma': sigma_S}}
+nonuniform_priors = {'S': {'gaussian': {'mu': 1.0, 'sigma': sigma_S}}}
 
-n_walkers = 20
-n_steps = 10
+n_walkers = 70
+n_steps = 800
 n_params = 8
-burn_in = 0
+burn_in = 150
 
 time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-res_dir = os.path.join('mcmc_results', str(time_now)+'_lum_250days')
+res_dir = os.path.join('mcmc_results', str(time_now)+'_lum_'+SN_name)
 Path(res_dir).mkdir(parents=True, exist_ok=True)
 
 run_param_df = pd.DataFrame.from_dict({'SN_name': SN_name,
@@ -59,7 +66,7 @@ data_lum_w_early= pd.read_csv(os.path.join('results', SN_name+'_martinez.csv'))
 # data_lum_w_early['dLum0'] = data_lum_w_early['dLum0'] * 10**7
 # data_lum_w_early['dLum1'] = data_lum_w_early['dLum1'] * 10**7
 # take only days between 30 and 200 (like the Martinez paper)
-data_lum_w_early = data_lum_w_early.loc[data_lum_w_early['t_from_discovery'] < 250]
+data_lum_w_early = data_lum_w_early.loc[data_lum_w_early['t_from_discovery'] < 200]
 
 # replicate the last point x times to artificially increase weight of fitting to last point (10-folds)
 times_to_amplify = 1
@@ -68,8 +75,8 @@ if times_to_amplify > 1:
     last_row_repeats = pd.concat([last_row]*(times_to_amplify-1), ignore_index=True)
     data_lum_w_early= pd.concat([data_lum_w_early, last_row_repeats], ignore_index=True)
 
-data_lum = data_lum_w_early.loc[data_lum_w_early['t_from_discovery'] > 30]
-
+# data_lum = data_lum_w_early.loc[data_lum_w_early['t_from_discovery'] > 30]
+data_lum = data_lum_w_early
 
 '''
 # running code #
@@ -78,7 +85,8 @@ data_lum = data_lum_w_early.loc[data_lum_w_early['t_from_discovery'] > 30]
 SN_data_all = {'lum': data_lum}
 SN_data_all_w_early = {'lum': data_lum_w_early}
 
-sampler = mcmc_snec.emcee_fit_params(SN_data_all, n_walkers, n_steps, parameter_ranges, 'lum', gaussian_priors)
+
+sampler = mcmc_snec.emcee_fit_params(SN_data_all, n_walkers, n_steps, parameter_ranges, 'lum', nonuniform_priors)
 
 flat_sampler = sampler.get_chain(flat=True)
 np.savetxt(os.path.join(res_dir, 'flat_sampler.csv'), flat_sampler, delimiter=",")
@@ -91,10 +99,9 @@ mcmc_snec.plot_lightcurve_with_fit(sampler.chain, SN_data_all_w_early, parameter
 mcmc_snec.plot_lightcurve_with_fit(sampler.chain, SN_data_all_w_early, parameter_ranges,
                                         'lum', res_dir, n_walkers, SN_name, 0)
 
+mcmc_snec.chain_plots(sampler.chain, parameter_ranges, res_dir, burn_in)
 
-mcmc_snec.chain_plots(sampler, parameter_ranges, res_dir)
-
-mcmc_snec.corner_plot(sampler, burn_in, parameter_ranges, res_dir)
+mcmc_snec.corner_plot(sampler.get_chain(flat=True)[n_walkers*burn_in:-1, :], parameter_ranges, res_dir)
 
 print(sampler.chain.shape)
 

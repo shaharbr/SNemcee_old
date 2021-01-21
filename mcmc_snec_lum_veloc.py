@@ -9,7 +9,7 @@ import mcmc_snec
 parts of this code are based on code by Griffin Hosseinzadeh
 '''
 
-SN_name = 'SN2012ec'
+SN_name = 'SN2008bk'
 
 distances = pd.read_csv(os.path.join('results', 'distances.csv'))
 distance = float(distances.loc[distances['SN_name'] == SN_name]['distance'])
@@ -17,9 +17,10 @@ distance_err = float(distances.loc[distances['SN_name'] == SN_name]['distance_er
 sigma_S = 2 * distance_err / (distance)
 
 
-Mzams_range = [9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]
+# Mzams_range = [9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]
+Mzams_range = [9.0, 10.0, 11.0, 12.0]
 Ni_range = [0.02, 0.07, 0.12]
-E_final_range = [0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7]
+E_final_range = [0.1, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7]
 Mix_range = [2.0, 5.0, 8.0]
 R_range = [0, 0]
 K_range = [0, 0]
@@ -28,19 +29,20 @@ T_range = [-10, 2]
 
 nonuniform_priors = {'S': {'gaussian': {'mu': 1.0, 'sigma': sigma_S}}}
 
-n_walkers = 20
-n_steps = 5
+n_walkers = 50
+n_steps = 300
 n_params = 8
-burn_in = 1
+burn_in = 150
 
 time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-res_dir = os.path.join('mcmc_results', str(time_now)+'_lum_veloc')
+res_dir = os.path.join('mcmc_results', str(time_now)+'_lum_veloc_wSv1.4_'+SN_name)
 Path(res_dir).mkdir(parents=True, exist_ok=True)
 
 run_param_df = pd.DataFrame.from_dict({'SN_name': SN_name,
                              'Mzams_range': str(Mzams_range), 'Ni_range': str(Ni_range),
                              'E_final_range': str(E_final_range), 'R_range': str(R_range), 'K_range': str(K_range),
                              'Mix_range': str(Mix_range), 'Scaling_range': str(S_range), 'T_range': str(T_range),
+                             'velocity_scaling_range': str(1.4),
                              'n_walkers': n_walkers, 'n_steps': n_steps, 'n_params': n_params,
                              'burn_in': burn_in,
                              'time': time_now}, orient='index')
