@@ -5,11 +5,8 @@ import os
 import matplotlib.pyplot as plt
 
 
-def snec_interpolator(requested_list, sampled_list, data_days, data_filters, pysynphot_models=False):
-    if pysynphot_models:
-        data_dir = os.path.join('..', 'all_pys_mag_data')
-    else:
-        data_dir = os.path.join('..', 'all_mag_data')
+def snec_interpolator(requested_list, sampled_list, data_days, data_filters):
+    data_dir = os.path.join('..', 'all_pys_mag_data')
     params = ['M', 'Ni', 'E', 'R', 'K', 'Mix']
     param_dict = {params[i]:{'requested': requested_list[i], 'sampled': sampled_list[i],
                              'below': 0, 'above': 0, 'weight_below': 0, 'weight_above': 0} for i in range(len(requested_list))}
