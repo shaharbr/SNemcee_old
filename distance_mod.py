@@ -8,11 +8,11 @@ def distance_luminosity_to_modulus(dL, dL_err):
     return dm, dm_err
 
 
-dL = 159 * 10**6
-dL_err = 15.9 * 10**6
-dm, dm_err = distance_luminosity_to_modulus(dL, dL_err)
-print(dm)
-print(dm_err)
+# dL = 3.43 * 10**6
+# dL_err = 0.21 * 10**6
+# dm, dm_err = distance_luminosity_to_modulus(dL, dL_err)
+# print(dm)
+# print(dm_err)
 
 
 '''
@@ -24,9 +24,9 @@ print(dm_err)
 
 
 
-# from astropy import cosmology
-# from astropy.coordinates import Distance
-# cosmology.default_cosmology.set(cosmology.WMAP7)
-# redshift = 0.000133
-# distmod = Distance(z=redshift).distmod.value
-# print(distmod)
+from astropy import cosmology
+from astropy.coordinates import Distance
+cosmology.default_cosmology.set(cosmology.WMAP7)
+redshift = 0.00167
+distmod = Distance(z=redshift).distmod.value
+print(distmod)

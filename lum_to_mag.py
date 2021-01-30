@@ -1,5 +1,5 @@
 import os
-os.environ['PYSYN_CDBS'] = os.path.join('..', 'cdbs')
+os.environ['PYSYN_CDBS'] = os.path.join('..', '..', 'cdbs')
 import pandas as pd
 import numpy as np
 import pysynphot
@@ -12,23 +12,25 @@ parsec_dist = z * 4.22 * (10 ** 9) # Parsec
 solar_rad = 6.957 * (10 ** 10)  # cm
 
 
-times = list(np.arange(0.1, 2.0, 0.1)* 86400)\
+times = list(np.arange(1.0, 2.0, 0.1)* 86400)\
         + list(np.arange(2.0, 10.0, 0.5)* 86400)\
         + list(np.arange(10.0, 100.0, 5.0)* 86400)\
         + list(np.arange(100.0, 150.0, 0.5)* 86400)\
         + list(np.arange(150.0, 250.0, 5.0)* 86400)
+
 num_timepoints = len(times)
+
 
 temp_rad_dir = os.path.join('..', 'all_temp_rad_data')
 
 filenames = [str('M' + str(Mzams) + '_Ni' + str(Ni_mass) + '_E' + str(E_final)
                  + '_Mix' + str(Ni_boundary) + '_R' + str(R_CSM) + '_K' + str(K_CSM))
-             for Mzams in [9.0]
-             for Ni_mass in [0.02, 0.07]
-             for E_final in [1.9]
-             for Ni_boundary in [2.0, 3.0]
-             for R_CSM in [600, 3000]
-             for K_CSM in [0.001, 120]
+                           for K_CSM in [20]
+                           for R_CSM in [1000, 2000]
+                           for E_final in [0.5, 0.9, 1.3, 1.7]
+                           for Mzams in [9.0, 11.0,  13.0, 15.0, 17.0]
+                           for Ni_mass in [0.02, 0.12]
+                           for Ni_boundary in [2.0, 8.0]
              ]
 
 
