@@ -57,8 +57,10 @@ def snec_interpolator(requested_list, sampled_list, data_days):
                 for Rdir in ['below', 'above']:
                     for Kdir in ['below', 'above']:
                         for Mixdir in ['below', 'above']:
-                            name = 'M'+str(param_dict['M'][Mdir])+\
-                                   '_Ni'+str(param_dict['Ni'][Nidir])+ \
+                            if param_dict['R'][Rdir] == 0:
+                                param_dict['K'][Kdir] = 0
+                            name = 'M' + str(param_dict['M'][Mdir]) + \
+                                   '_Ni' + str(param_dict['Ni'][Nidir]) + \
                                    '_E' + str(param_dict['E'][Edir]) + \
                                    '_Mix' + str(param_dict['Mix'][Mixdir]) + \
                                    '_R' + str(param_dict['R'][Rdir]) + \
