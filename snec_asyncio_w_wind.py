@@ -2,7 +2,7 @@ import asyncio, os
 import shutil, errno
 import time
 import re
-from add_wind_local import add_wind
+from add_wind_local_addedR import add_wind
 
 
 def copyanything(src, dst):
