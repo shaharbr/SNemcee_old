@@ -9,7 +9,7 @@ import snec_result_interpolator_veloc as interp_veloc
 
 
 
-result_t = '2021-01-16_13-54-29_lum_veloc_wSv1.4_SN2017eaw'
+result_t = '2021-01-18_01-02-53_lum_SN2012aw'
 result_dir = os.path.join('mcmc_results', result_t)
 
 flat_sampler_path = os.path.join(result_dir, 'flat_sampler.csv')
@@ -141,7 +141,7 @@ def plot_lum_with_fit(data, sampler_df, ranges_dict, output_dir, n_walkers, SN_n
             else:
                 ax.plot(fit_plotting_times, y_fit, alpha=0.3, color='purple')
     results_text = result_text_from_dict(sampler_df)
-    ax.text(1.02, 0.7, results_text, transform=ax.transAxes, fontsize=14,
+    ax.text(1.02, 0.8, results_text, transform=ax.transAxes, fontsize=14,
             verticalalignment='center', bbox=dict(facecolor='white', alpha=0.5), color='purple')
     # martinez fits (according to SNEC)
     data_x_moved = fit_plotting_times - martinez_values[7]
@@ -155,7 +155,7 @@ def plot_lum_with_fit(data, sampler_df, ranges_dict, output_dir, n_walkers, SN_n
     y_fit = y_fit * martinez_values[6]
     ax.plot(data_x_moved, y_fit, color='orange', label='Martinez fits', linewidth=2.0)
 
-    results_text = 'Martinez results (by SNEC)'+'\n\n' + \
+    results_text = 'Martinez fits'+'\n\n' + \
                    'Mzams: ' + str(martinez_values[0])+'\n' + \
                    'Ni: ' + str(martinez_values[1])+'\n' + \
                    'E: ' + str(martinez_values[2])+'\n' + \
@@ -164,7 +164,7 @@ def plot_lum_with_fit(data, sampler_df, ranges_dict, output_dir, n_walkers, SN_n
                    'T: ' + str(martinez_values[7]) + '\n' + \
                    'noCSM'
     ax.text(1.02, 0.4, results_text, transform=ax.transAxes, fontsize=14,
-            verticalalignment='center', bbox=dict(facecolor='white', alpha=0.5), color='orange')
+            verticalalignment='center', bbox=dict(facecolor='white', alpha=0.5), color='green')
     # real observations for the SN
     ax.errorbar(data_x, data_y, yerr=[dy0, dy1], marker='o', linestyle='None', color='k', label=SN_name+' observations')
     ax.set_xlim(-2, 200)
@@ -196,14 +196,14 @@ def plot_veloc_with_fit(data, sampler_df, ranges_dict, output_dir, n_walkers, SN
         y_fit = interp_veloc.snec_interpolator(requested[0:6], ranges_list, data_x_moved)
         if not isinstance(y_fit, str):
             # multiply whole graph by scaling factor
-            # y_fit = y_fit * 1.4
+            y_fit = y_fit
             if add_label:
                 ax.plot(x_plotting, y_fit, alpha=0.2, color='purple', label='SNEC-MCMC fits')
                 add_label = False
             else:
                 ax.plot(x_plotting, y_fit, alpha=0.3, color='purple')
     results_text = result_text_from_dict(sampler_df)
-    ax.text(1.02, 0.7, results_text, transform=ax.transAxes, fontsize=14,
+    ax.text(1.02, 0.8, results_text, transform=ax.transAxes, fontsize=14,
             verticalalignment='center', bbox=dict(facecolor='white', alpha=0.5), color='purple')
     # martinez fits (according to SNEC)
     data_x_moved = x_plotting - martinez_values[7]
@@ -215,7 +215,7 @@ def plot_veloc_with_fit(data, sampler_df, ranges_dict, output_dir, n_walkers, SN
     data_x_moved = martinez_fits['TIME'] + martinez_values[7]
     ax.plot(data_x_moved, martinez_fits['VPH'], color='orange', label='Martinez fits', linewidth=2.0)
 
-    results_text = 'Martinez results (by SNEC)' + '\n\n' + \
+    results_text = 'Martinez fits' + '\n\n' + \
                    'Mzams: ' + str(martinez_values[0]) + '\n' + \
                    'Ni: ' + str(martinez_values[1]) + '\n' + \
                    'E: ' + str(martinez_values[2]) + '\n' + \
@@ -224,7 +224,7 @@ def plot_veloc_with_fit(data, sampler_df, ranges_dict, output_dir, n_walkers, SN
                    'T: ' + str(martinez_values[7]) + '\n' + \
                    'noCSM'
     ax.text(1.02, 0.4, results_text, transform=ax.transAxes, fontsize=14,
-            verticalalignment='center', bbox=dict(facecolor='white', alpha=0.5), color='orange')
+            verticalalignment='center', bbox=dict(facecolor='white', alpha=0.5), color='green')
     # real observations for the SN
     ax.errorbar(data_x, data_y, yerr=dy, marker='o', linestyle='None', color='k',
                 label=SN_name + ' observations')

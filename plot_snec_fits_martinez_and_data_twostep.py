@@ -9,7 +9,7 @@ import snec_result_interpolator_veloc as interp_veloc
 
 
 
-result_t = '2021-01-18_00-11-37_lum_twostep_flatpriors_SN2017eaw'
+result_t = '2021-01-18_00-08-48_lum_twostep'
 result_dir = os.path.join('mcmc_results', result_t)
 
 flat_sampler_path = os.path.join(result_dir, 'flat_sampler.csv')
