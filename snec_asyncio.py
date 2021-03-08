@@ -61,12 +61,13 @@ async def snec(Mzams, Ni_mass, E_final, Ni_boundary, semaphore):
         shutil.rmtree(dir_name)
 
 async def main():
-    semaphore = asyncio.BoundedSemaphore(16)
+    semaphore = asyncio.BoundedSemaphore(1)
     await asyncio.gather(*[snec(Mzams, Ni_mass, E_final, Ni_boundary, semaphore)
-                           for E_final in [0.1]
-                           for Mzams in [9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]
-                           for Ni_mass in [0.02, 0.07, 0.12, 0.17]
-                           for Ni_boundary in [2.0, 5.0, 8.0]
+                           for Mzams in [8.0]
+                           for Ni_mass in [0.02, 0.07, 0.12, 0.001]
+                           for E_final in [1.7, 1.5, 1.3, 1.1, 0.9, 0.7, 0.5, 0.3, 0.1]
+                           for Ni_boundary in [2.0, 8.0, 5.0]
+
                          ])
 
 
