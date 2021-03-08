@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 data_dir = os.path.join('..', 'all_veloc_data')
 
 
-
 def snec_interpolator(requested_list, sampled_list, data_days):
     params = ['M', 'Ni', 'E', 'R', 'K', 'Mix']
     param_dict = {params[i]:{'requested': requested_list[i], 'sampled': sampled_list[i],
