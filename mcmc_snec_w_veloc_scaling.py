@@ -3,13 +3,12 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
-import snec_result_interpolator_lum as interp_lum
-import snec_result_interpolator_mag as interp_mag
-import snec_result_interpolator_veloc as interp_veloc
+import snec_model_interpolator as interp
 import pandas as pd
 import os
 import corner
 import csv
+from scipy.stats import chi2
 import copy
 
 
@@ -32,24 +31,129 @@ colors = {'u': 'purple', 'g': 'teal', 'r': 'red', 'i': 'maroon', 'z': 'black', '
 # multiplicative factor for SNEC's predicted photospheric velocities to Fe II velocities,
 # found to be equal about 1.4, by fitting to all the SNe in our sample
 T_thresh = 10 ** 3.75
+models = {}
 
 
-def get_maximal_smaller(number, list):
-    arr = np.array(list)
-    smaller = arr[arr < number]
-    return np.max(smaller)
+def initialize_empty_models_dict(ranges_dict):
+    for data_type in ['lum', 'veloc', 'mag', 'temp']:
+        models[data_type] = {}
+        for Mzams in ranges_dict['Mzams']:
+            models[data_type][Mzams] = {}
+            for Ni in ranges_dict['Ni']:
+                models[data_type][Mzams][Ni] = {}
+                for E in ranges_dict['E']:
+                    models[data_type][Mzams][Ni][E] = {}
+                    for R in ranges_dict['R']:
+                        models[data_type][Mzams][Ni][E][R] = {}
+                        for K in ranges_dict['K']:
+                            models[data_type][Mzams][Ni][E][R][K] = {}
+                            for Mix in ranges_dict['Mix']:
+                                models[data_type][Mzams][Ni][E][R][K][Mix] = None
 
-def time_before_T_thresh(theta, ranges_dict):
-    M_below = get_maximal_smaller(theta[0], ranges_dict['Mzams'])
-    Ni_below = get_maximal_smaller(theta[1], ranges_dict['Ni'])
-    E_below = get_maximal_smaller(theta[2], ranges_dict['E'])
-    Mix_below = get_maximal_smaller(theta[5], ranges_dict['Mix'])
-    model = 'M' + str(M_below) + '_Ni' + str(Ni_below) + '_E' + str(E_below) + \
-            '_Mix' + str(Mix_below) + '_R0_K0'
-    temps = pd.read_csv(os.path.join('..', 'all_temp_rad_data', model, 'T_eff.dat'), names=['time', 'temp'], sep=r'\s+')
-    max_temp_below_Tthresh = np.max(temps['temp'].loc[temps['temp'] < T_thresh])
-    time_thresh = float(temps['time'].loc[temps['temp'] == max_temp_below_Tthresh]) / 86400
-    return time_thresh
+
+def get_surrouding_values(requested, ranges_dict):
+    params = list(ranges_dict.keys())
+    surrouding_values = {param: [] for param in params}
+    for i in range(len(requested)):
+        param_range = np.array(ranges_dict[params[i]])
+        below = np.max(param_range[param_range <= requested[i]])
+        above = np.min(param_range[param_range >= requested[i]])
+        surrouding_values[params[i]] = [below, above]
+    return surrouding_values
+
+
+def load_model(Mzams, Ni, E, R, K, Mix, data_type, extend_tail=False):
+    if R == 0 or K == 0:
+        R = 0
+        K = 0
+    name = 'M' + str(Mzams) + \
+           '_Ni' + str(Ni) + \
+           '_E' + str(E) + \
+           '_Mix' + str(Mix) + \
+           '_R' + str(R) + \
+           '_K' + str(K)
+    if data_type == 'lum':
+        modelpath = os.path.join('..', 'all_lum_data', name, 'lum_observed.dat')
+        if os.stat(modelpath).st_size < 10 ** 5:
+            return 'failed SN'
+        else:
+            snec_model = pd.read_csv(modelpath,
+                                     names=['t_from_discovery', 'Lum'], sep=r'\s+')
+            time_col = snec_model['t_from_discovery'] / 86400  # sec to days
+            interp_days = np.linspace(0, 196, 1961)
+            snec_model = np.interp(interp_days, time_col, snec_model['Lum'])
+            if extend_tail is not False:
+                last_30d_x = interp_days[-100:-1]
+                last_30d_y = snec_model[-100:-1]
+                last_30d_ylog = np.log(last_30d_y)
+                tail_poly1d = np.poly1d(np.polyfit(last_30d_x, last_30d_ylog, deg=1))
+                extension_days = np.linspace(196.1, 196+extend_tail, int(10*extend_tail))
+                extension_lumlog = np.array([tail_poly1d(extension_days[i]) for i in range(len(extension_days))])
+                extension_lum = np.exp(extension_lumlog)
+                snec_model = np.concatenate((snec_model, extension_lum))
+            return snec_model
+    elif data_type == 'veloc':
+        modelpath = os.path.join('..', 'all_veloc_data', name, 'vel_photo.dat')
+        if os.stat(modelpath).st_size < 10 ** 5:
+            return 'failed SN'
+        else:
+            snec_model = pd.read_csv(modelpath,
+                                     names=['t_from_discovery', 'veloc'], sep=r'\s+')
+            snec_model['veloc'] = snec_model['veloc'] / 100000  # cm/s to km/s
+            time_col = snec_model['t_from_discovery'] / 86400  # sec to days
+            interp_days = np.linspace(0, 196, 1961)
+            snec_model = np.interp(interp_days, time_col, snec_model['veloc'])
+            return snec_model
+    elif data_type == 'temp':
+        modelpath = os.path.join('..', 'all_temp_rad_data', name, 'T_eff.dat')
+        if os.stat(modelpath).st_size < 10 ** 5:
+            return 'failed SN'
+        snec_model = pd.read_csv(modelpath,
+                                 names=['t_from_discovery', 'temp'], sep=r'\s+')
+        time_col = snec_model['t_from_discovery'] / 86400  # sec to days
+        interp_days = np.linspace(0, 196, 1961)
+        snec_model = np.interp(interp_days, time_col, snec_model['temp'])
+        return snec_model
+    elif data_type == 'mag':
+        modelpath = os.path.join('..', 'all_pys_mag_data', name, 'magnitudes.dat')
+        lumpath = os.path.join('..', 'all_lum_data', name, 'lum_observed.dat')
+        if os.stat(lumpath).st_size < 10 ** 5:
+            return 'failed SN'
+        else:
+            mag_file = pd.read_csv(modelpath,
+                                   names=['time', 'Teff', 'PTF_R_AB', 'u', 'g', 'r', 'i', 'z', 'U', 'B', 'V', 'R', 'I'],
+                                   sep=r'\s+')
+            mag_file = mag_file.abs()
+            time_col = mag_file['time'] / 86400  # sec to days
+            interp_days = np.linspace(0, 196, 1961)
+            snec_model_dict = {}
+            for filter in ['u', 'g', 'r', 'i', 'z', 'U', 'B', 'V', 'R', 'I']:
+                snec_model_dict[filter] = np.interp(interp_days, time_col, mag_file[filter])
+            snec_model_dict['time'] = interp_days
+            snec_model = pd.DataFrame(snec_model_dict)
+            snec_model = snec_model.sort_values('time')
+            return snec_model
+
+
+def load_surrounding_models(requested, ranges_dict, fitting_type, extend_tail=False):
+    surrouding_values = get_surrouding_values(requested, ranges_dict)
+    for Mzams in surrouding_values['Mzams']:
+        for Ni in surrouding_values['Ni']:
+            for E in surrouding_values['E']:
+                for R in surrouding_values['R']:
+                    for K in surrouding_values['K']:
+                        for Mix in surrouding_values['Mix']:
+                            if 'lum' in fitting_type:
+                                if models['lum'][Mzams][Ni][E][R][K][Mix] is None:
+                                    models['lum'][Mzams][Ni][E][R][K][Mix] = load_model(Mzams, Ni, E, R, K, Mix, 'lum', extend_tail)
+                            if 'veloc' in fitting_type:
+                                if models['veloc'][Mzams][Ni][E][R][K][Mix] is None:
+                                    models['veloc'][Mzams][Ni][E][R][K][Mix] = load_model(Mzams, Ni, E, R, K, Mix, 'veloc')
+                                if models['temp'][Mzams][Ni][E][R][K][Mix] is None:
+                                    models['temp'][Mzams][Ni][E][R][K][Mix] = load_model(Mzams, Ni, E, R, K, Mix, 'temp')
+                            if 'mag' in fitting_type:
+                                if models['mag'][Mzams][Ni][E][R][K][Mix] is None:
+                                    models['mag'][Mzams][Ni][E][R][K][Mix] = load_model(Mzams, Ni, E, R, K, Mix, 'mag')
 
 
 def theta_in_range(theta, ranges_dict):
@@ -105,42 +209,65 @@ def dict_to_list(dict):
     return l
 
 
-def calc_lum_likelihood(theta, data, ranges_list):
+def chi_square_norm(y, dy, y_fit):
+    return np.sum(((y - y_fit) / dy) ** 2)
+
+
+def calc_lum_likelihood(theta, data, surrounding_values, extend_tail=False):
     data_x_moved = data['t_from_discovery'] - theta[7]
     data_y = data['Lum']
     data_dy = data['dLum0']
-    y_fit = interp_lum.snec_interpolator(theta[0:6], ranges_list, data_x_moved)
+    y_fit = interp.snec_interpolator(theta[0:6], surrounding_values, models['lum'], data_x_moved, extend_tail)
     if not isinstance(y_fit, str):
         # multiply whole graph by scaling factor
         y_fit = y_fit * theta[6]
         # calculate the log likelihood
-        log_likeli = - 0.5 * np.sum(np.log(2 * np.pi * data_dy ** 2) + ((data_y - y_fit) / data_dy) ** 2)
+        df = len(data_y) - 1
+        print(chi2.logpdf(chi_square_norm(data_y, data_dy, y_fit), df))
+        return chi2.logpdf(chi_square_norm(data_y, data_dy, y_fit), df)
     else:
-        log_likeli = - np.inf
         print('impossible SN')
-    return log_likeli
+        return - np.inf
 
-def calc_veloc_likelihood(theta, data, ranges_list):
-    data_x_moved = data['t_from_discovery'] - theta[7]
+
+def calc_veloc_likelihood(theta, data, surrounding_values, Tthreshold=False):
     data_y = data['veloc']
     data_dy = data['dveloc']
-    y_fit = interp_veloc.snec_interpolator(theta[0:6], ranges_list, data_x_moved)
+    data_x = data['t_from_discovery']
+    data_x_moved = data_x - theta[7]
+    if Tthreshold:
+        temp_fit = interp.snec_interpolator(theta[0:6], surrounding_values, models['temp'], data_x_moved)
+        if not isinstance(temp_fit, str):
+            max_temp_below_Tthresh = np.max(temp_fit[temp_fit <= T_thresh])
+            data_x_moved = data_x_moved[temp_fit > max_temp_below_Tthresh]
+            if len(data_x_moved) <= 1:
+                # TODO this step introduces some bias - SNe that don't have early velocities
+                #  will select against models that cool fast
+                print('cooled too fast, no early velocity data')
+                return - np.inf
+            data = data.loc[temp_fit > max_temp_below_Tthresh]
+            data_y = data['veloc']
+            data_dy = data['dveloc']
+        else:
+            print('impossible SN')
+            return - np.inf
+    y_fit = interp.snec_interpolator(theta[0:6], surrounding_values, models['veloc'], data_x_moved)
     if not isinstance(y_fit, str):
         # multiply whole graph by scaling factor
         y_fit = y_fit * theta[8]
         # calculate the log likelihood
-        log_likeli = - 0.5 * np.sum(np.log(2 * np.pi * data_dy ** 2) + ((data_y - y_fit) / data_dy) ** 2)
+        df = len(data_y) - 1
+        return chi2.logpdf(chi_square_norm(data_y, data_dy, y_fit), df)
     else:
-        log_likeli = - np.inf
         print('impossible SN')
-    return log_likeli
+        return - np.inf
 
 
-def calc_mag_likelihood(theta, data, ranges_list):
+def calc_mag_likelihood(theta, data, surrounding_values):
     log_likeli = 0
     data_x_allfilt = data['t_from_discovery'] - theta[7]
     filters = list(data['filter'].unique())
-    y_fit = interp_mag.snec_interpolator(theta[0:6], ranges_list, data_x_allfilt, filters)
+    y_fit = interp.snec_interpolator(theta[0:6], surrounding_values, models['mag'], data_x_allfilt)
     if not isinstance(y_fit, str):
         # multiply whole graph by scaling factor
         y_fit = y_fit * theta[6]
@@ -151,20 +278,17 @@ def calc_mag_likelihood(theta, data, ranges_list):
             data_y_filt = data_filt['abs_mag']
             data_dy_filt = data_filt['dmag']
             y_fit_filt = y_fit[filt].loc[y_fit['time'].isin(data_x_filt)]
-            if not len(data_x_filt) == len(y_fit_filt):
-                print('stuck')
             # calculate the log likelihood
-            log_likeli += - 0.5 * np.sum(
-                np.log(2 * np.pi * data_dy_filt ** 2) + ((data_y_filt - y_fit_filt) / data_dy_filt) ** 2)
+            df = len(data_y_filt) - 1
+            log_likeli += chi2.logpdf(chi_square_norm(data_y_filt, data_dy_filt, y_fit_filt), df)
             # print('log likelihood', log_likeli)
+        return log_likeli
     else:
-        log_likeli = - np.inf
         print('impossible SN')
-    return log_likeli
+        return - np.inf
 
 
-
-def log_likelihood(theta, data, ranges_dict, fitting_type):
+def log_likelihood(theta, data, ranges_dict, fitting_type, extend_tail=False):
     """
     Parameters
     ----------
@@ -175,69 +299,67 @@ def log_likelihood(theta, data, ranges_dict, fitting_type):
     fitting_type : lum, mag, veloc, combined or combined_normalized
     """
     print(theta)
-    ranges_list = dict_to_list(ranges_dict)
-    print(ranges_list)
+    # ranges_list = dict_to_list(ranges_dict)
+    # print(ranges_list)
     if theta_in_range(theta, ranges_dict) or theta[3] == 0:
         print('ok SN')
+        surrounding_values = get_surrouding_values(theta[0:6], ranges_dict)
+        load_surrounding_models(theta[0:6], ranges_dict, fitting_type, extend_tail)
         if fitting_type == 'lum':
-            log_likeli = calc_lum_likelihood(theta, data['lum'], ranges_list)
+            log_likeli = calc_lum_likelihood(theta, data['lum'], surrounding_values, extend_tail)
         elif fitting_type == 'mag':
-            log_likeli = calc_mag_likelihood(theta, data['mag'], ranges_list)
+            log_likeli = calc_mag_likelihood(theta, data['mag'], surrounding_values)
         elif fitting_type == 'veloc':
-            log_likeli = calc_veloc_likelihood(theta, data['veloc'], ranges_list)
+            log_likeli = calc_veloc_likelihood(theta, data['veloc'], surrounding_values)
         elif fitting_type == 'lum_veloc':
-            log_likeli = calc_lum_likelihood(theta, data['lum'], ranges_list) + \
-                         calc_veloc_likelihood(theta, data['veloc'], ranges_list)
+            log_likeli = calc_lum_likelihood(theta, data['lum'], surrounding_values, extend_tail) + \
+                         calc_veloc_likelihood(theta, data['veloc'], surrounding_values)
         elif fitting_type == 'lum_veloc_Tthresh_normalized':
-            num_obs_lum = len(data['lum']['t_from_discovery'])
-            max_veloc_time = time_before_T_thresh(theta, ranges_dict)
-            data_veloc = data['veloc'].loc[data['veloc']['t_from_discovery'] < max_veloc_time]
-            num_obs_veloc = len(data_veloc)
-            log_likeli = calc_lum_likelihood(theta, data['lum'], ranges_list) / num_obs_lum + \
-                         calc_veloc_likelihood(theta, data_veloc, ranges_list) / num_obs_veloc
+            log_likeli = calc_lum_likelihood(theta, data['lum'], surrounding_values, extend_tail)+ \
+                         calc_veloc_likelihood(theta, data['veloc'], surrounding_values, Tthreshold=True)
         elif fitting_type == 'lum_veloc_normalized':
             num_obs_lum = len(data['lum']['t_from_discovery'])
             num_obs_veloc = len(data['veloc']['t_from_discovery'])
-            log_likeli = calc_lum_likelihood(theta, data['lum'], ranges_list) / num_obs_lum + \
-                         calc_veloc_likelihood(theta, data['veloc'], ranges_list) / num_obs_veloc
+            log_likeli = calc_lum_likelihood(theta, data['lum'], surrounding_values, extend_tail) / num_obs_lum + \
+                         calc_veloc_likelihood(theta, data['veloc'], surrounding_values) / num_obs_veloc
         elif fitting_type == 'mag_veloc':
-            log_likeli = calc_mag_likelihood(theta, data['mag'], ranges_list) + \
-                         calc_veloc_likelihood(theta, data['veloc'], ranges_list)
+            log_likeli = calc_mag_likelihood(theta, data['mag'], surrounding_values) + \
+                         calc_veloc_likelihood(theta, data['veloc'], surrounding_values)
         elif fitting_type == 'mag_veloc_normalized':
             num_obs_mag = len(data['mag']['t_from_discovery'])
             num_obs_veloc = len(data['veloc']['t_from_discovery'])
-            log_likeli = calc_mag_likelihood(theta, data['mag'], ranges_list) / num_obs_mag + \
-                         calc_veloc_likelihood(theta, data['veloc'], ranges_list) / num_obs_veloc
+            log_likeli = calc_mag_likelihood(theta, data['mag'], surrounding_values) / num_obs_mag + \
+                         calc_veloc_likelihood(theta, data['veloc'], surrounding_values) / num_obs_veloc
         elif fitting_type == 'combined':
-            log_likeli = calc_lum_likelihood(theta, data['lum'], ranges_list) + \
-                         calc_mag_likelihood(theta, data['mag'], ranges_list) + \
-                         calc_veloc_likelihood(theta, data['veloc'], ranges_list)
+            log_likeli = calc_lum_likelihood(theta, data['lum'], surrounding_values, extend_tail) + \
+                         calc_mag_likelihood(theta, data['mag'], surrounding_values) + \
+                         calc_veloc_likelihood(theta, data['veloc'], surrounding_values)
         elif fitting_type == 'combined_normalized':
             num_obs_lum = len(data['lum']['t_from_discovery'])
             num_obs_mag = len(data['mag']['t_from_discovery'])
             num_obs_veloc = len(data['veloc']['t_from_discovery'])
-            log_likeli = calc_lum_likelihood(theta, data['lum'], ranges_list) / num_obs_lum+ \
-                         calc_mag_likelihood(theta, data['mag'], ranges_list) / num_obs_mag+ \
-                         calc_veloc_likelihood(theta, data['veloc'], ranges_list) / num_obs_veloc
+            log_likeli = calc_lum_likelihood(theta, data['lum'], surrounding_values, extend_tail) / num_obs_lum+ \
+                         calc_mag_likelihood(theta, data['mag'], surrounding_values) / num_obs_mag+ \
+                         calc_veloc_likelihood(theta, data['veloc'], surrounding_values) / num_obs_veloc
         else:
             print('fitting_type should be: lum, mag, veloc, lum_veloc, lum_veloc_normalized, mag_veloc, mag_veloc_normalized, combined or combined_normalized')
     else:
-        log_likeli = - np.inf  # just a very big number so it won't go past the edge values
         print('out of range')
+        return - np.inf  # just a very big number so it won't go past the edge values
     print('loglik', log_likeli)
     return log_likeli
 
 
-
-def log_posterior(theta, data, ranges_dict, fitting_type, nonuniform_priors=None):
+def log_posterior(theta, data, ranges_dict, fitting_type, nonuniform_priors=None, extend_tail=False):
     if theta_in_range(theta, ranges_dict):
         lp = log_prior(theta, ranges_dict, nonuniform_priors)
-        ll = log_likelihood(theta, data, ranges_dict, fitting_type)
+        ll = log_likelihood(theta, data, ranges_dict, fitting_type, extend_tail)
         log_post = lp + ll
+        print('logpost', log_post)
+        return log_post
     else:
-        log_post = -np.inf
-    print('logpost', log_post)
-    return log_post
+        print('out of range')
+        return - np.inf  # just a very big number so it won't go past the edge values
 
 
 def initial_guesses(ranges_dict, n_walkers):
@@ -248,11 +370,16 @@ def initial_guesses(ranges_dict, n_walkers):
     return np.array(guesses).T
 
 
-def emcee_fit_params(data, n_walkers, n_steps, ranges_dict, fitting_type, nonuniform_priors=None, init_guesses=None):
+def emcee_fit_params(data, n_walkers, n_steps, ranges_dict, fitting_type, nonuniform_priors=None, init_guesses=None, extend_tail=False):
+    data_lum = data['lum']
+    data_no_early_lum = copy.deepcopy(data)
+    data_no_early_lum['lum'] = data_lum.loc[data_lum['t_from_discovery'] > 30]
     n_params = len(ranges_dict.keys())
-    sampler = emcee.EnsembleSampler(n_walkers, n_params, log_posterior, args=[data, ranges_dict, fitting_type, nonuniform_priors])
     if init_guesses is None:
         init_guesses = initial_guesses(ranges_dict, n_walkers)
+    initialize_empty_models_dict(ranges_dict)
+    sampler = emcee.EnsembleSampler(n_walkers, n_params, log_posterior,
+                                    args=[data_no_early_lum, ranges_dict, fitting_type, nonuniform_priors, extend_tail])
     sampler.run_mcmc(init_guesses, n_steps)
     return sampler
 
@@ -338,9 +465,9 @@ def result_text_from_dict(sampler_chain, ranges_dict, SN_name, step, output_dir)
                     rounded_str(param_dict['R_upper']) + ']\n'
     return res_text
 
+# TODO fix the interp here to the updated
 
-def plot_lum_with_fit(data_lum, sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name):
-    ranges_list = dict_to_list(ranges_dict)
+def plot_lum_with_fit(data_lum, sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name, extend_tail=False):
     data_x = data_lum['t_from_discovery']
     data_y = data_lum['Lum']
     dy0 = data_lum['dLum0']
@@ -348,19 +475,22 @@ def plot_lum_with_fit(data_lum, sampler_chain, ranges_dict, step, output_dir, n_
     f_fit, ax = plt.subplots(figsize=(10, 8))
     ax.axvspan(-2, 30, alpha=0.1, color='grey')
     log_likeli = []
-    x_plotting = np.arange(0, 200, 0.5)
-    print('start of walker loop')
+    if extend_tail is not False:
+        x_plotting = np.linspace(0, 196+extend_tail, int(1+10*196+extend_tail))
+    else:
+        x_plotting = np.linspace(0, 196, 1961)
     for i in range(n_walkers):
         [Mzams, Ni, E, R, K, Mix, S, T, Sv] = sampler_chain[i, step, :]
         requested = [Mzams, Ni, E, R, K, Mix, S, T, Sv]
         if theta_in_range(requested, ranges_dict) or R == 0:
             data_x_moved = x_plotting - T
-            y_fit = interp_lum.snec_interpolator(requested[0:6], ranges_list, data_x_moved)
+            surrounding_values = get_surrouding_values(requested[0:6], ranges_dict)
+            y_fit = interp.snec_interpolator(requested[0:6], surrounding_values, models['lum'], data_x_moved, extend_tail)
             if not isinstance(y_fit, str):
                 # multiply whole graph by scaling factor
                 y_fit = y_fit * S
                 ax.plot(x_plotting, np.log10(y_fit), alpha=0.4)
-                log_likeli.append(calc_lum_likelihood(requested, data_lum, ranges_list))
+                log_likeli.append(calc_lum_likelihood(requested, data_lum, surrounding_values, extend_tail))
     log_likeli = np.average(log_likeli)
     data_dy0 = np.log10(data_y + dy0) - np.log10(data_y)
     data_dy1 = np.log10(data_y + dy1) - np.log10(data_y)
@@ -368,7 +498,10 @@ def plot_lum_with_fit(data_lum, sampler_chain, ranges_dict, step, output_dir, n_
     results_text = result_text_from_dict(sampler_chain, ranges_dict, SN_name, step, output_dir)
     ax.text(0.6, 0.8, results_text, transform=ax.transAxes, fontsize=14,
             verticalalignment='center', bbox=dict(facecolor='white', alpha=0.5))
-    ax.set_xlim(-2, 200)
+    if extend_tail is not False:
+        ax.set_xlim(-2, 196+extend_tail)
+    else:
+        ax.set_xlim(-2, 196)
     ax.set_ylim(40.8, 43)
     # ax.set_ylim(np.min(data_y) * 0.5, np.max(data_y) * 5)
     ax.set_title('step ' + str(step)
@@ -382,25 +515,24 @@ def plot_lum_with_fit(data_lum, sampler_chain, ranges_dict, step, output_dir, n_
     return log_likeli
 
 def plot_mag_with_fit(data_mag, sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name):
-    ranges_list = dict_to_list(ranges_dict)
-    data_x = data_mag['t_from_discovery']
     filters = list(data_mag['filter'].unique())
     f_fit, ax = plt.subplots(figsize=(10, 8))
     ax.axvspan(-2, 30, alpha=0.1, color='grey')
     log_likeli = []
-    x_plotting = np.arange(0, 200, 0.5)
+    x_plotting = np.linspace(0, 196, 1961)
     for i in range(n_walkers):
         [Mzams, Ni, E, R, K, Mix, S, T, Sv] = sampler_chain[i, step, :]
         requested = [Mzams, Ni, E, R, K, Mix, S, T, Sv]
         if theta_in_range(requested, ranges_dict) or R == 0:
             data_x_moved_all = x_plotting - T
-            y_fit = interp_mag.snec_interpolator(requested[0:6], ranges_list, data_x_moved_all, filters)
+            surrounding_values = get_surrouding_values(requested[0:6], ranges_dict)
+            y_fit = interp.snec_interpolator(requested[0:6], surrounding_values, models['mag'], data_x_moved_all)
             if not isinstance(y_fit, str):
                 # multiply whole graph by scaling factor
                 y_fit = y_fit * S
                 for filt in filters:
                     ax.plot(x_plotting, y_fit[filt], color=colors[filt], alpha=0.3)
-                log_likeli.append(calc_mag_likelihood(requested, data_mag, ranges_list))
+                log_likeli.append(calc_mag_likelihood(requested, data_mag, surrounding_values))
     log_likeli = np.average(log_likeli)
     for filt in filters:
         data_filt = data_mag.loc[data_mag['filter'] == filt]
@@ -422,40 +554,42 @@ def plot_mag_with_fit(data_mag, sampler_chain, ranges_dict, step, output_dir, n_
 
 
 
-def plot_veloc_with_fit(data_veloc, sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name, Tthresh_normalized=False):
-    ranges_list = dict_to_list(ranges_dict)
+def plot_veloc_with_fit(data_veloc, sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name, Tthreshold=False):
     data_x = data_veloc['t_from_discovery']
     data_y = data_veloc['veloc']
-    dy = data_veloc['dveloc']
+    data_dy = data_veloc['dveloc']
     f_fit, ax = plt.subplots(figsize=(10, 8))
     log_likeli = []
-    x_plotting = np.arange(0, np.max(data_veloc['t_from_discovery'])+5, 0.5)
+    x_plotting = np.linspace(0, np.max(data_veloc['t_from_discovery']), int(1+10*np.max(data_veloc['t_from_discovery'])))
     for i in range(n_walkers):
         [Mzams, Ni, E, R, K, Mix, S, T, Sv] = sampler_chain[i, step, :]
         requested = [Mzams, Ni, E, R, K, Mix, S, T, Sv]
         if theta_in_range(requested, ranges_dict) or R == 0:
-            if Tthresh_normalized:
-                max_veloc_time = time_before_T_thresh(requested, ranges_dict)
-                thresh_veloc = data_veloc.loc[data_veloc['t_from_discovery'] < max_veloc_time]
-                num_obs_veloc = len(thresh_veloc)
-                x_plotting = np.arange(0, max_veloc_time, 0.5)
-                data_x_moved = x_plotting - T
-                y_fit = interp_veloc.snec_interpolator(requested[0:6], ranges_list, data_x_moved)
-                if not isinstance(y_fit, str):
-                    # multiply whole graph by scaling factor
-                    y_fit = y_fit * Sv
-                    ax.plot(x_plotting, y_fit, alpha=0.4)
-                    log_likeli.append(calc_veloc_likelihood(requested, thresh_veloc, ranges_list) / num_obs_veloc)
+            surrounding_values = get_surrouding_values(requested[0:6], ranges_dict)
+            temp_x_moved = data_x - T
+            if Tthreshold:
+                temp_fit = interp.snec_interpolator(requested[0:6], surrounding_values, models['temp'], temp_x_moved)
+                if not isinstance(temp_fit, str):
+                    max_temp_below_Tthresh = np.max(temp_fit[temp_fit <= T_thresh])
+                    temp_x_moved = temp_x_moved[temp_fit > max_temp_below_Tthresh]
+                    if len(temp_x_moved) <= 1:
+                        print('cooled too fast, no early velocity data')
+                        x_plotting = []
+                    else:
+                        max_x_moved = np.max(temp_x_moved)
+                        x_plotting = np.linspace(0, max_x_moved, int(1+max_x_moved*10))
             else:
+                x_plotting = np.linspace(0, 196, 1961)
+            if len(x_plotting) > 0:
                 data_x_moved = x_plotting - T
-                y_fit = interp_veloc.snec_interpolator(requested[0:6], ranges_list, data_x_moved)
+                y_fit = interp.snec_interpolator(requested[0:6], surrounding_values, models['veloc'], data_x_moved)
                 if not isinstance(y_fit, str):
                     # multiply whole graph by scaling factor
                     y_fit = y_fit * Sv
                     ax.plot(x_plotting, y_fit, alpha=0.4)
-                    log_likeli.append(calc_veloc_likelihood(requested, data_veloc, ranges_list))
+                    log_likeli.append(calc_veloc_likelihood(requested, data_veloc, surrounding_values, Tthreshold))
     log_likeli = np.average(log_likeli)
-    ax.errorbar(data_x, data_y, yerr=dy, marker='o', linestyle='None', color='k')
+    ax.errorbar(data_x, data_y, yerr=data_dy, marker='o', linestyle='None', color='k')
     results_text = result_text_from_dict(sampler_chain, ranges_dict, SN_name, step, output_dir)
     ax.text(0.6, 0.8, results_text, transform=ax.transAxes, fontsize=14,
             verticalalignment='center', bbox=dict(facecolor='white', alpha=0.5))
@@ -468,27 +602,27 @@ def plot_veloc_with_fit(data_veloc, sampler_chain, ranges_dict, step, output_dir
 
 
 
-def plot_lightcurve_with_fit(sampler_chain, SN_data, ranges_dict, fitting_type, output_dir, n_walkers, SN_name, step):
+def plot_lightcurve_with_fit(sampler_chain, SN_data, ranges_dict, fitting_type, output_dir, n_walkers, SN_name, step, extend_tail=False):
+    log_likeli = 0
     if fitting_type == 'lum':
-        log_likeli = plot_lum_with_fit(SN_data['lum'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name)
+        log_likeli = plot_lum_with_fit(SN_data['lum'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name, extend_tail)
     if fitting_type == 'mag':
         log_likeli = plot_mag_with_fit(SN_data['mag'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name)
     if fitting_type == 'veloc':
         log_likeli = plot_veloc_with_fit(SN_data['veloc'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name)
     if fitting_type == 'lum_veloc':
         log_likeli = 0
-        log_likeli += plot_lum_with_fit(SN_data['lum'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name)
+        log_likeli += plot_lum_with_fit(SN_data['lum'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name, extend_tail)
         log_likeli += plot_veloc_with_fit(SN_data['veloc'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name)
     if fitting_type == 'lum_veloc_Tthresh_normalized':
         log_likeli = 0
-        num_obs_lum = len(SN_data['lum']['t_from_discovery'])
-        log_likeli += plot_lum_with_fit(SN_data['lum'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name) / num_obs_lum
-        log_likeli += plot_veloc_with_fit(SN_data['veloc'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name, Tthresh_normalized=True)
+        log_likeli += plot_lum_with_fit(SN_data['lum'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name, extend_tail)
+        log_likeli += plot_veloc_with_fit(SN_data['veloc'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name, Tthreshold=True)
     if fitting_type == 'lum_veloc_normalized':
         log_likeli = 0
         num_obs_veloc = len(SN_data['veloc']['t_from_discovery'])
         num_obs_lum = len(SN_data['lum']['t_from_discovery'])
-        log_likeli += plot_lum_with_fit(SN_data['lum'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name) / num_obs_lum
+        log_likeli += plot_lum_with_fit(SN_data['lum'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name, extend_tail) / num_obs_lum
         log_likeli += plot_veloc_with_fit(SN_data['veloc'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name) / num_obs_veloc
     if fitting_type == 'mag_veloc':
         log_likeli = 0
@@ -502,7 +636,7 @@ def plot_lightcurve_with_fit(sampler_chain, SN_data, ranges_dict, fitting_type, 
         log_likeli += plot_veloc_with_fit(SN_data['veloc'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name) / num_obs_veloc
     if fitting_type == 'combined':
         log_likeli = 0
-        log_likeli += plot_lum_with_fit(SN_data['lum'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name)
+        log_likeli += plot_lum_with_fit(SN_data['lum'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name, extend_tail)
         log_likeli += plot_mag_with_fit(SN_data['mag'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name)
         log_likeli += plot_veloc_with_fit(SN_data['veloc'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name)
     if fitting_type == 'combined_normalized':
@@ -511,7 +645,7 @@ def plot_lightcurve_with_fit(sampler_chain, SN_data, ranges_dict, fitting_type, 
         num_obs_veloc = len(SN_data['veloc']['t_from_discovery'])
         num_obs_lum = len(SN_data['lum']['t_from_discovery'])
         log_likeli += plot_mag_with_fit(SN_data['mag'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name) / num_obs_mag
-        log_likeli += plot_lum_with_fit(SN_data['lum'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name) / num_obs_lum
+        log_likeli += plot_lum_with_fit(SN_data['lum'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name, extend_tail) / num_obs_lum
         log_likeli += plot_veloc_with_fit(SN_data['veloc'], sampler_chain, ranges_dict, step, output_dir, n_walkers, SN_name) / num_obs_veloc
     return log_likeli
 
