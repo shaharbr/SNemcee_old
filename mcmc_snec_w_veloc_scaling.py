@@ -384,7 +384,7 @@ def emcee_fit_params(data, n_walkers, n_steps, ranges_dict, fitting_type, nonuni
 
 def corner_plot(sampler_chain_flat, ranges_dict, output_dir):
     labels = list(ranges_dict.keys())
-    corner_range = [1., 1., 1., 1., 1., 1., 1., 1., 1.]
+    corner_range = [1.] * len(labels)
     f_corner = corner.corner(sampler_chain_flat, labels=labels, range=corner_range)
     f_corner.savefig(os.path.join(output_dir, 'corner_plot.png'))
 
