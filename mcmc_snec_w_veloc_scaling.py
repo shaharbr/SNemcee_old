@@ -80,29 +80,29 @@ def load_model(Mzams, Ni, E, R, K, Mix, data_type, extend_tail=False):
             snec_model = pd.read_csv(modelpath,
                                      names=['t_from_discovery', 'Lum'], sep=r'\s+')
             time_col = snec_model['t_from_discovery'] / 86400  # sec to days
-            interp_days = np.linspace(0, 196, 1961)
+            interp_days = np.linspace(0, 200, 2001)
             snec_model = np.interp(interp_days, time_col, snec_model['Lum'])
             if extend_tail is not False:
                 last_30d_x = interp_days[-100:-1]
                 last_30d_y = snec_model[-100:-1]
                 last_30d_ylog = np.log(last_30d_y)
                 tail_poly1d = np.poly1d(np.polyfit(last_30d_x, last_30d_ylog, deg=1))
-                extension_days = np.linspace(196.1, 196+extend_tail, int(10*extend_tail))
+                extension_days = np.linspace(200.1, 200+extend_tail, int(10*extend_tail))
                 extension_lumlog = np.array([tail_poly1d(extension_days[i]) for i in range(len(extension_days))])
                 extension_lum = np.exp(extension_lumlog)
                 snec_model = np.concatenate((snec_model, extension_lum))
             return snec_model
     elif data_type == 'veloc':
-        modelpath = os.path.join('..', 'all_veloc_data', name, 'vel_photo.dat')
-        if os.stat(modelpath).st_size < 10 ** 5:
+        modelpath = os.path.join('..', 'all_veloc_data', name, 'vel_Fe.dat')
+        if os.stat(modelpath).st_size < 10 ** 4:
             return 'failed SN'
         else:
-            snec_model = pd.read_csv(modelpath,
-                                     names=['t_from_discovery', 'veloc'], sep=r'\s+')
-            snec_model['veloc'] = snec_model['veloc'] / 100000  # cm/s to km/s
-            time_col = snec_model['t_from_discovery'] / 86400  # sec to days
-            interp_days = np.linspace(0, 196, 1961)
-            snec_model = np.interp(interp_days, time_col, snec_model['veloc'])
+            snec_model = pd.read_csv(modelpath)
+            # snec_model['veloc'] = snec_model['veloc'] / 100000  # cm to km
+            # snec_model['t_from_discovery'] = snec_model['t_from_discovery'] / 86400  # seconds to days
+            interp_days = np.linspace(0, 200, 2001)
+            snec_model = np.interp(interp_days, snec_model['t_from_discovery'],
+                                   snec_model['veloc'])
             return snec_model
     elif data_type == 'temp':
         modelpath = os.path.join('..', 'all_temp_rad_data', name, 'T_eff.dat')
@@ -111,7 +111,7 @@ def load_model(Mzams, Ni, E, R, K, Mix, data_type, extend_tail=False):
         snec_model = pd.read_csv(modelpath,
                                  names=['t_from_discovery', 'temp'], sep=r'\s+')
         time_col = snec_model['t_from_discovery'] / 86400  # sec to days
-        interp_days = np.linspace(0, 196, 1961)
+        interp_days = np.linspace(0, 200, 2001)
         snec_model = np.interp(interp_days, time_col, snec_model['temp'])
         return snec_model
     elif data_type == 'mag':
@@ -125,7 +125,7 @@ def load_model(Mzams, Ni, E, R, K, Mix, data_type, extend_tail=False):
                                    sep=r'\s+')
             mag_file = mag_file.abs()
             time_col = mag_file['time'] / 86400  # sec to days
-            interp_days = np.linspace(0, 196, 1961)
+            interp_days = np.linspace(0, 200, 2001)
             snec_model_dict = {}
             for filter in ['u', 'g', 'r', 'i', 'z', 'U', 'B', 'V', 'R', 'I']:
                 snec_model_dict[filter] = np.interp(interp_days, time_col, mag_file[filter])
@@ -208,7 +208,6 @@ def dict_to_list(dict):
         l.append(dict[key])
     return l
 
-
 def chi_square_norm(y, dy, y_fit):
     return np.sum(((y - y_fit) / dy) ** 2)
 
@@ -228,7 +227,6 @@ def calc_lum_likelihood(theta, data, surrounding_values, extend_tail=False):
     else:
         print('impossible SN')
         return - np.inf
-
 
 def calc_veloc_likelihood(theta, data, surrounding_values, Tthreshold=False):
     data_y = data['veloc']
@@ -396,7 +394,7 @@ def chain_plots(sampler_chain, ranges_dict, output_dir, burn_in, first_stage_ste
     for i in range(len(keys)):
         key = keys[i]
         plt.figure()
-        plt.plot(sampler_chain[:, :, i].T, color='k', alpha=0.2)
+        plt.plot(sampler_chain[:, :, i].T, color='k', alpha=0.1)
         plt.xlabel('Step Number')
         plt.ylabel(key)
         plt.axvspan(0, burn_in, alpha=0.1, color='grey')
@@ -476,9 +474,9 @@ def plot_lum_with_fit(data_lum, sampler_chain, ranges_dict, step, output_dir, n_
     ax.axvspan(-2, 30, alpha=0.1, color='grey')
     log_likeli = []
     if extend_tail is not False:
-        x_plotting = np.linspace(0, 196+extend_tail, int(1+10*196+extend_tail))
+        x_plotting = np.linspace(0, 200+extend_tail, int(1+10*200+extend_tail))
     else:
-        x_plotting = np.linspace(0, 196, 1961)
+        x_plotting = np.linspace(0, 200, 2001)
     for i in range(n_walkers):
         [Mzams, Ni, E, R, K, Mix, S, T, Sv] = sampler_chain[i, step, :]
         requested = [Mzams, Ni, E, R, K, Mix, S, T, Sv]
@@ -499,9 +497,9 @@ def plot_lum_with_fit(data_lum, sampler_chain, ranges_dict, step, output_dir, n_
     ax.text(0.6, 0.8, results_text, transform=ax.transAxes, fontsize=14,
             verticalalignment='center', bbox=dict(facecolor='white', alpha=0.5))
     if extend_tail is not False:
-        ax.set_xlim(-2, 196+extend_tail)
+        ax.set_xlim(-2, 200+extend_tail)
     else:
-        ax.set_xlim(-2, 196)
+        ax.set_xlim(-2, 200)
     ax.set_ylim(40.8, 43)
     # ax.set_ylim(np.min(data_y) * 0.5, np.max(data_y) * 5)
     ax.set_title('step ' + str(step)
@@ -519,7 +517,7 @@ def plot_mag_with_fit(data_mag, sampler_chain, ranges_dict, step, output_dir, n_
     f_fit, ax = plt.subplots(figsize=(10, 8))
     ax.axvspan(-2, 30, alpha=0.1, color='grey')
     log_likeli = []
-    x_plotting = np.linspace(0, 196, 1961)
+    x_plotting = np.linspace(0, 200, 2001)
     for i in range(n_walkers):
         [Mzams, Ni, E, R, K, Mix, S, T, Sv] = sampler_chain[i, step, :]
         requested = [Mzams, Ni, E, R, K, Mix, S, T, Sv]
@@ -579,7 +577,7 @@ def plot_veloc_with_fit(data_veloc, sampler_chain, ranges_dict, step, output_dir
                         max_x_moved = np.max(temp_x_moved)
                         x_plotting = np.linspace(0, max_x_moved, int(1+max_x_moved*10))
             else:
-                x_plotting = np.linspace(0, 196, 1961)
+                x_plotting = np.linspace(0, 200, 2001)
             if len(x_plotting) > 0:
                 data_x_moved = x_plotting - T
                 y_fit = interp.snec_interpolator(requested[0:6], surrounding_values, models['veloc'], data_x_moved)

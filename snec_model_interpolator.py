@@ -2,16 +2,19 @@ import numpy as np
 
 def snec_interpolator(requested, surrounding_values, models_dict, data_days, extend_tail=False):
     if extend_tail is not False:
-        model_days = np.linspace(0, 196+extend_tail, int(1+10*(196+extend_tail)))
+        model_days = np.linspace(0, 200+extend_tail, int(1+10*(200+extend_tail)))
     else:
-        model_days = np.linspace(0, 196, 1961)
+        model_days = np.linspace(0, 200, 2001)
     params = ['Mzams', 'Ni', 'E', 'R', 'K', 'Mix']
     param_dict = {}
     for i in range(len(params)):
         param = params[i]
         below = surrounding_values[param][0]
         above = surrounding_values[param][1]
-        weight_below = (above - requested[i]) / (above - below)
+        if above == below:
+            weight_below = 0
+        else:
+            weight_below = (above - requested[i]) / (above - below)
         param_dict[param] = {'requested': requested[i],
                                  'below': below, 'above': above,
                                  'weight_below': weight_below,

@@ -15,44 +15,24 @@ extra_tail_days = 60  # has to be False or an integer
 distances = pd.read_csv(os.path.join('results', 'distances.csv'))
 distance = float(distances.loc[distances['SN_name'] == SN_name]['distance'])
 distance_err = float(distances.loc[distances['SN_name'] == SN_name]['distance_err'])
-sigma_S = 2 * distance_err / (distance)
+sigma_S = 2 * distance_err / distance
 
-for E_final in [0.1, 0.3, 0.5, 0.9, 1.3, 1.7]
-for Mzams in [9.0, 10.0, 11.0, 12.0, 13.0, 15.0, 17.0]
-for K_CSM in [0, 10, 30, 60]
-for R_CSM in [0, 500, 1000, 2000]
-for Ni_mass in [0.001, 0.02, 0.07, 0.12]
-for Ni_boundary in [2.0, 5.0, 8.0]
-
-
-
-for E_final in [0.1, 0.3, 0.5, 0.9, 1.3, 1.7]
-for Mzams in [9.0, 10.0, 11.0, 12.0, 13.0, 15.0, 17.0]
-for K_CSM in [0, 10, 30, 60]
-for R_CSM in [0, 500, 1000, 2000]
-for Ni_mass in [0.001, 0.02, 0.07, 0.12]
-for Ni_boundary in [2.0, 5.0, 8.0]
-
-
-
-
-
-Mzams_range = [9.0, 11.0, 13.0, 15.0, 17.0]
+Mzams_range = [9.0, 11.0, 13.0, 15.0]
 Ni_range = [0.02, 0.07, 0.12]
 E_final_range = [0.5, 0.9, 1.3, 1.7]
 Mix_range = [2.0, 8.0]
-R_range = [0, 500, 1000]
-K_range = [0, 10, 30]
+R_range = [500, 1000, 2000]
+K_range = [10, 30, 60]
 S_range = [1.0-sigma_S, 1.0+sigma_S]
 T_range = [-10, 2]
-Sv_range = [0.1, 2.0]
+Sv_range = [0.5, 2.0]
 
 # nonuniform_priors = {'S': {'gaussian': {'mu': 1.0, 'sigma': sigma_S}}}
 
-n_walkers = 20
-n_steps = 200
+n_walkers = 100
+n_steps = 1500
 n_params = 9
-burn_in = 10
+burn_in = 500
 
 time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 res_dir = os.path.join('mcmc_results', str(time_now)+'_lum_veloc_w_Sv_'+SN_name)
@@ -79,9 +59,9 @@ parameter_ranges = {'Mzams' : Mzams_range, 'Ni' : Ni_range, 'E' : E_final_range,
 data_lum= pd.read_csv(os.path.join('results', SN_name+'_martinez.csv'))
 # take only days between 30 and 200 (like the Martinez paper)
 if extra_tail_days is not False:
-    data_lum = data_lum.loc[data_lum['t_from_discovery'] <= float(196 + extra_tail_days - 10)]
+    data_lum = data_lum.loc[data_lum['t_from_discovery'] <= float(200 + extra_tail_days - 10)]
 else:
-    data_lum = data_lum.loc[data_lum['t_from_discovery'] <= 196]
+    data_lum = data_lum.loc[data_lum['t_from_discovery'] <= 200]
 # data_lum= pd.read_csv(os.path.join('results', 'blackbody_results_'+SN_name+'_BVgri.csv'))
 # convert watt to erg/s
 # data_lum['Lum'] = data_lum['Lum'] * 10**7
