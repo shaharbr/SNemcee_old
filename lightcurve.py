@@ -60,7 +60,6 @@ def lightcurve_plot(lightcurve, SN_name, correction_params):
     dm = correction_params.loc[SN_name]['dm']
     fig, ax = plt.subplots(1, figsize=(9, 6))
     ax2 = ax.twinx()
-    print(lightcurve['source'])
     sources = lightcurve['source'].unique()
     filters = lightcurve['filter'].unique()
     for source in sources:
@@ -104,8 +103,6 @@ def lightcurve_plot(lightcurve, SN_name, correction_params):
 
 def lightcurve_plot_shift(SN_dict, correction_params):
     # TODO change this so it takes the lightcurve istead of dict
-    print(correction_params)
-    print(correction_params.loc[SN_dict['Name']])
     dm = correction_params.loc[SN_dict['Name']]['dm']
     fig, ax = plt.subplots(1, figsize=(12, 8))
     ax2 = ax.twinx()
