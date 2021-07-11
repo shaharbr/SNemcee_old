@@ -13,13 +13,12 @@ def copyanything(src, dst):
 
 list_names = [str('M' + str(Mzams) + '_Ni' + str(Ni_mass) + '_E' + str(E_final)\
                    + '_Mix' + str(Ni_boundary) + '_R' + str(R_CSM) + '_K' + str(K_CSM))
-			for Mzams in [9.0, 12.0, 15.0, 18.0]
-                        for Ni_mass in [0.02, 0.07, 0.12, 0.17]
-                        for E_final in [1.2, 1.7, 2.2, 2.7]
-                        for Ni_boundary in [1.0, 3.0, 6.0]
-                        for R_CSM in [600, 1400, 2200, 3000]
-                        for K_CSM in [0.001, 50, 100, 150]
-
+                           for K_CSM in [60]
+                           for E_final in [1.7, 1.3, 0.9, 0.5]
+                           for Ni_mass in [0.12, 0.02, 0.07]
+                           for Mzams in [9.0, 11.0, 13.0, 15.0, 17.0]
+                           for R_CSM in [500, 1000]
+                           for Ni_boundary in [2.0, 8.0]
               ]
 
 
