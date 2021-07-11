@@ -15,12 +15,12 @@ ff = 0.023
 lambda_0 = 5169e-8
 
 
-def compute_vel(Mzams):
-    rho = xg.parsefile(os.path.join('Data', 'rho.xg'))
-    temp = xg.parsefile(os.path.join('Data', 'temp.xg'))
-    vel = xg.parsefile(os.path.join('Data', 'vel.xg'))
+def compute_vel(Mzams, dat_dir, xg_dir, home_dir):
+    rho = xg.parsefile(os.path.join(xg_dir, 'rho.xg'))
+    temp = xg.parsefile(os.path.join(xg_dir, 'temp.xg'))
+    vel = xg.parsefile(os.path.join(xg_dir, 'vel.xg'))
 
-    profile_kepler = os.path.join('..', 'sukhbold_profiles_kepler', 's'+str(Mzams)+'_presn')
+    profile_kepler = os.path.join(home_dir, 'sukhbold_profiles_kepler', 's'+str(Mzams)+'_presn')
     mass_profile, Fe_mass_fraction = np.loadtxt(profile_kepler,usecols=(1,30),unpack=True,skiprows=2)
 
     n_Fe = []
@@ -34,7 +34,7 @@ def compute_vel(Mzams):
     T_tab = []
     rho_tab = []
 
-    eta_file = os.path.join('..', 'FeII_5169_eta.dat')
+    eta_file = os.path.join(home_dir, 'FeII_5169_eta.dat')
 
     for l in open(eta_file, 'r').readlines():
         s = l.split()
@@ -60,7 +60,7 @@ def compute_vel(Mzams):
             k = k + 1
 
     found_time_break = 0
-    info_path = os.path.join('Data', 'info.dat')
+    info_path = os.path.join(dat_dir, 'info.dat')
     for l in open(info_path, 'r').readlines():
         s = l.split()
         if (s[0] == 'Time') and (s[1] == 'of') and (s[2] == 'breakout'):
@@ -69,7 +69,7 @@ def compute_vel(Mzams):
         if found_time_break == 0:
             time_shock_breakout = 0.0
 
-    index_phot_path = os.path.join('Data', 'index_photo.dat')
+    index_phot_path = os.path.join(dat_dir, 'index_photo.dat')
 
     time_ind_ph, ind_ph = np.loadtxt(index_phot_path,usecols=(0,1),unpack=True)
 
@@ -99,5 +99,5 @@ def compute_vel(Mzams):
         vel_tau_sob.append(vel_tau_sob_x)
 
     sob1 = pd.DataFrame({'t_from_discovery': np.array(time_tau_sob), 'veloc': vel_tau_sob})
-    sob1.to_csv(os.path.join('Data', 's'+str(Mzams)+'_Tsob1_veloc.csv'))
+    sob1.to_csv(os.path.join(dat_dir, 'vel_Fe.dat'))
 
