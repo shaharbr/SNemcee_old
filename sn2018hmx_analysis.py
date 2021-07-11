@@ -9,49 +9,51 @@ import os
 
 
 # import photometry data files for 2018hmx
-atlas_phot_o = data_import.atlas_flux(os.path.join('data', 'SN2018hmx_flux_raw_wightedavg_orange.txt'), 'o')
-atlas_phot_c = data_import.atlas_flux(os.path.join('data', 'SN2018hmx_flux_raw_wightedavg_cyan.txt'), 'c')
-atlas_phot = pd.concat([atlas_phot_o, atlas_phot_c], ignore_index=True)
-lco_phot = data_import.lco_phot(os.path.join('data', 'sn2018hmx_20181101-20190505_lcophot.txt'))
-gaia_phot = data_import.gaia_phot(os.path.join('data', 'gaia18doi.txt'))
-ztf_phot_new = data_import.ztf_phot_new(os.path.join('data', 'ztf_dr1_lightcurve.txt'))
-arizona_phot = pd.read_csv(os.path.join('data', 'SN2018hmx_phot_arizona.csv'))
+# atlas_phot_o = data_import.atlas_flux(os.path.join('data', 'SN2018hmx_flux_raw_wightedavg_orange.txt'), 'o')
+# atlas_phot_c = data_import.atlas_flux(os.path.join('data', 'SN2018hmx_flux_raw_wightedavg_cyan.txt'), 'c')
+# atlas_phot = pd.concat([atlas_phot_o, atlas_phot_c], ignore_index=True)
+# lco_phot = data_import.lco_phot(os.path.join('data', 'sn2018hmx_20181101-20190505_lcophot.txt'))
+# gaia_phot = data_import.gaia_phot(os.path.join('data', 'gaia18doi.txt'))
+# ztf_phot_new = data_import.ztf_phot_new(os.path.join('data', 'ztf_dr1_lightcurve.txt'))
+# arizona_phot = pd.read_csv(os.path.join('data', 'SN2018hmx_phot_arizona.csv'))
 
 
 # import photometry data files for other comparison SNe
 sn1999em_leonard_phot = data_import.leonard_phot(os.path.join('data', 'sn1999em_UBVRI_leonard02.txt'))
-ASASSN14kg_phot = data_import.sne_catalog_phot(os.path.join('data', 'ASASSN-14kg.csv'))
-ksp_phot = data_import.ksp_phot(os.path.join('data', 'KSP-SN-2016kf.txt'))
-sn2018aad_phot = data_import.sn18aad_phot(os.path.join('data', 'sn2018aad_20180305-20190325_pyzogy_lcophot.txt'))
-SN2017eaw_phot = data_import.sne_catalog_phot(os.path.join('data', 'SN2017eaw_phot.csv'))
-SN2004et_phot = data_import.sne_catalog_phot(os.path.join('data', 'SN2004et_phot.csv'))
+# ASASSN14kg_phot = data_import.sne_catalog_phot(os.path.join('data', 'ASASSN-14kg.csv'))
+# ksp_phot = data_import.ksp_phot(os.path.join('data', 'KSP-SN-2016kf.txt'))
+# sn2018aad_phot = data_import.sn18aad_phot(os.path.join('data', 'sn2018aad_20180305-20190325_pyzogy_lcophot.txt'))
+# SN2017eaw_phot = data_import.sne_catalog_phot(os.path.join('data', 'SN2017eaw_phot.csv'))
+# SN2004et_phot = data_import.sne_catalog_phot(os.path.join('data', 'SN2004et_phot.csv'))
 
 
 # import correction params
 correction_params = pd.concat([
-    pd.read_csv(os.path.join('data', 'SN2018hmx_correction.csv')),
+    # pd.read_csv(os.path.join('data', 'SN2018hmx_correction.csv')),
     # pd.read_csv(os.path.join('data', 'ASASSN14kg_correction.csv')),
-    # pd.read_csv(os.path.join('data', 'SN1999em_correction.csv')),
+    pd.read_csv(os.path.join('data', 'SN1999em_correction.csv'))
     # pd.read_csv(os.path.join('data', 'KSP_correction.csv')),
-    pd.read_csv(os.path.join('data', 'SN2018aad_correction.csv')),
-    pd.read_csv(os.path.join('data', 'SN2017eaw_correction.csv')),
-    pd.read_csv(os.path.join('data', 'SN2004et_correction.csv'))
+    # pd.read_csv(os.path.join('data', 'SN2018aad_correction.csv')),
+    # pd.read_csv(os.path.join('data', 'SN2017eaw_correction.csv')),
+    # pd.read_csv(os.path.join('data', 'SN2004et_correction.csv'))
     ], sort=False, ignore_index=True)
 correction_params.set_index('Name', inplace=True)
 colormap = pd.read_csv(os.path.join('data', 'colormap.csv'))
 
-# print(correction_params)
+
 
 # sort the light curve data of each SN in a dict, which also has the plotting guides for each light curve
-SN2018hmx = {'Name': 'SN2018hmx'}
-SN2018hmx['lightcurve'] = {'Gaia': {'df': gaia_phot, 'marker': 'o', 'Linestyle': 'None'},
-                          'ATLAS': {'df': atlas_phot, 'marker': 'o', 'Linestyle': 'None'},
-                          'P60': {'df': ztf_phot_new, 'marker': 'o', 'Linestyle': 'None'},
-                          'Las Cumbres': {'df': lco_phot, 'marker': 'o', 'Linestyle': 'None'},
-                          'Arizona': {'df': arizona_phot, 'marker': 'o', 'Linestyle': 'None'}}
+# SN2018hmx = {'Name': 'SN2018hmx'}
+# SN2018hmx['lightcurve'] = {'Gaia': {'df': gaia_phot, 'marker': 'o', 'Linestyle': 'None'},
+#                           'ATLAS': {'df': atlas_phot, 'marker': 'o', 'Linestyle': 'None'},
+#                           'P60': {'df': ztf_phot_new, 'marker': 'o', 'Linestyle': 'None'},
+#                           'Las Cumbres': {'df': lco_phot, 'marker': 'o', 'Linestyle': 'None'},
+#                           'Arizona': {'df': arizona_phot, 'marker': 'o', 'Linestyle': 'None'}}
 
-# SN1999em = {'Name': 'SN1999em'}
-# SN1999em['lightcurve'] = {'Leonard': {'df': sn1999em_leonard_phot, 'marker': 'None', 'Linestyle': '--'}}
+sn1999em_leonard_phot['mjd'] = 51480.43958 + sn1999em_leonard_phot['t_from_discovery'] * 1.00274
+
+SN1999em = {'Name': 'SN1999em'}
+SN1999em['lightcurve'] = {'Leonard': {'df': sn1999em_leonard_phot, 'marker': 'None', 'Linestyle': '--'}}
 
 # ASASSN14kg = {'Name': 'ASASSN14kg'}
 # ASASSN14kg['lightcurve'] = {'ASASSN': {'df': ASASSN14kg_phot, 'marker': 'None', 'Linestyle': '--'}}
@@ -59,42 +61,42 @@ SN2018hmx['lightcurve'] = {'Gaia': {'df': gaia_phot, 'marker': 'o', 'Linestyle':
 # ksp = {'Name': 'KSP-SN-2016kf'}
 # ksp['lightcurve'] = {'Las Cumbres': {'df': ksp_phot, 'marker': 'None', 'Linestyle': '--'}}
 
-SN2018aad = {'Name': 'SN2018aad'}
-SN2018aad['lightcurve'] = {'Las Cumbres': {'df': sn2018aad_phot, 'marker': '^', 'Linestyle': 'None'}}
+# SN2018aad = {'Name': 'SN2018aad'}
+# SN2018aad['lightcurve'] = {'Las Cumbres': {'df': sn2018aad_phot, 'marker': '^', 'Linestyle': 'None'}}
 
-SN2017eaw = {'Name': 'SN2017eaw'}
-SN2017eaw['lightcurve'] = {'SNe catalog': {'df': SN2017eaw_phot, 'marker': 'None', 'Linestyle': 'None'}}
+# SN2017eaw = {'Name': 'SN2017eaw'}
+# SN2017eaw['lightcurve'] = {'SNe catalog': {'df': SN2017eaw_phot, 'marker': 'None', 'Linestyle': 'None'}}
 
-SN2004et = {'Name': 'SN2004et'}
-SN2004et['lightcurve'] = {'SNe catalog': {'df': SN2004et_phot, 'marker': 'None', 'Linestyle': 'None'}}
+# SN2004et = {'Name': 'SN2004et'}
+# SN2004et['lightcurve'] = {'SNe catalog': {'df': SN2004et_phot, 'marker': 'None', 'Linestyle': 'None'}}
 
 # processing
-SN2018hmx = lightcurve.add_rest_frame_days_from_discovery(SN2018hmx, correction_params.loc['SN2018hmx'])
-SN2018hmx = lightcurve.remove_glactic_extinction(SN2018hmx, correction_params.loc['SN2018hmx'])
-SN2018hmx = lightcurve.add_absolute_magnitude(SN2018hmx, correction_params.loc['SN2018hmx'])
+# SN2018hmx = lightcurve.add_rest_frame_days_from_discovery(SN2018hmx, correction_params.loc['SN2018hmx'])
+# SN2018hmx = lightcurve.remove_glactic_extinction(SN2018hmx, correction_params.loc['SN2018hmx'])
+# SN2018hmx = lightcurve.add_absolute_magnitude(SN2018hmx, correction_params.loc['SN2018hmx'])
 
 # ASASSN14kg = lightcurve.add_rest_frame_days_from_discovery(ASASSN14kg, correction_params.loc['ASASSN14kg'])
 # ASASSN14kg = lightcurve.remove_glactic_extinction(ASASSN14kg, correction_params.loc['ASASSN14kg'])
 # ASASSN14kg = lightcurve.add_absolute_magnitude(ASASSN14kg, correction_params.loc['ASASSN14kg'])
 
-# SN1999em = lightcurve.remove_glactic_extinction(SN1999em, correction_params.loc['SN1999em'])
-# SN1999em = lightcurve.add_absolute_magnitude(SN1999em, correction_params.loc['SN1999em'])
+SN1999em = lightcurve.remove_glactic_extinction(SN1999em, correction_params.loc['SN1999em'])
+SN1999em = lightcurve.add_absolute_magnitude(SN1999em, correction_params.loc['SN1999em'])
 #
 # ksp = lightcurve.add_rest_frame_days_from_discovery(ksp, correction_params.loc['KSP-SN-2016kf'])
 # ksp = lightcurve.remove_glactic_extinction(ksp, correction_params.loc['KSP-SN-2016kf'])
 # ksp = lightcurve.add_absolute_magnitude(ksp, correction_params.loc['KSP-SN-2016kf'])
 
-SN2018aad = lightcurve.add_rest_frame_days_from_discovery(SN2018aad, correction_params.loc['SN2018aad'])
-SN2018aad = lightcurve.remove_glactic_extinction(SN2018aad, correction_params.loc['SN2018aad'])
-SN2018aad = lightcurve.add_absolute_magnitude(SN2018aad, correction_params.loc['SN2018aad'])
+# SN2018aad = lightcurve.add_rest_frame_days_from_discovery(SN2018aad, correction_params.loc['SN2018aad'])
+# SN2018aad = lightcurve.remove_glactic_extinction(SN2018aad, correction_params.loc['SN2018aad'])
+# SN2018aad = lightcurve.add_absolute_magnitude(SN2018aad, correction_params.loc['SN2018aad'])
 
-SN2017eaw = lightcurve.add_rest_frame_days_from_discovery(SN2017eaw, correction_params.loc['SN2017eaw'])
-SN2017eaw = lightcurve.remove_glactic_extinction(SN2017eaw, correction_params.loc['SN2017eaw'])
-SN2017eaw = lightcurve.add_absolute_magnitude(SN2017eaw, correction_params.loc['SN2017eaw'])
+# SN2017eaw = lightcurve.add_rest_frame_days_from_discovery(SN2017eaw, correction_params.loc['SN2017eaw'])
+# SN2017eaw = lightcurve.remove_glactic_extinction(SN2017eaw, correction_params.loc['SN2017eaw'])
+# SN2017eaw = lightcurve.add_absolute_magnitude(SN2017eaw, correction_params.loc['SN2017eaw'])
 
-SN2004et = lightcurve.add_rest_frame_days_from_discovery(SN2004et, correction_params.loc['SN2004et'])
-SN2004et = lightcurve.remove_glactic_extinction(SN2004et, correction_params.loc['SN2004et'])
-SN2004et = lightcurve.add_absolute_magnitude(SN2004et, correction_params.loc['SN2004et'])
+# SN2004et = lightcurve.add_rest_frame_days_from_discovery(SN2004et, correction_params.loc['SN2004et'])
+# SN2004et = lightcurve.remove_glactic_extinction(SN2004et, correction_params.loc['SN2004et'])
+# SN2004et = lightcurve.add_absolute_magnitude(SN2004et, correction_params.loc['SN2004et'])
 
 
 
@@ -110,14 +112,20 @@ SN2004et = lightcurve.add_absolute_magnitude(SN2004et, correction_params.loc['SN
 # SN2004et_lightcurves = data_import.make_alllightcurve_df(SN2004et)
 # data_import.save_ascii(SN2004et_lightcurves, os.path.join('data', 'ascii04et.ascii'))
 
-SN_list =[SN2018hmx, SN2018aad, SN2017eaw, SN2004et]
-names_list = ['SN2018hmx', 'SN2018aad', 'SN2017eaw', 'SN2004et']
-ascii_names = ['ascii18hmx', 'ascii18aad', 'ascii17eaw', 'ascii04et']
+# SN_list =[SN2018hmx, SN2018aad, SN2017eaw, SN2004et]
+# names_list = ['SN2018hmx', 'SN2018aad', 'SN2017eaw', 'SN2004et']
+# ascii_names = ['ascii18hmx', 'ascii18aad', 'ascii17eaw', 'ascii04et']
+
+SN_list =[SN1999em]
+names_list = ['SN1999em']
+ascii_names = ['ascii99em']
+
 
 
 for i in range(len(names_list)):
     # make df with all the lightcurves data
     lightcurve_df = data_import.make_alllightcurve_df(SN_list[i])
+    print(lightcurve_df)
     # save ascii (as input for the bolometric code)
     data_import.save_ascii(lightcurve_df, os.path.join('data', ascii_names[i]+'.ascii'))
     dm = correction_params.loc[names_list[i]]['dm']
@@ -133,7 +141,7 @@ for i in range(len(names_list)):
     lightcurve.lightcurve_plot(lightcurve_df, names_list[i], correction_params)
 
 # lightcurve.lightcurve_plot_shift(ksp, correction_params)
-lightcurve.lightcurve_plot_shift(SN2017eaw, correction_params)
+lightcurve.lightcurve_plot_shift(sn1999em_leonard_phot, correction_params)
 
 
 # lightcurve.lightcurve_plot([SN2018hmx], 'SN2018hmx', correction_params)
