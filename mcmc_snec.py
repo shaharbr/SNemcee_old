@@ -3,13 +3,15 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
-import snec_model_interpolator as interp
+import snec_model_interpolator_plotting as interp
 import pandas as pd
 import os
 import corner
 import csv
 from scipy.stats import chi2
 import copy
+from numpy import trapz
+
 
 
 '''
@@ -83,8 +85,8 @@ def load_model(Mzams, Ni, E, R, K, Mix, data_type, extend_tail=False):
             interp_days = np.linspace(0, 200, 2001)
             snec_model = np.interp(interp_days, time_col, snec_model['Lum'])
             if extend_tail is not False:
-                last_30d_x = interp_days[-100:-1]
-                last_30d_y = snec_model[-100:-1]
+                last_30d_x = interp_days[-100:]
+                last_30d_y = snec_model[-100:]
                 last_30d_ylog = np.log(last_30d_y)
                 tail_poly1d = np.poly1d(np.polyfit(last_30d_x, last_30d_ylog, deg=1))
                 extension_days = np.linspace(200.1, 200+extend_tail, int(10*extend_tail))
@@ -154,6 +156,24 @@ def load_surrounding_models(requested, ranges_dict, fitting_type, extend_tail=Fa
                                     models['mag'][Mzams][Ni][E][R][K][Mix] = load_model(Mzams, Ni, E, R, K, Mix, 'mag')
 
 
+def polyfit_to_distribution(array_walker_results, res_dir):
+    name = array_walker_results.name
+    counts, bin_edges = np.histogram(array_walker_results, bins=20)
+    fig, ax = plt.subplots()
+    ax.hist(array_walker_results, density=True, bins=20)
+    bin_widths = np.diff(bin_edges)
+    x = bin_edges[:-1] + (bin_widths / 2)
+    y = counts
+    area = trapz(y, dx=bin_widths[0])
+    y = y / area
+    polymod = np.poly1d(np.polyfit(x, y, deg=12))
+    ax.plot(x, y, color='black')
+    dense_x = np.arange(np.min(x), np.max(x), (np.max(x)-np.min(x))/50)
+    ax.plot(dense_x, [polymod(i) for i in dense_x], color='orange')
+    fig.savefig(os.path.join(res_dir, str(name)+'_first_step_dist.png'))
+    return polymod
+
+
 def theta_in_range(theta, ranges_dict):
     ranges_list = dict_to_list(ranges_dict)
     truth_value = True
@@ -215,6 +235,7 @@ def calc_lum_likelihood(theta, data, surrounding_values, extend_tail=False):
     data_y = data['Lum']
     data_dy = data['dLum0']
     y_fit = interp.snec_interpolator(theta[0:6], surrounding_values, models['lum'], data_x_moved, extend_tail)
+    exit()
     if not isinstance(y_fit, str):
         # multiply whole graph by scaling factor
         y_fit = y_fit * theta[6]
@@ -234,16 +255,24 @@ def calc_veloc_likelihood(theta, data, surrounding_values, Tthreshold=False):
     if Tthreshold:
         temp_fit = interp.snec_interpolator(theta[0:6], surrounding_values, models['temp'], data_x_moved)
         if not isinstance(temp_fit, str):
-            max_temp_below_Tthresh = np.max(temp_fit[temp_fit <= T_thresh])
-            data_x_moved = data_x_moved[temp_fit > max_temp_below_Tthresh]
-            if len(data_x_moved) <= 1:
-                # TODO this step introduces some bias - SNe that don't have early velocities
-                #  will select against models that cool fast
-                print('cooled too fast, no early velocity data')
+            below_Tthresh = temp_fit[temp_fit <= T_thresh]
+            print('tthreshhhhhhhhhhh')
+            print(below_Tthresh)
+            print(len(below_Tthresh))
+            if len(below_Tthresh) > 0:
+                max_temp_below_Tthresh = np.max(below_Tthresh)
+                data_x_moved = data_x_moved[temp_fit > max_temp_below_Tthresh]
+                if len(data_x_moved) <= 1:
+                    # TODO this step introduces some bias - SNe that don't have early velocities
+                    #  will select against models that cool fast
+                    print('cooled too fast, no early velocity data')
+                    return - np.inf
+                data = data.loc[temp_fit > max_temp_below_Tthresh]
+                data_y = data['veloc']
+                data_dy = data['dveloc']
+            else:
+                print('cooled too fast')
                 return - np.inf
-            data = data.loc[temp_fit > max_temp_below_Tthresh]
-            data_y = data['veloc']
-            data_dy = data['dveloc']
         else:
             print('impossible SN')
             return - np.inf
@@ -338,6 +367,9 @@ def log_likelihood(theta, data, ranges_dict, fitting_type, extend_tail=False):
         else:
             print('fitting_type should be: lum, mag, veloc, lum_veloc, lum_veloc_normalized, mag_veloc, mag_veloc_normalized, combined or combined_normalized')
     else:
+        print('log lik')
+        print(theta)
+        print(ranges_dict)
         print('out of range')
         return - np.inf  # just a very big number so it won't go past the edge values
     print('loglik', log_likeli)
@@ -352,6 +384,9 @@ def log_posterior(theta, data, ranges_dict, fitting_type, nonuniform_priors=None
         print('logpost', log_post)
         return log_post
     else:
+        print('log pos')
+        print(theta)
+        print(ranges_dict)
         print('out of range')
         return - np.inf  # just a very big number so it won't go past the edge values
 
@@ -479,6 +514,7 @@ def plot_lum_with_fit(data_lum, sampler_chain, ranges_dict, step, output_dir, n_
         if theta_in_range(requested, ranges_dict) or R == 0:
             data_x_moved = x_plotting - T
             surrounding_values = get_surrouding_values(requested[0:6], ranges_dict)
+            load_surrounding_models(requested[0:6], ranges_dict, 'lum', extend_tail)
             y_fit = interp.snec_interpolator(requested[0:6], surrounding_values, models['lum'], data_x_moved, extend_tail)
             if not isinstance(y_fit, str):
                 # multiply whole graph by scaling factor
@@ -518,6 +554,7 @@ def plot_mag_with_fit(data_mag, sampler_chain, ranges_dict, step, output_dir, n_
         [Mzams, Ni, E, R, K, Mix, S, T] = sampler_chain[i, step, :]
         requested = [Mzams, Ni, E, R, K, Mix, S, T]
         if theta_in_range(requested, ranges_dict) or R == 0:
+            load_surrounding_models(requested[0:6], ranges_dict, 'mag')
             data_x_moved_all = x_plotting - T
             surrounding_values = get_surrouding_values(requested[0:6], ranges_dict)
             y_fit = interp.snec_interpolator(requested[0:6], surrounding_values, models['mag'], data_x_moved_all)
@@ -559,6 +596,7 @@ def plot_veloc_with_fit(data_veloc, sampler_chain, ranges_dict, step, output_dir
         [Mzams, Ni, E, R, K, Mix, S, T] = sampler_chain[i, step, :]
         requested = [Mzams, Ni, E, R, K, Mix, S, T]
         if theta_in_range(requested, ranges_dict) or R == 0:
+            load_surrounding_models(requested[0:6], ranges_dict, 'veloc')
             surrounding_values = get_surrouding_values(requested[0:6], ranges_dict)
             temp_x_moved = data_x - T
             if Tthreshold:
