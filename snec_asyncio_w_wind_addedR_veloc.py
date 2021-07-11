@@ -25,12 +25,12 @@ def copyanything(src, dst):
 
 
 def copy_to_datadir(model_name, data_filename, dst_dir_name):
-    os.mkdir(os.path.join('..', dst_dir_name, model_name))
+    os.mkdir(os.path.join(project_dir, dst_dir_name, model_name))
     if type(data_filename) != list:
         data_filename = [data_filename]
     for filename in data_filename:
         file_path = os.path.join('Data', filename)
-        dst_file_path = os.path.join('..', dst_dir_name, model_name, filename)
+        dst_file_path = os.path.join(project_dir, dst_dir_name, model_name, filename)
         shutil.copy(file_path, dst_file_path)
 
 
@@ -105,24 +105,24 @@ async def snec(Mzams, Ni_mass, E_final, Ni_boundary, R_CSM, K_CSM, semaphore):
             data_src = dir_name+'Data/'
             shutil.copyfile(dir_name+name+'.txt', data_src+name+'.txt')
 
-            cv.compute_vel(Mzams)
+            cv.compute_vel(Mzams, data_src, project_dir)
 
             copy_to_datadir(name, 'lum_observed.dat', 'all_lum_data')
             copy_to_datadir(name, 'magnitudes.dat', 'all_mag_data')
             copy_to_datadir(name, 'vel_photo.dat', 'all_veloc_data')
             copy_to_datadir(name, ['T_eff.dat', 'rad_photo.dat'], 'all_temp_rad_data')
 
-            dat_dir = name+'_dat'
-            xg_dir = name+'_xg'
+            dat_dir = os.path.join(dir_name, name+'_dat')
+            xg_dir = os.path.join(dir_name, name+'_xg')
             os.mkdir(dat_dir)
             os.mkdir(xg_dir)
             move_file(data_src, xg_dir, '.*.xg')
             os.rename(data_src, dat_dir)
             make_tarfile(xg_dir + '.tar.gz', xg_dir)
-            make_tarfile(dat_dir+'.tar.gz', dat_dir)
+            make_tarfile(dat_dir +'.tar.gz', dat_dir)
 
-            os.rename(xg_dir + '.tar.gz', os.path.join('..', 'all_data', xg_dir + '.tar.gz'))
-            os.rename(dat_dir+'.tar.gz', os.path.join('..', 'all_data', dat_dir+'.tar.gz'))
+            os.rename(xg_dir + '.tar.gz', os.path.join(project_dir, 'all_data', name+'_xg' + '.tar.gz'))
+            os.rename(dat_dir+'.tar.gz', os.path.join(project_dir, 'all_data', name+'_dat' +'.tar.gz'))
 
             shutil.rmtree(dir_name)
             progress_txt('end ' + name)
@@ -132,13 +132,25 @@ async def snec(Mzams, Ni_mass, E_final, Ni_boundary, R_CSM, K_CSM, semaphore):
 async def main():
     semaphore = asyncio.BoundedSemaphore(1)
     await asyncio.gather(*[snec(Mzams, Ni_mass, E_final, Ni_boundary, R_CSM, K_CSM, semaphore)
-                           for Mzams in [12.0]
-                           for E_final in [0.5]
+                           for Mzams in [10.0]                           
+                           for E_final in [0.9]
                            for Ni_mass in [0.12]
-                           for Ni_boundary in [8.0]
+                           for Ni_boundary in [2.0]
                            for K_CSM in [30]
                            for R_CSM in [1000]
                            ])
+
+    # semaphore = asyncio.BoundedSemaphore(16)
+    # await asyncio.gather(*[snec(Mzams, Ni_mass, E_final, Ni_boundary, R_CSM, K_CSM, semaphore)
+    #                        for Mzams in [10.0]
+    #                        for E_final in [0.5, 0.3, 0.1]
+    #                        for Ni_mass in [0.001, 0.02, 0.07, 0.12]
+    #                        for Ni_boundary in [2.0, 8.0]
+    #                        for K_CSM in [0, 10, 30, 60]
+    #                        for R_CSM in [0, 500, 1000, 2000]
+    #                        ])
+
+
 
 
 asyncio.run(main())
