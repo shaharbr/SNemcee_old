@@ -1,4 +1,7 @@
 import numpy as np
+import pandas as pd
+
+data_filters = ['g', 'r', 'i', 'V', 'R', 'I']
 
 def snec_interpolator(requested, surrounding_values, models_dict, data_days, extend_tail=False):
     if extend_tail is not False:
@@ -34,7 +37,6 @@ def snec_interpolator(requested, surrounding_values, models_dict, data_days, ext
                         for Mixdir in ['below', 'above', 'requested']:
                             snec_dict[Mdir][Nidir][Edir][Rdir][Kdir][Mixdir] = {}
 
-    # fig, ax = plt.subplots(figsize=(10, 8), constrained_layout=True)
     for Mdir in ['below', 'above']:
         for Nidir in ['below', 'above']:
             for Edir in ['below', 'above']:
@@ -48,8 +50,18 @@ def snec_interpolator(requested, surrounding_values, models_dict, data_days, ext
                             K = param_dict['K'][Kdir]
                             Mix = param_dict['Mix'][Mixdir]
                             snec_model = models_dict[M][Ni][E][R][K][Mix]
-                            snec_dict[Mdir][Nidir][Edir][Rdir][Kdir][Mixdir]['snec'] = \
-                                np.interp(data_days, model_days, snec_model)
+                            if isinstance(snec_model, str):
+                                return 'failed SN'
+                            else:
+                                snec_model_dict = {}
+                                for filter in data_filters:
+                                    snec_model_dict[filter] = np.interp(data_days, model_days, snec_model[filter])
+                                snec_model_dict['time'] = data_days
+                                snec_model = pd.DataFrame(snec_model_dict)
+                                snec_model = snec_model.sort_values('time')
+                                snec_dict[Mdir][Nidir][Edir][Rdir][Kdir][Mixdir]['snec'] = snec_model
+                                # snec_dict[Mdir][Nidir][Edir][Rdir][Kdir][Mixdir]['snec'] = \
+                                #     np.interp(data_days, model_days, snec_model)
                         Mix_below = snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['below']['snec']
                         Mix_above = snec_dict[Mdir][Nidir][Edir][Rdir][Kdir]['above']['snec']
                         Mix_requested = Mix_below * param_dict['Mix']['weight_below'] + Mix_above * param_dict['Mix'][
@@ -60,41 +72,23 @@ def snec_interpolator(requested, surrounding_values, models_dict, data_days, ext
                     K_requested = K_below * param_dict['K']['weight_below'] + K_above * param_dict['K'][
                         'weight_above']
                     snec_dict[Mdir][Nidir][Edir][Rdir]['requested']['requested']['snec'] = K_requested
-                    # ax.plot(K_below, label='K_below')
-                    # ax.plot(K_above, label='K_above')
-                    # ax.plot(K_requested, label='K_requested')
                 R_below = snec_dict[Mdir][Nidir][Edir]['below']['requested']['requested']['snec']
                 R_above = snec_dict[Mdir][Nidir][Edir]['above']['requested']['requested']['snec']
                 R_requested = R_below * param_dict['R']['weight_below'] + R_above * param_dict['R'][
                     'weight_above']
                 snec_dict[Mdir][Nidir][Edir]['requested']['requested']['requested']['snec'] = R_requested
-                # ax.plot(R_below, label='R_below')
-                # ax.plot(R_above, label='R_above')
-                # ax.plot(R_requested, label='R_requested')
             E_below = snec_dict[Mdir][Nidir]['below']['requested']['requested']['requested']['snec']
             E_above = snec_dict[Mdir][Nidir]['above']['requested']['requested']['requested']['snec']
             E_requested = E_below * param_dict['E']['weight_below'] + E_above * param_dict['E']['weight_above']
             snec_dict[Mdir][Nidir]['requested']['requested']['requested']['requested']['snec'] = E_requested
-            # ax.plot(E_below, label='E_below')
-            # ax.plot(E_above, label='E_above')
-            # ax.plot(E_requested, label='E_requested')
         Ni_below = snec_dict[Mdir]['below']['requested']['requested']['requested']['requested']['snec']
         Ni_above = snec_dict[Mdir]['above']['requested']['requested']['requested']['requested']['snec']
         Ni_requested = Ni_below * param_dict['Ni']['weight_below'] + Ni_above * param_dict['Ni']['weight_above']
         snec_dict[Mdir]['requested']['requested']['requested']['requested']['requested']['snec'] = Ni_requested
-        # ax.plot(Ni_below, label='Ni_below')
-        # ax.plot(Ni_above, label='Ni_above')
-        # ax.plot(Ni_requested, label='Ni_requested')
     M_below = snec_dict['below']['requested']['requested']['requested']['requested']['requested']['snec']
     M_above = snec_dict['above']['requested']['requested']['requested']['requested']['requested']['snec']
     M_requested = M_below * param_dict['Mzams']['weight_below'] + M_above * param_dict['Mzams']['weight_above']
     snec_dict['requested']['requested']['requested']['requested']['requested']['requested']['snec'] = M_requested
-    # ax.plot(M_below, label='M_below')
-    # ax.plot(M_above, label='M_above')
-    # ax.plot(M_requested, label='M_requested')
-    # ax.legend()
-    # ax.set_yscale('log')
-    # ax.set_ylim(2.8e+41, 1.3e+43)
     return snec_dict['requested']['requested']['requested']['requested']['requested']['requested']['snec']
 
 
