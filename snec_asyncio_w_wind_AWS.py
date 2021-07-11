@@ -38,6 +38,7 @@ def move_file(src_dir, dst_dir, pattern):
             os.rename(os.path.join(src_dir, f),
                       os.path.join(dst_dir, f))
 
+
 def make_tarfile(output_filename, source_dir):
     with tarfile.open(output_filename, "w:gz") as tar:
         tar.add(source_dir, arcname=os.path.basename(source_dir))
@@ -96,33 +97,32 @@ async def snec(Mzams, Ni_mass, E_final, Ni_boundary, R_CSM, K_CSM, semaphore):
             data_src = dir_name+'Data/'
             shutil.copyfile(dir_name+name+'.txt', data_src+name+'.txt')
 
-            cv.compute_vel(Mzams)
-
-            dat_dir = name+'_dat'
-            xg_dir = name+'_xg'
+            dat_dir = os.path.join(dir_name, name+'_dat')
+            xg_dir = os.path.join(dir_name, name+'_xg')
             os.mkdir(dat_dir)
             os.mkdir(xg_dir)
             move_file(data_src, xg_dir, '.*.xg')
             os.rename(data_src, dat_dir)
-
             make_tarfile(xg_dir + '.tar.gz', xg_dir)
-            make_tarfile(dat_dir+'.tar.gz', dat_dir)
-            s3.upload_file(xg_dir+'.tar.gz', 'snecbucket', xg_dir+'.tar.gz')
-            s3.upload_file(dat_dir + '.tar.gz', 'snecbucket', dat_dir + '.tar.gz')
+            make_tarfile(dat_dir + '.tar.gz', dat_dir)
+
+            s3.upload_file(xg_dir+'.tar.gz', 'snecmachine', xg_dir+'.tar.gz')
+            s3.upload_file(dat_dir + '.tar.gz', 'snecmachine', dat_dir + '.tar.gz')
+
             shutil.rmtree(dir_name)
             progress_txt('end ' + name)
 
 
 
 async def main():
-    semaphore = asyncio.BoundedSemaphore(1)
+    semaphore = asyncio.BoundedSemaphore(64)
     await asyncio.gather(*[snec(Mzams, Ni_mass, E_final, Ni_boundary, R_CSM, K_CSM, semaphore)
-                           for Mzams in [12.0]
-                           for E_final in [0.5]
-                           for Ni_mass in [0.12]
-                           for Ni_boundary in [8.0]
-                           for K_CSM in [30]
-                           for R_CSM in [1000]
+                           for Mzams in [9.0, 11.0, 13.0, 15.0, 17.0]
+                           for E_final in [0.5, 0.9, 1.3, 1.7]
+                           for Ni_mass in [0.02, 0.07, 0.12]
+                           for Ni_boundary in [2.0, 8.0]
+                           for K_CSM in [0, 10, 30, 60]
+                           for R_CSM in [0, 500, 1000, 2000]
                            ])
 
 
