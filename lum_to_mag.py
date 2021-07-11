@@ -25,12 +25,12 @@ temp_rad_dir = os.path.join('..', 'all_temp_rad_data')
 
 filenames = [str('M' + str(Mzams) + '_Ni' + str(Ni_mass) + '_E' + str(E_final)
                  + '_Mix' + str(Ni_boundary) + '_R' + str(R_CSM) + '_K' + str(K_CSM))
-                           for K_CSM in [20]
-                           for R_CSM in [1000, 2000]
-                           for E_final in [0.5, 0.9, 1.3, 1.7]
-                           for Mzams in [9.0, 11.0,  13.0, 15.0, 17.0]
-                           for Ni_mass in [0.02, 0.12]
-                           for Ni_boundary in [2.0, 8.0]
+                           for K_CSM in [0]
+                           for R_CSM in [0]
+                           for E_final in [1.0]
+                           for Mzams in [15.0]
+                           for Ni_mass in [0.05]
+                           for Ni_boundary in [5.0]
              ]
 
 
