@@ -4,6 +4,7 @@ import datetime
 from pathlib import Path
 import os
 import mcmc_snec
+# import mcmc_snec_noCSM as mcmc_snec
 
 def loopy_snec_mcmc(SN_name, parameter_ranges):
     extra_tail_days = False  # has to be False or an integer
@@ -25,13 +26,14 @@ def loopy_snec_mcmc(SN_name, parameter_ranges):
 
     # nonuniform_priors = {'S': {'gaussian': {'mu': 1.0, 'sigma': sigma_S}}}
 
-    n_walkers = 20
-    n_steps = 3
+    n_walkers = 200
+    n_steps = 1500
     n_params = 8
-    burn_in = 0
+    burn_in = 500
 
     time_now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     res_dir = os.path.join('mcmc_results', str(time_now)+'_lum_'+SN_name)
+    # res_dir = os.path.join('mcmc_results', str(time_now) + '_lum_noCSM' + SN_name)
     Path(res_dir).mkdir(parents=True, exist_ok=True)
 
     run_param_df = pd.DataFrame.from_dict({'SN_name': SN_name,
@@ -93,6 +95,5 @@ SN_list = ['SN2004a', 'SN2004et_d5.9', 'SN2005cs', 'SN2008bk', 'SN2012aw', 'SN20
 
 
 for SN_name in SN_list:
-    for params in [parameter_ranges_lowE, parameter_ranges_highE]:
+    for params in [parameter_ranges_highE]:
         loopy_snec_mcmc(SN_name, params)
-
